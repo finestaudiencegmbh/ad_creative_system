@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { TrendingUp, TrendingDown, ArrowRight, Calendar, Loader2 } from "lucide-react";
+import { ArrowRight, Calendar, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
@@ -124,31 +124,58 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Impressions</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {campaign.impressions.toLocaleString('de-DE')}
-                    </p>
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                  {/* 1. Ausgaben */}
                   <div>
                     <p className="text-sm text-muted-foreground">Ausgaben</p>
-                    <p className="text-2xl font-bold mt-1">
+                    <p className="text-xl font-bold mt-1">
                       €{campaign.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
+                  
+                  {/* 2. Kosten pro Lead */}
                   <div>
-                    <p className="text-sm text-muted-foreground">CTR</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-2xl font-bold">
-                        {campaign.ctr.toFixed(2)}%
-                      </p>
-                    </div>
+                    <p className="text-sm text-muted-foreground">Kosten/Lead</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.costPerLead > 0 
+                        ? `€${campaign.costPerLead.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '-'
+                      }
+                    </p>
                   </div>
+                  
+                  {/* 3. CPM */}
                   <div>
-                    <p className="text-sm text-muted-foreground">Conversions</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {campaign.conversions}
+                    <p className="text-sm text-muted-foreground">CPM</p>
+                    <p className="text-xl font-bold mt-1">
+                      €{campaign.cpm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  
+                  {/* 4. Individuell ausgehende CTR */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Outbound CTR</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.outboundCtr.toFixed(2)}%
+                    </p>
+                  </div>
+                  
+                  {/* 5. Kosten pro individuell ausgehendem Klick */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Kosten/Klick</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.costPerOutboundClick > 0
+                        ? `€${campaign.costPerOutboundClick.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                  
+                  {/* 6. Conversion Rate Landingpage */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">CR Landingpage</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.conversionRate.toFixed(2)}%
                     </p>
                   </div>
                 </div>

@@ -23,7 +23,16 @@ interface MetaInsights {
   impressions: string;
   spend: string;
   ctr: string;
+  cpm: string;
+  outbound_clicks?: Array<{
+    action_type: string;
+    value: string;
+  }>;
   actions?: Array<{
+    action_type: string;
+    value: string;
+  }>;
+  cost_per_outbound_click?: Array<{
     action_type: string;
     value: string;
   }>;
@@ -49,10 +58,10 @@ export async function getMetaCampaigns(params?: {
     throw new Error("META_ACCESS_TOKEN or META_AD_ACCOUNT_ID not configured");
   }
 
-  // Build query parameters
+  // Build query parameters with all required metrics
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,status,objective,created_time,updated_time,insights{impressions,spend,ctr,actions}",
+    fields: "id,name,status,objective,created_time,updated_time,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
     limit: "100",
   });
 
@@ -105,10 +114,10 @@ export async function getCampaignInsights(
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
-  // Build query parameters
+  // Build query parameters with all required metrics
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "impressions,spend,ctr,actions",
+    fields: "impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click",
   });
 
   // Add date filtering if provided

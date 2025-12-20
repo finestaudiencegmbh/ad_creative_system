@@ -93,3 +93,11 @@
 - [x] Dashboard standardmäßig nur aktive Kampagnen anzeigen
 - [x] Tab-Navigation hinzufügen: "Aktive Kampagnen" und "Inaktive Kampagnen"
 - [x] Filter-State zwischen Tabs verwalten
+
+### Dashboard Metriken (Wichtige KPIs)
+- [x] Ausgaben (bereits vorhanden)
+- [x] Kosten pro Lead (Ausgaben / Leads)
+- [x] CPM (Cost per Mille - Kosten pro 1000 Impressions)
+- [x] Individuell ausgehende CTR (Outbound CTR)
+- [x] Kosten pro individuell ausgehendem Klick (Cost per Outbound Click)
+- [x] Conversion Rate Landingpage (Leads / individuell ausgehende Klicks * 100)

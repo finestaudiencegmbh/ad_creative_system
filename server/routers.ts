@@ -45,24 +45,56 @@ export const appRouter = router({
           return campaigns.map(campaign => {
             const insights = campaign.insights?.data?.[0];
             
-            // Extract conversions from actions array
-            let conversions = 0;
+            // Extract leads from actions array
+            let leads = 0;
             if (insights?.actions) {
-              const conversionAction = insights.actions.find(
-                action => action.action_type === "offsite_conversion.fb_pixel_purchase" || 
-                         action.action_type === "omni_purchase"
+              const leadAction = insights.actions.find(
+                action => action.action_type === "lead" || 
+                         action.action_type === "offsite_conversion.fb_pixel_lead"
               );
-              conversions = conversionAction ? parseInt(conversionAction.value) : 0;
+              leads = leadAction ? parseInt(leadAction.value) : 0;
             }
+
+            // Extract outbound clicks
+            let outboundClicks = 0;
+            if (insights?.outbound_clicks) {
+              const outboundClickAction = insights.outbound_clicks.find(
+                action => action.action_type === "outbound_click"
+              );
+              outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+            }
+
+            // Extract cost per outbound click
+            let costPerOutboundClick = 0;
+            if (insights?.cost_per_outbound_click) {
+              const costAction = insights.cost_per_outbound_click.find(
+                action => action.action_type === "outbound_click"
+              );
+              costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
+            }
+
+            const impressions = insights ? parseInt(insights.impressions) : 0;
+            const spend = insights ? parseFloat(insights.spend) : 0;
+            const cpm = insights ? parseFloat(insights.cpm) : 0;
+            
+            // Calculate derived metrics
+            const costPerLead = leads > 0 ? spend / leads : 0;
+            const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+            const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
 
             return {
               id: campaign.id,
               name: campaign.name,
               status: campaign.status,
-              impressions: insights ? parseInt(insights.impressions) : 0,
-              spend: insights ? parseFloat(insights.spend) : 0,
-              ctr: insights ? parseFloat(insights.ctr) : 0,
-              conversions,
+              impressions,
+              spend,
+              leads,
+              costPerLead,
+              cpm,
+              outboundClicks,
+              outboundCtr,
+              costPerOutboundClick,
+              conversionRate,
             };
           });
         } catch (error) {
