@@ -121,3 +121,11 @@
 - [x] Dashboard: ROAS-Metriken in Kampagnen-Cards anzeigen
 - [x] Detail-Seiten: ROAS-Metriken in AdSet/Ad-Cards anzeigen
 - [x] Datumsfilter: Nur Sales im gewählten Zeitraum für ROAS-Berechnung berücksichtigen
+
+### Sales Management (Bearbeiten & Löschen)
+- [x] Backend: Update und Delete Procedures für Sales implementieren
+- [x] SalesListDialog Komponente: Liste aller Sales mit Bearbeiten/Löschen-Buttons
+- [x] Sales-Zusammenfassung klickbar machen (öffnet SalesListDialog)
+- [x] Edit-Funktionalität: Bestehende Sales-Einträge bearbeiten
+- [x] Delete-Funktionalität: Sales-Einträge löschen mit Bestätigung
+- [x] UI auf allen Ebenen implementieren (Dashboard, CampaignDetail, AdSetDetail)

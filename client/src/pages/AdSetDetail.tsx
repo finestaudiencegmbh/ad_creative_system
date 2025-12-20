@@ -11,6 +11,7 @@ import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
+import { SalesListDialog } from "@/components/SalesListDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -20,6 +21,7 @@ export default function AdSetDetail() {
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [salesListDialogOpen, setSalesListDialogOpen] = useState(false);
   const [selectedAd, setSelectedAd] = useState<{ id: string; name: string } | null>(null);
   
   const adSetId = params?.id || "";
@@ -207,7 +209,14 @@ export default function AdSetDetail() {
                 
                 {/* Sales Summary and Add Button */}
                 <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
+                  <button
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedAd({ id: ad.id, name: ad.name });
+                      setSalesListDialogOpen(true);
+                    }}
+                  >
                     {ad.salesCount > 0 ? (
                       <span>
                         {ad.salesCount} Verkauf{ad.salesCount !== 1 ? 'e' : ''} erfasst 
@@ -216,7 +225,7 @@ export default function AdSetDetail() {
                     ) : (
                       <span>Noch keine Verkäufe erfasst</span>
                     )}
-                  </div>
+                  </button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -317,13 +326,22 @@ export default function AdSetDetail() {
       
       {/* Add Sale Dialog */}
       {selectedAd && (
-        <AddSaleDialog
-          open={saleDialogOpen}
-          onOpenChange={setSaleDialogOpen}
-          entityId={selectedAd.id}
-          entityType="ad"
-          entityName={selectedAd.name}
-        />
+        <>
+          <AddSaleDialog
+            open={saleDialogOpen}
+            onOpenChange={setSaleDialogOpen}
+            entityId={selectedAd.id}
+            entityType="ad"
+            entityName={selectedAd.name}
+          />
+          <SalesListDialog
+            open={salesListDialogOpen}
+            onOpenChange={setSalesListDialogOpen}
+            entityId={selectedAd.id}
+            entityType="ad"
+            entityName={selectedAd.name}
+          />
+        </>
       )}
     </DashboardLayout>
   );
