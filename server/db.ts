@@ -1,11 +1,31 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users,
+  clients,
+  InsertClient,
+  Client,
+  onboardingData,
+  InsertOnboardingData,
+  OnboardingData,
+  brandAssets,
+  InsertBrandAsset,
+  BrandAsset,
+  creatives,
+  InsertCreative,
+  Creative,
+  performanceData,
+  InsertPerformanceData,
+  PerformanceData,
+  projects,
+  InsertProject,
+  Project,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -17,6 +37,10 @@ export async function getDb() {
   }
   return _db;
 }
+
+// ============================================
+// User Management
+// ============================================
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -89,4 +113,226 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ============================================
+// Client Management
+// ============================================
+
+export async function createClient(client: InsertClient): Promise<Client> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(clients).values(client);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(clients).where(eq(clients.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted client");
+  
+  return inserted[0];
+}
+
+export async function getAllClients(): Promise<Client[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(clients).orderBy(desc(clients.createdAt));
+}
+
+export async function getClientById(id: number): Promise<Client | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateClient(id: number, updates: Partial<InsertClient>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(clients).set(updates).where(eq(clients.id, id));
+}
+
+export async function deleteClient(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(clients).where(eq(clients.id, id));
+}
+
+// ============================================
+// Onboarding Data Management
+// ============================================
+
+export async function upsertOnboardingData(data: InsertOnboardingData): Promise<OnboardingData> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db.select().from(onboardingData).where(eq(onboardingData.clientId, data.clientId)).limit(1);
+
+  if (existing[0]) {
+    await db.update(onboardingData).set(data).where(eq(onboardingData.clientId, data.clientId));
+    const updated = await db.select().from(onboardingData).where(eq(onboardingData.clientId, data.clientId)).limit(1);
+    if (!updated[0]) throw new Error("Failed to retrieve updated onboarding data");
+    return updated[0];
+  } else {
+    const result = await db.insert(onboardingData).values(data);
+    const insertedId = Number(result[0].insertId);
+    const inserted = await db.select().from(onboardingData).where(eq(onboardingData.id, insertedId)).limit(1);
+    if (!inserted[0]) throw new Error("Failed to retrieve inserted onboarding data");
+    return inserted[0];
+  }
+}
+
+export async function getOnboardingDataByClientId(clientId: number): Promise<OnboardingData | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(onboardingData).where(eq(onboardingData.clientId, clientId)).limit(1);
+  return result[0];
+}
+
+// ============================================
+// Brand Assets Management
+// ============================================
+
+export async function createBrandAsset(asset: InsertBrandAsset): Promise<BrandAsset> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(brandAssets).values(asset);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(brandAssets).where(eq(brandAssets.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted brand asset");
+  
+  return inserted[0];
+}
+
+export async function getBrandAssetsByClientId(clientId: number): Promise<BrandAsset[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(brandAssets).where(eq(brandAssets.clientId, clientId)).orderBy(desc(brandAssets.createdAt));
+}
+
+export async function deleteBrandAsset(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(brandAssets).where(eq(brandAssets.id, id));
+}
+
+// ============================================
+// Creatives Management
+// ============================================
+
+export async function createCreative(creative: InsertCreative): Promise<Creative> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(creatives).values(creative);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(creatives).where(eq(creatives.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted creative");
+  
+  return inserted[0];
+}
+
+export async function getCreativesByClientId(clientId: number): Promise<Creative[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(creatives).where(eq(creatives.clientId, clientId)).orderBy(desc(creatives.createdAt));
+}
+
+export async function getCreativeById(id: number): Promise<Creative | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(creatives).where(eq(creatives.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateCreative(id: number, updates: Partial<InsertCreative>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(creatives).set(updates).where(eq(creatives.id, id));
+}
+
+export async function deleteCreative(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(creatives).where(eq(creatives.id, id));
+}
+
+// ============================================
+// Performance Data Management
+// ============================================
+
+export async function createPerformanceData(data: InsertPerformanceData): Promise<PerformanceData> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(performanceData).values(data);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(performanceData).where(eq(performanceData.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted performance data");
+  
+  return inserted[0];
+}
+
+export async function getPerformanceDataByCreativeId(creativeId: number): Promise<PerformanceData[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(performanceData).where(eq(performanceData.creativeId, creativeId)).orderBy(desc(performanceData.date));
+}
+
+export async function getPerformanceDataByMetaAdId(metaAdId: string): Promise<PerformanceData[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(performanceData).where(eq(performanceData.metaAdId, metaAdId)).orderBy(desc(performanceData.date));
+}
+
+// ============================================
+// Projects Management
+// ============================================
+
+export async function createProject(project: InsertProject): Promise<Project> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(projects).values(project);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(projects).where(eq(projects.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted project");
+  
+  return inserted[0];
+}
+
+export async function getProjectsByClientId(clientId: number): Promise<Project[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(projects).where(eq(projects.clientId, clientId)).orderBy(desc(projects.createdAt));
+}
+
+export async function updateProject(id: number, updates: Partial<InsertProject>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(projects).set(updates).where(eq(projects.id, id));
+}
+
+export async function deleteProject(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(projects).where(eq(projects.id, id));
+}
