@@ -72,3 +72,10 @@
 - [x] Creative Generator: Reel-Format hinzufügen (1080×1920)
 - [x] Safe Zone Templates für Story und Reel integrieren
 - [x] Format-Auswahl: Feed (1080×1420), Story (1080×1920), Reel (1080×1920)
+
+
+### Datumsfilter im Dashboard
+- [x] Datumsfilter-Komponente erstellen (Heute, Letzte 7 Tage, Letzter Monat, Aktueller Monat, Letztes Quartal, Custom Range)
+- [x] Voreinstellung: Aktueller Monat
+- [x] KPIs basierend auf gewähltem Zeitraum filtern
+- [ ] Filter-State in URL-Parameter speichern (optional)

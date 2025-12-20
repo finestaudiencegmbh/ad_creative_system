@@ -2,14 +2,61 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
-import { TrendingUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
+import { useState, useMemo } from "react";
+import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
+import { de } from "date-fns/locale";
+
+type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+  const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   
-  // Dummy data for now - will be replaced with real API call
+  // Calculate date range based on selection
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    
+    switch (dateRange) {
+      case "today":
+        return {
+          startDate: startOfDay(now),
+          endDate: endOfDay(now)
+        };
+      case "last7days":
+        return {
+          startDate: subDays(now, 7),
+          endDate: now
+        };
+      case "lastMonth":
+        const lastMonth = subMonths(now, 1);
+        return {
+          startDate: startOfMonth(lastMonth),
+          endDate: endOfMonth(lastMonth)
+        };
+      case "currentMonth":
+        return {
+          startDate: startOfMonth(now),
+          endDate: endOfMonth(now)
+        };
+      case "lastQuarter":
+        const lastQuarter = subMonths(now, 3);
+        return {
+          startDate: startOfQuarter(lastQuarter),
+          endDate: endOfQuarter(lastQuarter)
+        };
+      default:
+        return {
+          startDate: startOfMonth(now),
+          endDate: endOfMonth(now)
+        };
+    }
+  }, [dateRange]);
+  
+  // Dummy data for now - will be replaced with real API call filtered by date range
   const campaigns = [
     {
       id: 1,
@@ -46,14 +93,39 @@ export default function Dashboard() {
     }
   ];
 
+  const dateRangeLabel = useMemo(() => {
+    return `${format(startDate, 'dd. MMM yyyy', { locale: de })} - ${format(endDate, 'dd. MMM yyyy', { locale: de })}`;
+  }, [startDate, endDate]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Übersicht über alle aktiven Kampagnen und deren Performance
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-2">
+              Übersicht über alle aktiven Kampagnen und deren Performance
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-end gap-2">
+            <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
+              <SelectTrigger className="w-[220px]">
+                <Calendar className="mr-2 h-4 w-4" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Heute</SelectItem>
+                <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
+                <SelectItem value="lastMonth">Letzter Monat</SelectItem>
+                <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
+                <SelectItem value="lastQuarter">Letztes Quartal</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {dateRangeLabel}
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-4">
