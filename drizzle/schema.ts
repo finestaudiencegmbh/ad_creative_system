@@ -150,3 +150,24 @@ export const sales = mysqlTable("sales", {
 
 export type Sale = typeof sales.$inferSelect;
 export type InsertSale = typeof sales.$inferInsert;
+
+/**
+ * Lead Corrections table - Stores manually corrected lead counts
+ * Overrides Meta API lead data for accurate CPL and CVR calculations
+ */
+export const leadCorrections = mysqlTable("lead_corrections", {
+  id: int("id").autoincrement().primaryKey(),
+  // Link to Meta entities (exactly one must be set)
+  metaCampaignId: varchar("metaCampaignId", { length: 255 }),
+  metaAdSetId: varchar("metaAdSetId", { length: 255 }),
+  metaAdId: varchar("metaAdId", { length: 255 }),
+  // Corrected lead count
+  correctedLeadCount: int("correctedLeadCount").notNull(),
+  // Optional note explaining the correction
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadCorrection = typeof leadCorrections.$inferSelect;
+export type InsertLeadCorrection = typeof leadCorrections.$inferInsert;

@@ -54,14 +54,19 @@ export const appRouter = router({
             const insights = campaign.insights?.data?.[0];
             
             // Extract leads from actions array
-            let leads = 0;
+            let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
                 action => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
-              leads = leadAction ? parseInt(leadAction.value) : 0;
+              leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
             }
+
+            // Check for manual lead correction
+            const leadCorrection = await db.getLeadCorrectionByEntity({ metaCampaignId: campaign.id });
+            const leads = leadCorrection ? leadCorrection.correctedLeadCount : leadsFromMeta;
+            const hasLeadCorrection = !!leadCorrection;
 
             // Extract outbound clicks
             let outboundClicks = 0;
@@ -110,6 +115,8 @@ export const appRouter = router({
               impressions,
               spend,
               leads,
+              leadsFromMeta,
+              hasLeadCorrection,
               costPerLead,
               cpm,
               outboundClicks,
@@ -205,14 +212,19 @@ export const appRouter = router({
             const insights = adset.insights?.data?.[0];
             
             // Extract leads from actions array
-            let leads = 0;
+            let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
                 action => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
-              leads = leadAction ? parseInt(leadAction.value) : 0;
+              leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
             }
+
+            // Check for manual lead correction
+            const leadCorrection = await db.getLeadCorrectionByEntity({ metaAdSetId: adset.id });
+            const leads = leadCorrection ? leadCorrection.correctedLeadCount : leadsFromMeta;
+            const hasLeadCorrection = !!leadCorrection;
 
             // Extract outbound clicks
             let outboundClicks = 0;
@@ -261,6 +273,8 @@ export const appRouter = router({
               impressions,
               spend,
               leads,
+              leadsFromMeta,
+              hasLeadCorrection,
               costPerLead,
               cpm,
               outboundClicks,
@@ -314,14 +328,19 @@ export const appRouter = router({
             const insights = ad.insights?.data?.[0];
             
             // Extract leads from actions array
-            let leads = 0;
+            let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
                 action => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
-              leads = leadAction ? parseInt(leadAction.value) : 0;
+              leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
             }
+
+            // Check for manual lead correction
+            const leadCorrection = await db.getLeadCorrectionByEntity({ metaAdId: ad.id });
+            const leads = leadCorrection ? leadCorrection.correctedLeadCount : leadsFromMeta;
+            const hasLeadCorrection = !!leadCorrection;
 
             // Extract outbound clicks
             let outboundClicks = 0;
@@ -370,6 +389,8 @@ export const appRouter = router({
               impressions,
               spend,
               leads,
+              leadsFromMeta,
+              hasLeadCorrection,
               costPerLead,
               cpm,
               outboundClicks,
@@ -726,6 +747,45 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteSale(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
+  // Lead Corrections
+  // ============================================
+  leadCorrections: router({
+    upsert: protectedProcedure
+      .input(z.object({
+        metaCampaignId: z.string().optional(),
+        metaAdSetId: z.string().optional(),
+        metaAdId: z.string().optional(),
+        correctedLeadCount: z.number().int().min(0),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Ensure exactly one entity ID is provided
+        const entityCount = [input.metaCampaignId, input.metaAdSetId, input.metaAdId].filter(Boolean).length;
+        if (entityCount !== 1) {
+          throw new Error("Exactly one entity ID (campaign, ad set, or ad) must be provided");
+        }
+        return await db.upsertLeadCorrection(input);
+      }),
+
+    getByEntity: protectedProcedure
+      .input(z.object({
+        metaCampaignId: z.string().optional(),
+        metaAdSetId: z.string().optional(),
+        metaAdId: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getLeadCorrectionByEntity(input);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteLeadCorrection(input.id);
         return { success: true };
       }),
   }),

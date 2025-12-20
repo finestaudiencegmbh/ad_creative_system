@@ -12,17 +12,19 @@ import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, sta
 import { de } from "date-fns/locale";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { SalesListDialog } from "@/components/SalesListDialog";
+import { EditLeadCountDialog } from "@/components/EditLeadCountDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
 export default function CampaignDetail() {
   const [, params] = useRoute("/campaign/:id");
   const [, setLocation] = useLocation();
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [salesListDialogOpen, setSalesListDialogOpen] = useState(false);
-  const [selectedAdSet, setSelectedAdSet] = useState<{ id: string; name: string } | null>(null);
+  const [selectedAdSet, setSelectedAdSet] = useState<{ id: string; name: string; leads: number; leadsFromMeta: number } | null>(null);
   
   const campaignId = params?.id || "";
 
@@ -161,7 +163,34 @@ export default function CampaignDetail() {
                     </p>
                   </div>
                   
-                  {/* 4. Individuell ausgehende CTR */}
+                  {/* 4. Lead-Anzahl (mit Edit-Button) */}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Leads</p>
+                      {adset.hasLeadCorrection && (
+                        <Badge variant="secondary" className="text-xs">Korrigiert</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-bold">
+                        {adset.leads}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAdSet({ id: adset.id, name: adset.name, leads: adset.leads, leadsFromMeta: adset.leadsFromMeta });
+                          setLeadDialogOpen(true);
+                        }}
+                      >
+                        Bearbeiten
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* 5. Individuell ausgehende CTR */}
                   <div>
                     <p className="text-sm text-muted-foreground">Outbound CTR</p>
                     <p className="text-xl font-bold mt-1">
@@ -217,7 +246,7 @@ export default function CampaignDetail() {
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedAdSet({ id: adset.id, name: adset.name });
+                      setSelectedAdSet({ id: adset.id, name: adset.name, leads: adset.leads, leadsFromMeta: adset.leadsFromMeta });
                       setSalesListDialogOpen(true);
                     }}
                   >
@@ -235,7 +264,7 @@ export default function CampaignDetail() {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedAdSet({ id: adset.id, name: adset.name });
+                      setSelectedAdSet({ id: adset.id, name: adset.name, leads: adset.leads, leadsFromMeta: adset.leadsFromMeta });
                       setSaleDialogOpen(true);
                     }}
                   >
@@ -344,6 +373,15 @@ export default function CampaignDetail() {
             entityId={selectedAdSet.id}
             entityType="adset"
             entityName={selectedAdSet.name}
+          />
+          <EditLeadCountDialog
+            open={leadDialogOpen}
+            onOpenChange={setLeadDialogOpen}
+            entityId={selectedAdSet.id}
+            entityType="adset"
+            entityName={selectedAdSet.name}
+            currentLeadCount={selectedAdSet.leads}
+            leadsFromMeta={selectedAdSet.leadsFromMeta}
           />
         </>
       )}

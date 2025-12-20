@@ -129,3 +129,13 @@
 - [x] Edit-Funktionalität: Bestehende Sales-Einträge bearbeiten
 - [x] Delete-Funktionalität: Sales-Einträge löschen mit Bestätigung
 - [x] UI auf allen Ebenen implementieren (Dashboard, CampaignDetail, AdSetDetail)
+
+### Lead-Anzahl mit manueller Korrektur
+- [x] Datenbank-Schema: leadCorrections-Tabelle (metaCampaignId, metaAdSetId, metaAdId, correctedLeadCount)
+- [x] Backend: CRUD-Procedures für Lead-Korrekturen (create, get, update, delete)
+- [x] Metriken-Berechnung: CPL und CVR basierend auf korrigierter Lead-Zahl (falls vorhanden, sonst Meta API Wert)
+- [x] UI: Lead-Anzahl in Metriken anzeigen (neben Ausgaben, CPM, etc.)
+- [x] UI: "Bearbeiten"-Button für Lead-Anzahl mit Inline-Edit-Funktionalität
+- [x] UI: Visueller Indikator wenn Lead-Zahl manuell korrigiert wurde
+- [x] Automatische Neuberechnung von CPL und CVR nach Lead-Korrektur
+- [x] Implementierung auf allen Ebenen (Dashboard, CampaignDetail, AdSetDetail)

@@ -12,6 +12,7 @@ import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, sta
 import { de } from "date-fns/locale";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { SalesListDialog } from "@/components/SalesListDialog";
+import { EditLeadCountDialog } from "@/components/EditLeadCountDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -22,7 +23,8 @@ export default function AdSetDetail() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [salesListDialogOpen, setSalesListDialogOpen] = useState(false);
-  const [selectedAd, setSelectedAd] = useState<{ id: string; name: string } | null>(null);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [selectedAd, setSelectedAd] = useState<{ id: string; name: string; leads: number; leadsFromMeta: number } | null>(null);
   
   const adSetId = params?.id || "";
 
@@ -157,7 +159,34 @@ export default function AdSetDetail() {
                     </p>
                   </div>
                   
-                  {/* 4. Individuell ausgehende CTR */}
+                  {/* 4. Lead-Anzahl (mit Edit-Button) */}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Leads</p>
+                      {ad.hasLeadCorrection && (
+                        <Badge variant="secondary" className="text-xs">Korrigiert</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-bold">
+                        {ad.leads}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAd({ id: ad.id, name: ad.name, leads: ad.leads, leadsFromMeta: ad.leadsFromMeta });
+                          setLeadDialogOpen(true);
+                        }}
+                      >
+                        Bearbeiten
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* 5. Individuell ausgehende CTR */}
                   <div>
                     <p className="text-sm text-muted-foreground">Outbound CTR</p>
                     <p className="text-xl font-bold mt-1">
@@ -213,7 +242,7 @@ export default function AdSetDetail() {
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedAd({ id: ad.id, name: ad.name });
+                      setSelectedAd({ id: ad.id, name: ad.name, leads: ad.leads, leadsFromMeta: ad.leadsFromMeta });
                       setSalesListDialogOpen(true);
                     }}
                   >
@@ -231,7 +260,7 @@ export default function AdSetDetail() {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedAd({ id: ad.id, name: ad.name });
+                      setSelectedAd({ id: ad.id, name: ad.name, leads: ad.leads, leadsFromMeta: ad.leadsFromMeta });
                       setSaleDialogOpen(true);
                     }}
                   >
@@ -340,6 +369,15 @@ export default function AdSetDetail() {
             entityId={selectedAd.id}
             entityType="ad"
             entityName={selectedAd.name}
+          />
+          <EditLeadCountDialog
+            open={leadDialogOpen}
+            onOpenChange={setLeadDialogOpen}
+            entityId={selectedAd.id}
+            entityType="ad"
+            entityName={selectedAd.name}
+            currentLeadCount={selectedAd.leads}
+            leadsFromMeta={selectedAd.leadsFromMeta}
           />
         </>
       )}

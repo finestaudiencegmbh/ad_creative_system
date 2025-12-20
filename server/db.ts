@@ -24,6 +24,9 @@ import {
   sales,
   InsertSale,
   Sale,
+  leadCorrections,
+  InsertLeadCorrection,
+  LeadCorrection,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -420,4 +423,72 @@ export async function deleteSale(id: number): Promise<void> {
   if (!db) throw new Error("Database not available");
 
   await db.delete(sales).where(eq(sales.id, id));
+}
+
+// ============================================
+// Lead Corrections
+// ============================================
+
+export async function upsertLeadCorrection(correction: InsertLeadCorrection): Promise<LeadCorrection> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if a correction already exists for this entity
+  const existing = await getLeadCorrectionByEntity({
+    metaCampaignId: correction.metaCampaignId || undefined,
+    metaAdSetId: correction.metaAdSetId || undefined,
+    metaAdId: correction.metaAdId || undefined,
+  });
+
+  if (existing) {
+    // Update existing correction
+    await db.update(leadCorrections)
+      .set({ 
+        correctedLeadCount: correction.correctedLeadCount,
+        notes: correction.notes || undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(leadCorrections.id, existing.id));
+    
+    const updated = await db.select().from(leadCorrections).where(eq(leadCorrections.id, existing.id)).limit(1);
+    return updated[0];
+  } else {
+    // Create new correction
+    const result = await db.insert(leadCorrections).values(correction);
+    const insertedId = Number(result[0].insertId);
+    
+    const inserted = await db.select().from(leadCorrections).where(eq(leadCorrections.id, insertedId)).limit(1);
+    return inserted[0];
+  }
+}
+
+export async function getLeadCorrectionByEntity(params: {
+  metaCampaignId?: string;
+  metaAdSetId?: string;
+  metaAdId?: string;
+}): Promise<LeadCorrection | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  let query = db.select().from(leadCorrections);
+
+  if (params.metaCampaignId) {
+    query = query.where(eq(leadCorrections.metaCampaignId, params.metaCampaignId)) as any;
+  } else if (params.metaAdSetId) {
+    query = query.where(eq(leadCorrections.metaAdSetId, params.metaAdSetId)) as any;
+  } else if (params.metaAdId) {
+    query = query.where(eq(leadCorrections.metaAdId, params.metaAdId)) as any;
+  } else {
+    return undefined;
+  }
+
+  const result = await query.limit(1);
+  return result[0];
+}
+
+export async function deleteLeadCorrection(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(leadCorrections).where(eq(leadCorrections.id, id));
 }

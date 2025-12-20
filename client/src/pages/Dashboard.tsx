@@ -12,6 +12,7 @@ import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, sta
 import { de } from "date-fns/locale";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { SalesListDialog } from "@/components/SalesListDialog";
+import { EditLeadCountDialog } from "@/components/EditLeadCountDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -21,7 +22,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [salesListDialogOpen, setSalesListDialogOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<{ id: string; name: string } | null>(null);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<{ id: string; name: string; leads: number; leadsFromMeta: number } | null>(null);
   
   // Calculate date range based on selection
   const { startDate, endDate, datePreset } = useMemo(() => {
@@ -157,7 +159,34 @@ export default function Dashboard() {
                     </p>
                   </div>
                   
-                  {/* 4. Individuell ausgehende CTR */}
+                  {/* 4. Lead-Anzahl (mit Edit-Button) */}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Leads</p>
+                      {campaign.hasLeadCorrection && (
+                        <Badge variant="secondary" className="text-xs">Korrigiert</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-bold">
+                        {campaign.leads}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
+                          setLeadDialogOpen(true);
+                        }}
+                      >
+                        Bearbeiten
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* 5. Individuell ausgehende CTR */}
                   <div>
                     <p className="text-sm text-muted-foreground">Outbound CTR</p>
                     <p className="text-xl font-bold mt-1">
@@ -213,7 +242,7 @@ export default function Dashboard() {
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedCampaign({ id: campaign.id, name: campaign.name });
+                      setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
                       setSalesListDialogOpen(true);
                     }}
                   >
@@ -231,7 +260,7 @@ export default function Dashboard() {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedCampaign({ id: campaign.id, name: campaign.name });
+                      setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
                       setSaleDialogOpen(true);
                     }}
                   >
@@ -331,6 +360,15 @@ export default function Dashboard() {
             entityId={selectedCampaign.id}
             entityType="campaign"
             entityName={selectedCampaign.name}
+          />
+          <EditLeadCountDialog
+            open={leadDialogOpen}
+            onOpenChange={setLeadDialogOpen}
+            entityId={selectedCampaign.id}
+            entityType="campaign"
+            entityName={selectedCampaign.name}
+            currentLeadCount={selectedCampaign.leads}
+            leadsFromMeta={selectedCampaign.leadsFromMeta}
           />
         </>
       )}
