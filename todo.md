@@ -79,3 +79,12 @@
 - [x] Voreinstellung: Aktueller Monat
 - [x] KPIs basierend auf gewähltem Zeitraum filtern
 - [ ] Filter-State in URL-Parameter speichern (optional)
+
+### Meta API Live-Daten Integration
+- [x] Meta Access Token und Ad Account ID als Secrets konfigurieren
+- [x] Meta Marketing API Helper-Modul erstellen (getMetaCampaigns, getCampaignInsights)
+- [x] tRPC campaigns.list Procedure implementieren
+- [x] Dashboard auf echte Meta-Daten umstellen (statt Dummy-Daten)
+- [x] Datumsfilter mit Meta API verbinden (datePreset: today, last_7d, last_30d, this_month, last_90d)
+- [x] Vitest Tests für Meta API Connection und Campaigns schreiben
+- [x] Live-Daten im Dashboard verifizieren (7 Kampagnen erfolgreich geladen)

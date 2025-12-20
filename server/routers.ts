@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import * as metaApi from "./metaApi";
 import * as aiServices from "./aiServices";
+import { getMetaCampaigns, getCampaignInsights } from "./meta-api";
 
 export const appRouter = router({
   system: systemRouter,
@@ -19,6 +20,98 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // ============================================
+  // Campaigns (Real Meta Data)
+  // ============================================
+  campaigns: router({
+    list: protectedProcedure
+      .input(z.object({
+        datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }).optional(),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const campaigns = await getMetaCampaigns({
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+
+          // Transform Meta API response to our format
+          return campaigns.map(campaign => {
+            const insights = campaign.insights?.data?.[0];
+            
+            // Extract conversions from actions array
+            let conversions = 0;
+            if (insights?.actions) {
+              const conversionAction = insights.actions.find(
+                action => action.action_type === "offsite_conversion.fb_pixel_purchase" || 
+                         action.action_type === "omni_purchase"
+              );
+              conversions = conversionAction ? parseInt(conversionAction.value) : 0;
+            }
+
+            return {
+              id: campaign.id,
+              name: campaign.name,
+              status: campaign.status,
+              impressions: insights ? parseInt(insights.impressions) : 0,
+              spend: insights ? parseFloat(insights.spend) : 0,
+              ctr: insights ? parseFloat(insights.ctr) : 0,
+              conversions,
+            };
+          });
+        } catch (error) {
+          console.error("Error fetching campaigns:", error);
+          throw error;
+        }
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }).optional(),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const insights = await getCampaignInsights(input.campaignId, {
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+
+          if (!insights) {
+            return null;
+          }
+
+          // Extract conversions from actions array
+          let conversions = 0;
+          if (insights.actions) {
+            const conversionAction = insights.actions.find(
+              action => action.action_type === "offsite_conversion.fb_pixel_purchase" || 
+                       action.action_type === "omni_purchase"
+            );
+            conversions = conversionAction ? parseInt(conversionAction.value) : 0;
+          }
+
+          return {
+            impressions: parseInt(insights.impressions),
+            spend: parseFloat(insights.spend),
+            ctr: parseFloat(insights.ctr),
+            conversions,
+          };
+        } catch (error) {
+          console.error("Error fetching campaign insights:", error);
+          throw error;
+        }
+      }),
   }),
 
   // ============================================
