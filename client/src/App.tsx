@@ -4,7 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+
 import Dashboard from "./pages/Dashboard";
 import CreativeGenerator from "./pages/CreativeGenerator";
 import Werbetexte from "./pages/Werbetexte";
@@ -13,7 +13,7 @@ import Performance from "./pages/Performance";
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/generator"} component={CreativeGenerator} />
       <Route path={"/werbetexte"} component={Werbetexte} />

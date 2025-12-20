@@ -59,3 +59,9 @@
 - [x] Client-Übersicht und -Verwaltung
 - [x] Performance-Dashboard mit Visualisierungen
 - [x] Kampagnen-Performance-Anzeige
+
+### Korrekturen (neue Anforderungen)
+- [x] Dashboard als Startseite (/) statt Landing Page
+- [x] Sidebar-Navigation mit korrekten Labels (Dashboard, Creative Generator, Werbetexte, Performance)
+- [x] Landing Page entfernen (nicht nötig für Kunden-Tool)
+- [x] Direkt nach Login → Dashboard anzeigen
