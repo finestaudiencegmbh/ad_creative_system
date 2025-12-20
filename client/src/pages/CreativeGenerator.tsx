@@ -60,11 +60,24 @@ export default function CreativeGenerator() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="feed">Feed (1080×1420)</SelectItem>
-                    <SelectItem value="story">Story (1080×1930)</SelectItem>
-                    <SelectItem value="both">Beide Formate</SelectItem>
+                    <SelectItem value="story">Story (1080×1920) - mit Safe Zone</SelectItem>
+                    <SelectItem value="reel">Reel (1080×1920) - mit Safe Zone</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {(format === "story" || format === "reel") && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 font-medium mb-1">
+                    ⚠️ Safe Zone beachten
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    {format === "story" 
+                      ? "Text und wichtige Elemente müssen innerhalb der markierten Zone platziert werden (Header oben ~250px, Footer unten ~350px)."
+                      : "Text und wichtige Elemente müssen innerhalb der markierten Zone platziert werden (Header oben ~200px, Footer + UI unten ~450px)."}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="prompt">Beschreibung</Label>
@@ -120,7 +133,7 @@ export default function CreativeGenerator() {
                 </div>
                 <h3 className="font-semibold">Format wählen</h3>
                 <p className="text-sm text-muted-foreground">
-                  Wähle zwischen Feed (1080×1420) und Story (1080×1930) Format
+                  Wähle zwischen Feed (1080×1420), Story oder Reel (beide 1080×1920)
                 </p>
               </div>
               <div className="space-y-2">

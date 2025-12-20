@@ -65,3 +65,10 @@
 - [x] Sidebar-Navigation mit korrekten Labels (Dashboard, Creative Generator, Werbetexte, Performance)
 - [x] Landing Page entfernen (nicht nötig für Kunden-Tool)
 - [x] Direkt nach Login → Dashboard anzeigen
+
+### Neue Anforderungen (Dashboard & Formate)
+- [x] Dashboard: Kampagnen-Liste statt KPI-Karten anzeigen
+- [x] Kampagnen sind klickbar → Detail-Seite mit Performance-Insights
+- [x] Creative Generator: Reel-Format hinzufügen (1080×1920)
+- [x] Safe Zone Templates für Story und Reel integrieren
+- [x] Format-Auswahl: Feed (1080×1420), Story (1080×1920), Reel (1080×1920)
