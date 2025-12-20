@@ -18,19 +18,19 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-2">
-            Willkommen im Ad Creative System. Verwalten Sie Ihre Kunden und erstellen Sie hochwertige Creatives für Meta Ads.
+            Willkommen zurück! Hier siehst du deine wichtigsten KPIs und Performance-Daten auf einen Blick.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Kunden</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Impressions</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">15</div>
-              <p className="text-xs text-muted-foreground">Aktive Kunden</p>
+              <div className="text-2xl font-bold">259.631</div>
+              <p className="text-xs text-muted-foreground">Letzte 30 Tage</p>
             </CardContent>
           </Card>
 
@@ -75,16 +75,16 @@ export default function Dashboard() {
               <CardDescription>Beginnen Sie mit der Creative-Erstellung</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Link href="/clients">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="mr-2 h-4 w-4" />
-                  Kunden verwalten
-                </Button>
-              </Link>
-              <Link href="/creatives">
+              <Link href="/generator">
                 <Button variant="outline" className="w-full justify-start">
                   <Image className="mr-2 h-4 w-4" />
-                  Neue Creatives erstellen
+                  Creative Generator
+                </Button>
+              </Link>
+              <Link href="/werbetexte">
+                <Button variant="outline" className="w-full justify-start">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Werbetexte generieren
                 </Button>
               </Link>
               <Link href="/performance">

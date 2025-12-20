@@ -8,14 +8,19 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-white">
       <main className="container max-w-4xl text-center space-y-8 px-4">
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tight text-foreground">
-            Ad Creative System
+        <div className="space-y-6">
+          <img 
+            src="/logo-black.png" 
+            alt="Finest Audience" 
+            className="h-16 mx-auto"
+          />
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            Creative Generator
           </h1>
           <p className="text-xl text-muted-foreground">
-            KI-gestützte Creative-Generierung und Performance-Optimierung für Meta Ads
+            Erstelle hochwertige Ad-Creatives auf Knopfdruck mit KI-Power
           </p>
         </div>
 
