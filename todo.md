@@ -101,3 +101,12 @@
 - [x] Individuell ausgehende CTR (Outbound CTR)
 - [x] Kosten pro individuell ausgehendem Klick (Cost per Outbound Click)
 - [x] Conversion Rate Landingpage (Leads / individuell ausgehende Klicks * 100)
+
+### Drill-Down Hierarchie (Kampagne → Anzeigengruppe → Werbeanzeige)
+- [x] Meta API erweitern: Ad Sets (Anzeigengruppen) mit allen 6 Metriken abrufen
+- [x] Meta API erweitern: Ads (Werbeanzeigen) mit allen 6 Metriken abrufen
+- [x] Campaign Detail Page erstellen: Zeigt Anzeigengruppen der Kampagne
+- [x] Ad Set Detail Page erstellen: Zeigt Werbeanzeigen der Anzeigengruppe
+- [x] Standardmäßig nur aktive Ad Sets/Ads anzeigen (mit Tab für inaktive)
+- [x] Navigation: Dashboard → Kampagne → Anzeigengruppe → Werbeanzeige
+- [x] Breadcrumb-Navigation für einfache Rückkehr zur übergeordneten Ebene

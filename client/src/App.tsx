@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
+import AdSetDetail from "./pages/AdSetDetail";
 import CreativeGenerator from "./pages/CreativeGenerator";
 import Werbetexte from "./pages/Werbetexte";
 import Performance from "./pages/Performance";
@@ -17,6 +18,7 @@ function Router() {
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/campaign/:id"} component={CampaignDetail} />
+      <Route path={"/adset/:id"} component={AdSetDetail} />
       <Route path={"/generator"} component={CreativeGenerator} />
       <Route path={"/werbetexte"} component={Werbetexte} />
       <Route path={"/performance"} component={Performance} />

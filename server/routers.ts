@@ -6,7 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import * as metaApi from "./metaApi";
 import * as aiServices from "./aiServices";
-import { getMetaCampaigns, getCampaignInsights } from "./meta-api";
+import { getMetaCampaigns, getCampaignInsights, getCampaignAdSets, getAdSetAds } from "./meta-api";
 
 export const appRouter = router({
   system: systemRouter,
@@ -141,6 +141,172 @@ export const appRouter = router({
           };
         } catch (error) {
           console.error("Error fetching campaign insights:", error);
+          throw error;
+        }
+      }),
+  }),
+
+  // ============================================
+  // Ad Sets (Anzeigengruppen)
+  // ============================================
+  adsets: router({
+    listByCampaign: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }).optional(),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const adsets = await getCampaignAdSets(input.campaignId, {
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+
+          // Transform Meta API response with same metrics as campaigns
+          return adsets.map(adset => {
+            const insights = adset.insights?.data?.[0];
+            
+            // Extract leads from actions array
+            let leads = 0;
+            if (insights?.actions) {
+              const leadAction = insights.actions.find(
+                action => action.action_type === "lead" || 
+                         action.action_type === "offsite_conversion.fb_pixel_lead"
+              );
+              leads = leadAction ? parseInt(leadAction.value) : 0;
+            }
+
+            // Extract outbound clicks
+            let outboundClicks = 0;
+            if (insights?.outbound_clicks) {
+              const outboundClickAction = insights.outbound_clicks.find(
+                action => action.action_type === "outbound_click"
+              );
+              outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+            }
+
+            // Extract cost per outbound click
+            let costPerOutboundClick = 0;
+            if (insights?.cost_per_outbound_click) {
+              const costAction = insights.cost_per_outbound_click.find(
+                action => action.action_type === "outbound_click"
+              );
+              costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
+            }
+
+            const impressions = insights ? parseInt(insights.impressions) : 0;
+            const spend = insights ? parseFloat(insights.spend) : 0;
+            const cpm = insights ? parseFloat(insights.cpm) : 0;
+            
+            // Calculate derived metrics
+            const costPerLead = leads > 0 ? spend / leads : 0;
+            const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+            const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
+
+            return {
+              id: adset.id,
+              name: adset.name,
+              status: adset.status,
+              impressions,
+              spend,
+              leads,
+              costPerLead,
+              cpm,
+              outboundClicks,
+              outboundCtr,
+              costPerOutboundClick,
+              conversionRate,
+            };
+          });
+        } catch (error) {
+          console.error("Error fetching ad sets:", error);
+          throw error;
+        }
+      }),
+  }),
+
+  // ============================================
+  // Ads (Werbeanzeigen)
+  // ============================================
+  ads: router({
+    listByAdSet: protectedProcedure
+      .input(z.object({
+        adSetId: z.string(),
+        datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }).optional(),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const ads = await getAdSetAds(input.adSetId, {
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+
+          // Transform Meta API response with same metrics as campaigns
+          return ads.map(ad => {
+            const insights = ad.insights?.data?.[0];
+            
+            // Extract leads from actions array
+            let leads = 0;
+            if (insights?.actions) {
+              const leadAction = insights.actions.find(
+                action => action.action_type === "lead" || 
+                         action.action_type === "offsite_conversion.fb_pixel_lead"
+              );
+              leads = leadAction ? parseInt(leadAction.value) : 0;
+            }
+
+            // Extract outbound clicks
+            let outboundClicks = 0;
+            if (insights?.outbound_clicks) {
+              const outboundClickAction = insights.outbound_clicks.find(
+                action => action.action_type === "outbound_click"
+              );
+              outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+            }
+
+            // Extract cost per outbound click
+            let costPerOutboundClick = 0;
+            if (insights?.cost_per_outbound_click) {
+              const costAction = insights.cost_per_outbound_click.find(
+                action => action.action_type === "outbound_click"
+              );
+              costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
+            }
+
+            const impressions = insights ? parseInt(insights.impressions) : 0;
+            const spend = insights ? parseFloat(insights.spend) : 0;
+            const cpm = insights ? parseFloat(insights.cpm) : 0;
+            
+            // Calculate derived metrics
+            const costPerLead = leads > 0 ? spend / leads : 0;
+            const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+            const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
+
+            return {
+              id: ad.id,
+              name: ad.name,
+              status: ad.status,
+              impressions,
+              spend,
+              leads,
+              costPerLead,
+              cpm,
+              outboundClicks,
+              outboundCtr,
+              costPerOutboundClick,
+              conversionRate,
+            };
+          });
+        } catch (error) {
+          console.error("Error fetching ads:", error);
           throw error;
         }
       }),

@@ -154,6 +154,118 @@ export async function getCampaignInsights(
 }
 
 /**
+ * Fetch ad sets for a specific campaign
+ */
+export async function getCampaignAdSets(
+  campaignId: string,
+  params?: {
+    datePreset?: string;
+    timeRange?: { since: string; until: string };
+  }
+): Promise<CampaignWithInsights[]> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  // Build query parameters with all required metrics
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "id,name,status,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    limit: "100",
+  });
+
+  // Add date filtering if provided
+  if (params?.datePreset) {
+    queryParams.append("date_preset", params.datePreset);
+  } else if (params?.timeRange) {
+    queryParams.append(
+      "time_range",
+      JSON.stringify({
+        since: params.timeRange.since,
+        until: params.timeRange.until,
+      })
+    );
+  }
+
+  const url = `${META_API_BASE_URL}/${campaignId}/adsets?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return data.data || [];
+}
+
+/**
+ * Fetch ads for a specific ad set
+ */
+export async function getAdSetAds(
+  adSetId: string,
+  params?: {
+    datePreset?: string;
+    timeRange?: { since: string; until: string };
+  }
+): Promise<CampaignWithInsights[]> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  // Build query parameters with all required metrics
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "id,name,status,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    limit: "100",
+  });
+
+  // Add date filtering if provided
+  if (params?.datePreset) {
+    queryParams.append("date_preset", params.datePreset);
+  } else if (params?.timeRange) {
+    queryParams.append(
+      "time_range",
+      JSON.stringify({
+        since: params.timeRange.since,
+        until: params.timeRange.until,
+      })
+    );
+  }
+
+  const url = `${META_API_BASE_URL}/${adSetId}/ads?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return data.data || [];
+}
+
+/**
  * Test Meta API connection
  */
 export async function testMetaConnection(): Promise<{

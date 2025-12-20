@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, Calendar, Loader2, ChevronLeft } from "lucide-react";
+import { Calendar, Loader2, ChevronLeft } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
@@ -13,13 +13,13 @@ import { de } from "date-fns/locale";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
-export default function CampaignDetail() {
-  const [, params] = useRoute("/campaign/:id");
+export default function AdSetDetail() {
+  const [, params] = useRoute("/adset/:id");
   const [, setLocation] = useLocation();
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   
-  const campaignId = params?.id || "";
+  const adSetId = params?.id || "";
 
   // Calculate date range based on selection
   const { startDate, endDate, datePreset } = useMemo(() => {
@@ -67,33 +67,33 @@ export default function CampaignDetail() {
     }
   }, [dateRange]);
 
-  // Fetch ad sets for this campaign
-  const { data: allAdSets, isLoading, error } = trpc.adsets.listByCampaign.useQuery({
-    campaignId,
+  // Fetch ads for this ad set
+  const { data: allAds, isLoading, error } = trpc.ads.listByAdSet.useQuery({
+    adSetId,
     datePreset,
   });
 
-  // Filter ad sets by status
-  const activeAdSets = useMemo(() => {
-    return allAdSets?.filter(a => a.status === 'ACTIVE') || [];
-  }, [allAdSets]);
+  // Filter ads by status
+  const activeAds = useMemo(() => {
+    return allAds?.filter(a => a.status === 'ACTIVE') || [];
+  }, [allAds]);
 
-  const inactiveAdSets = useMemo(() => {
-    return allAdSets?.filter(a => a.status !== 'ACTIVE') || [];
-  }, [allAdSets]);
+  const inactiveAds = useMemo(() => {
+    return allAds?.filter(a => a.status !== 'ACTIVE') || [];
+  }, [allAds]);
 
   const dateRangeLabel = useMemo(() => {
     return `${format(startDate, 'dd. MMM yyyy', { locale: de })} - ${format(endDate, 'dd. MMM yyyy', { locale: de })}`;
   }, [startDate, endDate]);
 
-  const renderAdSetCards = (adsets: typeof allAdSets) => {
-    if (!adsets || adsets.length === 0) {
+  const renderAdCards = (ads: typeof allAds) => {
+    if (!ads || ads.length === 0) {
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Keine Anzeigengruppen gefunden</CardTitle>
+            <CardTitle>Keine Werbeanzeigen gefunden</CardTitle>
             <CardDescription>
-              Es wurden keine Anzeigengruppen für den gewählten Zeitraum gefunden.
+              Es wurden keine Werbeanzeigen für den gewählten Zeitraum gefunden.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -102,29 +102,25 @@ export default function CampaignDetail() {
 
     return (
       <div className="grid gap-4">
-        {adsets.map((adset) => {
+        {ads.map((ad) => {
           return (
             <Card 
-              key={adset.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setLocation(`/adset/${adset.id}`)}
+              key={ad.id}
+              className="hover:shadow-lg transition-shadow"
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-3">
-                      <CardTitle className="text-xl">{adset.name}</CardTitle>
-                      <Badge variant={adset.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                        {adset.status === 'ACTIVE' ? 'Aktiv' : adset.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
+                      <CardTitle className="text-xl">{ad.name}</CardTitle>
+                      <Badge variant={ad.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                        {ad.status === 'ACTIVE' ? 'Aktiv' : ad.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
                       </Badge>
                     </div>
                     <CardDescription>
-                      Anzeigengruppen-ID: {adset.id}
+                      Werbeanzeigen-ID: {ad.id}
                     </CardDescription>
                   </div>
-                  <Button variant="ghost" size="icon">
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -133,7 +129,7 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ausgaben</p>
                     <p className="text-xl font-bold mt-1">
-                      €{adset.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      €{ad.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   
@@ -141,8 +137,8 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">Kosten/Lead</p>
                     <p className="text-xl font-bold mt-1">
-                      {adset.costPerLead > 0 
-                        ? `€${adset.costPerLead.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      {ad.costPerLead > 0 
+                        ? `€${ad.costPerLead.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : '-'
                       }
                     </p>
@@ -152,7 +148,7 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">CPM</p>
                     <p className="text-xl font-bold mt-1">
-                      €{adset.cpm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      €{ad.cpm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   
@@ -160,7 +156,7 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">Outbound CTR</p>
                     <p className="text-xl font-bold mt-1">
-                      {adset.outboundCtr.toFixed(2)}%
+                      {ad.outboundCtr.toFixed(2)}%
                     </p>
                   </div>
                   
@@ -168,8 +164,8 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">Kosten/Klick</p>
                     <p className="text-xl font-bold mt-1">
-                      {adset.costPerOutboundClick > 0
-                        ? `€${adset.costPerOutboundClick.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      {ad.costPerOutboundClick > 0
+                        ? `€${ad.costPerOutboundClick.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : '-'
                       }
                     </p>
@@ -179,7 +175,7 @@ export default function CampaignDetail() {
                   <div>
                     <p className="text-sm text-muted-foreground">CR Landingpage</p>
                     <p className="text-xl font-bold mt-1">
-                      {adset.conversionRate.toFixed(2)}%
+                      {ad.conversionRate.toFixed(2)}%
                     </p>
                   </div>
                 </div>
@@ -199,15 +195,15 @@ export default function CampaignDetail() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setLocation('/')}
+              onClick={() => window.history.back()}
               className="mb-4 -ml-2"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Zurück zum Dashboard
+              Zurück zur Anzeigengruppe
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">Anzeigengruppen</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Werbeanzeigen</h1>
             <p className="text-muted-foreground mt-2">
-              Übersicht über alle Anzeigengruppen dieser Kampagne
+              Übersicht über alle Werbeanzeigen dieser Anzeigengruppe
             </p>
           </div>
           
@@ -240,7 +236,7 @@ export default function CampaignDetail() {
         {error && (
           <Card className="border-destructive">
             <CardHeader>
-              <CardTitle className="text-destructive">Fehler beim Laden der Anzeigengruppen</CardTitle>
+              <CardTitle className="text-destructive">Fehler beim Laden der Werbeanzeigen</CardTitle>
               <CardDescription>{error.message}</CardDescription>
             </CardHeader>
           </Card>
@@ -250,19 +246,19 @@ export default function CampaignDetail() {
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "active" | "inactive")}>
             <TabsList>
               <TabsTrigger value="active">
-                Aktive Anzeigengruppen ({activeAdSets.length})
+                Aktive Werbeanzeigen ({activeAds.length})
               </TabsTrigger>
               <TabsTrigger value="inactive">
-                Inaktive Anzeigengruppen ({inactiveAdSets.length})
+                Inaktive Werbeanzeigen ({inactiveAds.length})
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active" className="mt-6">
-              {renderAdSetCards(activeAdSets)}
+              {renderAdCards(activeAds)}
             </TabsContent>
             
             <TabsContent value="inactive" className="mt-6">
-              {renderAdSetCards(inactiveAdSets)}
+              {renderAdCards(inactiveAds)}
             </TabsContent>
           </Tabs>
         )}
