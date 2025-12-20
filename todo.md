@@ -110,3 +110,14 @@
 - [x] Standardmäßig nur aktive Ad Sets/Ads anzeigen (mit Tab für inaktive)
 - [x] Navigation: Dashboard → Kampagne → Anzeigengruppe → Werbeanzeige
 - [x] Breadcrumb-Navigation für einfache Rückkehr zur übergeordneten Ebene
+
+### Sales Tracking & ROAS Berechnung
+- [x] Datenbank-Schema: Sales-Tabelle mit Feldern (order_value, cash_collect, completion_date, campaign_id, adset_id, ad_id)
+- [x] Backend: CRUD-Procedures für Sales (create, list, update, delete)
+- [x] ROAS-Berechnung: ROAS Auftragsvolumen (Summe order_value / Ausgaben)
+- [x] ROAS-Berechnung: ROAS Cash Collect (Summe cash_collect / Ausgaben)
+- [x] UI: Dialog zum Hinzufügen von Sales-Einträgen auf allen Ebenen (Campaign/AdSet/Ad)
+- [x] UI: Liste aller Sales-Einträge mit Bearbeiten/Löschen-Funktionen
+- [x] Dashboard: ROAS-Metriken in Kampagnen-Cards anzeigen
+- [x] Detail-Seiten: ROAS-Metriken in AdSet/Ad-Cards anzeigen
+- [x] Datumsfilter: Nur Sales im gewählten Zeitraum für ROAS-Berechnung berücksichtigen

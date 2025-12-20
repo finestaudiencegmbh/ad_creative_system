@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, Calendar, Loader2 } from "lucide-react";
+import { ArrowRight, Calendar, Loader2, Plus } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
 import { de } from "date-fns/locale";
+import { AddSaleDialog } from "@/components/AddSaleDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -17,6 +18,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
+  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<{ id: string; name: string } | null>(null);
   
   // Calculate date range based on selection
   const { startDate, endDate, datePreset } = useMemo(() => {
@@ -124,7 +127,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {/* 1. Ausgaben */}
                   <div>
                     <p className="text-sm text-muted-foreground">Ausgaben</p>
@@ -178,6 +181,54 @@ export default function Dashboard() {
                       {campaign.conversionRate.toFixed(2)}%
                     </p>
                   </div>
+                  
+                  {/* 7. ROAS Auftragsvolumen */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">ROAS Auftrag</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.roasOrderVolume > 0
+                        ? campaign.roasOrderVolume.toFixed(2) + 'x'
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                  
+                  {/* 8. ROAS Cash Collect */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">ROAS Cash</p>
+                    <p className="text-xl font-bold mt-1">
+                      {campaign.roasCashCollect > 0
+                        ? campaign.roasCashCollect.toFixed(2) + 'x'
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Sales Summary and Add Button */}
+                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {campaign.salesCount > 0 ? (
+                      <span>
+                        {campaign.salesCount} Verkauf{campaign.salesCount !== 1 ? 'e' : ''} erfasst 
+                        (Auftragswert: €{campaign.totalOrderValue.toLocaleString('de-DE', { minimumFractionDigits: 2 })})
+                      </span>
+                    ) : (
+                      <span>Noch keine Verkäufe erfasst</span>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCampaign({ id: campaign.id, name: campaign.name });
+                      setSaleDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Verkauf hinzufügen
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -254,6 +305,17 @@ export default function Dashboard() {
           </Tabs>
         )}
       </div>
+      
+      {/* Add Sale Dialog */}
+      {selectedCampaign && (
+        <AddSaleDialog
+          open={saleDialogOpen}
+          onOpenChange={setSaleDialogOpen}
+          entityId={selectedCampaign.id}
+          entityType="campaign"
+          entityName={selectedCampaign.name}
+        />
+      )}
     </DashboardLayout>
   );
 }

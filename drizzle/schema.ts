@@ -127,3 +127,26 @@ export const projects = mysqlTable("projects", {
 
 export type Project = typeof projects.$inferSelect;
 export type InsertProject = typeof projects.$inferInsert;
+
+/**
+ * Sales table - Tracks order value, cash collected, and completion date
+ * Can be linked to campaigns, ad sets, or individual ads for ROAS calculation
+ */
+export const sales = mysqlTable("sales", {
+  id: int("id").autoincrement().primaryKey(),
+  // Link to Meta entities (at least one must be set)
+  metaCampaignId: varchar("metaCampaignId", { length: 255 }),
+  metaAdSetId: varchar("metaAdSetId", { length: 255 }),
+  metaAdId: varchar("metaAdId", { length: 255 }),
+  // Sales data
+  orderValue: decimal("orderValue", { precision: 10, scale: 2 }).notNull(), // Generierter Auftragswert
+  cashCollect: decimal("cashCollect", { precision: 10, scale: 2 }).notNull(), // Tatsächlich eingegangenes Geld
+  completionDate: timestamp("completionDate").notNull(), // Datum Abschluss
+  // Optional metadata
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Sale = typeof sales.$inferSelect;
+export type InsertSale = typeof sales.$inferInsert;

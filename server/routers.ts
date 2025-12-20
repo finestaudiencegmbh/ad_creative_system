@@ -41,8 +41,16 @@ export const appRouter = router({
             timeRange: input.timeRange,
           });
 
-          // Transform Meta API response to our format
-          return campaigns.map(campaign => {
+          // Calculate date range for sales filtering
+          let startDate: Date | undefined;
+          let endDate: Date | undefined;
+          if (input.timeRange) {
+            startDate = new Date(input.timeRange.since);
+            endDate = new Date(input.timeRange.until);
+          }
+
+          // Transform Meta API response to our format with ROAS
+          return await Promise.all(campaigns.map(async campaign => {
             const insights = campaign.insights?.data?.[0];
             
             // Extract leads from actions array
@@ -82,6 +90,19 @@ export const appRouter = router({
             const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
             const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
 
+            // Fetch sales for ROAS calculation
+            const sales = await db.getSalesByEntity({
+              metaCampaignId: campaign.id,
+              startDate,
+              endDate,
+            });
+
+            // Calculate ROAS metrics
+            const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+            const totalCashCollect = sales.reduce((sum, sale) => sum + parseFloat(sale.cashCollect), 0);
+            const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
+            const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
+
             return {
               id: campaign.id,
               name: campaign.name,
@@ -95,8 +116,13 @@ export const appRouter = router({
               outboundCtr,
               costPerOutboundClick,
               conversionRate,
+              totalOrderValue,
+              totalCashCollect,
+              roasOrderVolume,
+              roasCashCollect,
+              salesCount: sales.length,
             };
-          });
+          }));
         } catch (error) {
           console.error("Error fetching campaigns:", error);
           throw error;
@@ -166,8 +192,16 @@ export const appRouter = router({
             timeRange: input.timeRange,
           });
 
+          // Calculate date range for sales filtering
+          let startDate: Date | undefined;
+          let endDate: Date | undefined;
+          if (input.timeRange) {
+            startDate = new Date(input.timeRange.since);
+            endDate = new Date(input.timeRange.until);
+          }
+
           // Transform Meta API response with same metrics as campaigns
-          return adsets.map(adset => {
+          return await Promise.all(adsets.map(async adset => {
             const insights = adset.insights?.data?.[0];
             
             // Extract leads from actions array
@@ -207,6 +241,19 @@ export const appRouter = router({
             const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
             const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
 
+            // Fetch sales for ROAS calculation
+            const sales = await db.getSalesByEntity({
+              metaAdSetId: adset.id,
+              startDate,
+              endDate,
+            });
+
+            // Calculate ROAS metrics
+            const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+            const totalCashCollect = sales.reduce((sum, sale) => sum + parseFloat(sale.cashCollect), 0);
+            const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
+            const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
+
             return {
               id: adset.id,
               name: adset.name,
@@ -220,8 +267,13 @@ export const appRouter = router({
               outboundCtr,
               costPerOutboundClick,
               conversionRate,
+              totalOrderValue,
+              totalCashCollect,
+              roasOrderVolume,
+              roasCashCollect,
+              salesCount: sales.length,
             };
-          });
+          }));
         } catch (error) {
           console.error("Error fetching ad sets:", error);
           throw error;
@@ -249,8 +301,16 @@ export const appRouter = router({
             timeRange: input.timeRange,
           });
 
+          // Calculate date range for sales filtering
+          let startDate: Date | undefined;
+          let endDate: Date | undefined;
+          if (input.timeRange) {
+            startDate = new Date(input.timeRange.since);
+            endDate = new Date(input.timeRange.until);
+          }
+
           // Transform Meta API response with same metrics as campaigns
-          return ads.map(ad => {
+          return await Promise.all(ads.map(async ad => {
             const insights = ad.insights?.data?.[0];
             
             // Extract leads from actions array
@@ -290,6 +350,19 @@ export const appRouter = router({
             const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
             const conversionRate = outboundClicks > 0 ? (leads / outboundClicks) * 100 : 0;
 
+            // Fetch sales for ROAS calculation
+            const sales = await db.getSalesByEntity({
+              metaAdId: ad.id,
+              startDate,
+              endDate,
+            });
+
+            // Calculate ROAS metrics
+            const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+            const totalCashCollect = sales.reduce((sum, sale) => sum + parseFloat(sale.cashCollect), 0);
+            const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
+            const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
+
             return {
               id: ad.id,
               name: ad.name,
@@ -303,8 +376,13 @@ export const appRouter = router({
               outboundCtr,
               costPerOutboundClick,
               conversionRate,
+              totalOrderValue,
+              totalCashCollect,
+              roasOrderVolume,
+              roasCashCollect,
+              salesCount: sales.length,
             };
-          });
+          }));
         } catch (error) {
           console.error("Error fetching ads:", error);
           throw error;
@@ -584,6 +662,71 @@ export const appRouter = router({
           onboarding.metaAccessToken,
           input.campaignNames
         );
+      }),
+  }),
+
+  // ============================================
+  // Sales Tracking
+  // ============================================
+  sales: router({
+    create: protectedProcedure
+      .input(z.object({
+        metaCampaignId: z.string().optional(),
+        metaAdSetId: z.string().optional(),
+        metaAdId: z.string().optional(),
+        orderValue: z.number(),
+        cashCollect: z.number(),
+        completionDate: z.date(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Ensure at least one entity ID is provided
+        if (!input.metaCampaignId && !input.metaAdSetId && !input.metaAdId) {
+          throw new Error("At least one entity ID (campaign, ad set, or ad) must be provided");
+        }
+        // Convert numbers to strings for decimal fields
+        const saleData = {
+          ...input,
+          orderValue: input.orderValue.toString(),
+          cashCollect: input.cashCollect.toString(),
+        };
+        return await db.createSale(saleData);
+      }),
+
+    listByEntity: protectedProcedure
+      .input(z.object({
+        metaCampaignId: z.string().optional(),
+        metaAdSetId: z.string().optional(),
+        metaAdId: z.string().optional(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getSalesByEntity(input);
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        orderValue: z.number().optional(),
+        cashCollect: z.number().optional(),
+        completionDate: z.date().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, orderValue, cashCollect, ...rest } = input;
+        const updates: any = { ...rest, updatedAt: new Date() };
+        if (orderValue !== undefined) updates.orderValue = orderValue.toString();
+        if (cashCollect !== undefined) updates.cashCollect = cashCollect.toString();
+        await db.updateSale(id, updates);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSale(input.id);
+        return { success: true };
       }),
   }),
 

@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -21,6 +21,9 @@ import {
   projects,
   InsertProject,
   Project,
+  sales,
+  InsertSale,
+  Sale,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -335,4 +338,86 @@ export async function deleteProject(id: number): Promise<void> {
   if (!db) throw new Error("Database not available");
 
   await db.delete(projects).where(eq(projects.id, id));
+}
+
+// ============================================
+// Sales Management
+// ============================================
+
+export async function createSale(sale: InsertSale): Promise<Sale> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(sales).values(sale);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(sales).where(eq(sales.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted sale");
+  
+  return inserted[0];
+}
+
+export async function getSalesByEntity(params: {
+  metaCampaignId?: string;
+  metaAdSetId?: string;
+  metaAdId?: string;
+  startDate?: Date;
+  endDate?: Date;
+}): Promise<Sale[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+
+  // Entity filters (at least one must match)
+  const entityConditions = [];
+  if (params.metaCampaignId) {
+    entityConditions.push(eq(sales.metaCampaignId, params.metaCampaignId));
+  }
+  if (params.metaAdSetId) {
+    entityConditions.push(eq(sales.metaAdSetId, params.metaAdSetId));
+  }
+  if (params.metaAdId) {
+    entityConditions.push(eq(sales.metaAdId, params.metaAdId));
+  }
+
+  if (entityConditions.length > 0) {
+    conditions.push(or(...entityConditions));
+  }
+
+  // Date range filters
+  if (params.startDate) {
+    conditions.push(gte(sales.completionDate, params.startDate));
+  }
+  if (params.endDate) {
+    conditions.push(lte(sales.completionDate, params.endDate));
+  }
+
+  if (conditions.length === 0) {
+    return await db.select().from(sales).orderBy(desc(sales.completionDate));
+  }
+
+  return await db.select().from(sales).where(and(...conditions)).orderBy(desc(sales.completionDate));
+}
+
+export async function getSaleById(id: number): Promise<Sale | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(sales).where(eq(sales.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateSale(id: number, updates: Partial<InsertSale>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(sales).set(updates).where(eq(sales.id, id));
+}
+
+export async function deleteSale(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(sales).where(eq(sales.id, id));
 }

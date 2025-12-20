@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Calendar, Loader2, ChevronLeft } from "lucide-react";
+import { Calendar, Loader2, ChevronLeft, Plus } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
 import { de } from "date-fns/locale";
+import { AddSaleDialog } from "@/components/AddSaleDialog";
 
 type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -18,6 +19,8 @@ export default function AdSetDetail() {
   const [, setLocation] = useLocation();
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
+  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [selectedAd, setSelectedAd] = useState<{ id: string; name: string } | null>(null);
   
   const adSetId = params?.id || "";
 
@@ -124,7 +127,7 @@ export default function AdSetDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {/* 1. Ausgaben */}
                   <div>
                     <p className="text-sm text-muted-foreground">Ausgaben</p>
@@ -178,6 +181,54 @@ export default function AdSetDetail() {
                       {ad.conversionRate.toFixed(2)}%
                     </p>
                   </div>
+                  
+                  {/* 7. ROAS Auftragsvolumen */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">ROAS Auftrag</p>
+                    <p className="text-xl font-bold mt-1">
+                      {ad.roasOrderVolume > 0
+                        ? ad.roasOrderVolume.toFixed(2) + 'x'
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                  
+                  {/* 8. ROAS Cash Collect */}
+                  <div>
+                    <p className="text-sm text-muted-foreground">ROAS Cash</p>
+                    <p className="text-xl font-bold mt-1">
+                      {ad.roasCashCollect > 0
+                        ? ad.roasCashCollect.toFixed(2) + 'x'
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Sales Summary and Add Button */}
+                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {ad.salesCount > 0 ? (
+                      <span>
+                        {ad.salesCount} Verkauf{ad.salesCount !== 1 ? 'e' : ''} erfasst 
+                        (Auftragswert: €{ad.totalOrderValue.toLocaleString('de-DE', { minimumFractionDigits: 2 })})
+                      </span>
+                    ) : (
+                      <span>Noch keine Verkäufe erfasst</span>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedAd({ id: ad.id, name: ad.name });
+                      setSaleDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Verkauf hinzufügen
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -263,6 +314,17 @@ export default function AdSetDetail() {
           </Tabs>
         )}
       </div>
+      
+      {/* Add Sale Dialog */}
+      {selectedAd && (
+        <AddSaleDialog
+          open={saleDialogOpen}
+          onOpenChange={setSaleDialogOpen}
+          entityId={selectedAd.id}
+          entityType="ad"
+          entityName={selectedAd.name}
+        />
+      )}
     </DashboardLayout>
   );
 }
