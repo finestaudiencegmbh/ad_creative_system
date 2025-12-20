@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { TrendingUp, TrendingDown, ArrowRight, Calendar, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -15,6 +16,7 @@ type DateRange = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQua
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [dateRange, setDateRange] = useState<DateRange>("currentMonth");
+  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   
   // Calculate date range based on selection
   const { startDate, endDate, datePreset } = useMemo(() => {
@@ -63,13 +65,100 @@ export default function Dashboard() {
   }, [dateRange]);
 
   // Fetch real campaign data from Meta API
-  const { data: campaigns, isLoading, error } = trpc.campaigns.list.useQuery({
+  const { data: allCampaigns, isLoading, error } = trpc.campaigns.list.useQuery({
     datePreset,
   });
+
+  // Filter campaigns by status
+  const activeCampaigns = useMemo(() => {
+    return allCampaigns?.filter(c => c.status === 'ACTIVE') || [];
+  }, [allCampaigns]);
+
+  const inactiveCampaigns = useMemo(() => {
+    return allCampaigns?.filter(c => c.status !== 'ACTIVE') || [];
+  }, [allCampaigns]);
 
   const dateRangeLabel = useMemo(() => {
     return `${format(startDate, 'dd. MMM yyyy', { locale: de })} - ${format(endDate, 'dd. MMM yyyy', { locale: de })}`;
   }, [startDate, endDate]);
+
+  const renderCampaignCards = (campaigns: typeof allCampaigns) => {
+    if (!campaigns || campaigns.length === 0) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Keine Kampagnen gefunden</CardTitle>
+            <CardDescription>
+              Es wurden keine Kampagnen für den gewählten Zeitraum gefunden.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
+
+    return (
+      <div className="grid gap-4">
+        {campaigns.map((campaign) => {
+          return (
+            <Card 
+              key={campaign.id}
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setLocation(`/campaign/${campaign.id}`)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-xl">{campaign.name}</CardTitle>
+                      <Badge variant={campaign.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                        {campaign.status === 'ACTIVE' ? 'Aktiv' : campaign.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Kampagnen-ID: {campaign.id}
+                    </CardDescription>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Impressions</p>
+                    <p className="text-2xl font-bold mt-1">
+                      {campaign.impressions.toLocaleString('de-DE')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ausgaben</p>
+                    <p className="text-2xl font-bold mt-1">
+                      €{campaign.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">CTR</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-2xl font-bold">
+                        {campaign.ctr.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Conversions</p>
+                    <p className="text-2xl font-bold mt-1">
+                      {campaign.conversions}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <DashboardLayout>
@@ -117,78 +206,25 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {campaigns && campaigns.length === 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Keine Kampagnen gefunden</CardTitle>
-              <CardDescription>
-                Es wurden keine aktiven Kampagnen für den gewählten Zeitraum gefunden.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
-        {campaigns && campaigns.length > 0 && (
-          <div className="grid gap-4">
-            {campaigns.map((campaign) => {
-              return (
-                <Card 
-                  key={campaign.id}
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => setLocation(`/campaign/${campaign.id}`)}
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-3">
-                          <CardTitle className="text-xl">{campaign.name}</CardTitle>
-                          <Badge variant={campaign.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                            {campaign.status === 'ACTIVE' ? 'Aktiv' : campaign.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
-                          </Badge>
-                        </div>
-                        <CardDescription>
-                          Kampagnen-ID: {campaign.id}
-                        </CardDescription>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <ArrowRight className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Impressions</p>
-                        <p className="text-2xl font-bold mt-1">
-                          {campaign.impressions.toLocaleString('de-DE')}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Ausgaben</p>
-                        <p className="text-2xl font-bold mt-1">
-                          €{campaign.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">CTR</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <p className="text-2xl font-bold">
-                            {campaign.ctr.toFixed(2)}%
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Conversions</p>
-                        <p className="text-2xl font-bold mt-1">
-                          {campaign.conversions}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        {!isLoading && !error && (
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "active" | "inactive")}>
+            <TabsList>
+              <TabsTrigger value="active">
+                Aktive Kampagnen ({activeCampaigns.length})
+              </TabsTrigger>
+              <TabsTrigger value="inactive">
+                Inaktive Kampagnen ({inactiveCampaigns.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="mt-6">
+              {renderCampaignCards(activeCampaigns)}
+            </TabsContent>
+            
+            <TabsContent value="inactive" className="mt-6">
+              {renderCampaignCards(inactiveCampaigns)}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </DashboardLayout>

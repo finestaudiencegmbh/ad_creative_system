@@ -88,3 +88,8 @@
 - [x] Datumsfilter mit Meta API verbinden (datePreset: today, last_7d, last_30d, this_month, last_90d)
 - [x] Vitest Tests für Meta API Connection und Campaigns schreiben
 - [x] Live-Daten im Dashboard verifizieren (7 Kampagnen erfolgreich geladen)
+
+### Dashboard Kampagnen-Filter
+- [x] Dashboard standardmäßig nur aktive Kampagnen anzeigen
+- [x] Tab-Navigation hinzufügen: "Aktive Kampagnen" und "Inaktive Kampagnen"
+- [x] Filter-State zwischen Tabs verwalten
