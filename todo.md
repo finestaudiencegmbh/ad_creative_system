@@ -236,3 +236,12 @@
 - [x] Ersetze technische Lade-Schritte mit animierter Ladeanimation
 - [x] Zeige wechselnde Fun Facts über Facebook/Instagram während der Generierung
 - [x] Schöne visuelle Animation statt nüchterner Schrittliste
+
+### CRITICAL BUG - Text Overlays fehlen komplett
+- [x] Canvas-basierte Text-Overlays funktionieren nicht (native Kompilierung fehlgeschlagen)
+- [x] Alternative Lösung implementieren: Sharp + SVG für Text-Rendering
+- [x] **NEUE LÖSUNG**: Google Gemini für Prompt-Optimierung implementiert
+- [x] Gemini optimiert Prompts für FLUX-Generierung (enhancePromptWithGemini)
+- [x] Sharp + SVG für Text-Overlays implementiert (addTextOverlaySharp)
+- [ ] **PROBLEM**: Text-Overlays müssen noch getestet werden
+- [ ] Testen mit allen 3 Formaten (Feed, Story, Reel)

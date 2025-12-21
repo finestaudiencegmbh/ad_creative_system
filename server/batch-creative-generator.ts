@@ -36,7 +36,9 @@ export async function generateBatchCreatives(
   const { scrapeLandingPage } = await import('./landingpage-scraper');
   const { identifyWinningCreatives } = await import('./winning-creatives');
   const { generateImage } = await import('./_core/imageGeneration');
-  const { addTextOverlay, FORMAT_SPECS } = await import('./text-overlay');
+  const { enhancePromptWithGemini } = await import('./_core/geminiImageGeneration');
+  const { FORMAT_SPECS } = await import('./text-overlay');
+  const { addTextOverlaySharp } = await import('./text-overlay-sharp');
   const { storagePut } = await import('./storage');
   
   // Get winning creative
@@ -113,15 +115,25 @@ export async function generateBatchCreatives(
     headlines.map(async (headline, index) => {
       try {
         // Generate style-aware prompt
-        const prompt = await generateStyleAwarePrompt(
+        const basePrompt = await generateStyleAwarePrompt(
           designSystem,
           landingPageData,
           config.userDescription
         );
         
-        // Generate image with FLUX
+        // Enhance prompt with Gemini for better visual quality
+        const enhancedPrompt = await enhancePromptWithGemini(basePrompt, {
+          eyebrowText: headline.eyebrow,
+          headlineText: headline.headline,
+          ctaText: headline.cta,
+          aspectRatio,
+        });
+        
+        console.log(`🎨 Creative ${index}: Using Gemini-enhanced prompt`);
+        
+        // Generate image with FLUX using enhanced prompt
         const { url: generatedImageUrl } = await generateImage({
-          prompt,
+          prompt: enhancedPrompt,
           aspectRatio,
         });
         
@@ -129,27 +141,26 @@ export async function generateBatchCreatives(
           throw new Error('Image generation failed');
         }
         
-        // Try to add text overlay (optional - skip if canvas not available)
-        let finalUrl = generatedImageUrl;
-        try {
-          const imageBuffer = await addTextOverlay(generatedImageUrl, {
-            eyebrowText: headline.eyebrow,
-            headlineText: headline.headline,
-            ctaText: headline.cta,
-            designSystem,
-            format: config.format,
-          });
-          
-          // Upload final creative with text overlay to S3
-          const randomSuffix = Math.random().toString(36).substring(7);
-          const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
-          const result = await storagePut(fileKey, imageBuffer, 'image/png');
-          finalUrl = result.url;
-          console.log(`✅ Text overlay added to creative ${index}`);
-        } catch (overlayError) {
-          console.warn(`⚠️  Text overlay skipped for creative ${index} (canvas not available):`, overlayError);
-          // Use generated image without text overlay
-        }
+        // Download generated image
+        const imageResponse = await fetch(generatedImageUrl);
+        const imageArrayBuffer = await imageResponse.arrayBuffer();
+        const imageBuffer = Buffer.from(imageArrayBuffer);
+        
+        // Add text overlay using Sharp + SVG
+        const finalImageBuffer = await addTextOverlaySharp({
+          imageBuffer,
+          eyebrowText: headline.eyebrow,
+          headlineText: headline.headline,
+          ctaText: headline.cta,
+          format: config.format,
+        });
+        
+        // Upload final creative with text overlay to S3
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
+        const result = await storagePut(fileKey, finalImageBuffer, 'image/png');
+        const finalUrl = result.url;
+        console.log(`✅ Creative ${index} complete: Gemini-enhanced prompt → FLUX generation → Sharp text overlay`);
         
         return {
           imageUrl: finalUrl,
