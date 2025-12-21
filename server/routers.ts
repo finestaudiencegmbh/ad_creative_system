@@ -1057,6 +1057,194 @@ export const appRouter = router({
         return { winners: winnersWithImages, insights };
       }),
 
+    // Creative Generator - Extract design system from winning creative
+    extractDesignSystem: protectedProcedure
+      .input(z.object({
+        imageUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { extractDesignSystem } = await import('./creative-analyzer');
+        const designSystem = await extractDesignSystem(input.imageUrl);
+        return designSystem;
+      }),
+
+    // Creative Generator - Generate style-aware prompt
+    generateStyleAwarePrompt: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        userDescription: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { extractDesignSystem, generateStyleAwarePrompt } = await import('./creative-analyzer');
+        const { getAdCreatives, extractImageUrl, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
+        const { scrapeLandingPage } = await import('./landingpage-scraper');
+        const { identifyWinningCreatives } = await import('./winning-creatives');
+        
+        // Get winning creative
+        const adSets = await getCampaignAdSets(input.campaignId);
+        const allAds = [];
+        for (const adSet of adSets) {
+          const ads = await getAdSetAds(adSet.id);
+          allAds.push(...ads);
+        }
+        
+        const adsWithPerformance = allAds.map(ad => {
+          const insights = ad.insights?.data?.[0];
+          const spend = parseFloat(insights?.spend || '0');
+          const impressions = parseInt(insights?.impressions || '0');
+          const outboundClicks = insights?.outbound_clicks?.find(a => a.action_type === 'outbound_click');
+          const leads = insights?.actions?.find(a => a.action_type === 'lead');
+          
+          return {
+            id: ad.id,
+            name: ad.name,
+            roasOrderVolume: 0,
+            roasCashCollect: 0,
+            costPerLead: leads ? spend / parseInt(leads.value) : 0,
+            costPerOutboundClick: outboundClicks ? spend / parseInt(outboundClicks.value) : 0,
+            outboundCtr: impressions > 0 ? (parseInt(outboundClicks?.value || '0') / impressions) * 100 : 0,
+            cpm: impressions > 0 ? (spend / impressions) * 1000 : 0,
+            spend,
+            leads: leads ? parseInt(leads.value) : 0,
+            impressions,
+          };
+        });
+        
+        const winners = identifyWinningCreatives(adsWithPerformance, 1);
+        if (winners.length === 0) {
+          throw new Error('No winning creatives found');
+        }
+        
+        // Get image URL and extract design system
+        const creative = await getAdCreatives(winners[0].adId);
+        const imageUrl = extractImageUrl(creative);
+        
+        if (!imageUrl) {
+          throw new Error('No image found for winning creative');
+        }
+        
+        const designSystem = await extractDesignSystem(imageUrl);
+        
+        // Get landing page data
+        const landingPageUrl = await import('./meta-api').then(m => m.extractLandingPageUrl(creative));
+        const landingPageData = landingPageUrl ? await scrapeLandingPage(landingPageUrl) : {
+          url: '',
+          title: '',
+          description: '',
+          h1: '',
+          h2: '',
+          ctaText: '',
+          heroImages: [],
+          ogTitle: null,
+          ogDescription: null,
+          ogImage: null,
+          keywords: null,
+          error: undefined,
+        };
+        
+        // Generate style-aware prompt
+        const prompt = await generateStyleAwarePrompt(
+          designSystem,
+          landingPageData,
+          input.userDescription
+        );
+        
+        return { prompt, designSystem, imageUrl };
+      }),
+
+    // Creative Generator - Generate headline variations
+    generateHeadlineVariations: protectedProcedure
+      .input(z.object({
+        originalHeadline: z.string(),
+        campaignId: z.string(),
+        count: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateHeadlineVariations } = await import('./creative-analyzer');
+        const { extractLandingPageUrl, getAdCreatives, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
+        const { scrapeLandingPage } = await import('./landingpage-scraper');
+        
+        // Get landing page from campaign
+        const adSets = await getCampaignAdSets(input.campaignId);
+        const allAds = [];
+        for (const adSet of adSets) {
+          const ads = await getAdSetAds(adSet.id);
+          allAds.push(...ads);
+        }
+        
+        if (allAds.length === 0) {
+          throw new Error('No ads found in campaign');
+        }
+        
+        const creative = await getAdCreatives(allAds[0].id);
+        const landingPageUrl = extractLandingPageUrl(creative);
+        const landingPageData = landingPageUrl ? await scrapeLandingPage(landingPageUrl) : {
+          url: '',
+          title: '',
+          description: '',
+          h1: '',
+          h2: '',
+          ctaText: '',
+          heroImages: [],
+          ogTitle: null,
+          ogDescription: null,
+          ogImage: null,
+          keywords: null,
+          error: undefined,
+        };
+        
+        const variations = await generateHeadlineVariations(
+          input.originalHeadline,
+          landingPageData,
+          input.count
+        );
+        
+        return variations;
+      }),
+
+    // Creative Generator - Add text overlay to image
+    addTextOverlay: protectedProcedure
+      .input(z.object({
+        imageUrl: z.string(),
+        eyebrowText: z.string().optional(),
+        headlineText: z.string(),
+        ctaText: z.string().optional(),
+        designSystem: z.object({
+          colorPalette: z.array(z.string()),
+          textLayout: z.object({
+            eyebrowPosition: z.string(),
+            headlinePosition: z.string(),
+            ctaPosition: z.string(),
+          }),
+          typography: z.object({
+            eyebrowStyle: z.string(),
+            headlineStyle: z.string(),
+            ctaStyle: z.string(),
+          }),
+          visualStyle: z.string(),
+          backgroundStyle: z.string(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        const { addTextOverlay } = await import('./text-overlay');
+        const { storagePut } = await import('./storage');
+        
+        // Add text overlay
+        const imageBuffer = await addTextOverlay(input.imageUrl, {
+          eyebrowText: input.eyebrowText,
+          headlineText: input.headlineText,
+          ctaText: input.ctaText,
+          designSystem: input.designSystem,
+        });
+        
+        // Upload to S3
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `creatives/final-${randomSuffix}.png`;
+        const { url } = await storagePut(fileKey, imageBuffer, 'image/png');
+        
+        return { url };
+      }),
+
     // Creative Generator - Generate contextual prompt
     generateCreativePrompt: protectedProcedure
       .input(z.object({

@@ -198,3 +198,13 @@
 - [x] LLM-basierter Prompt-Generator: Kombiniert Landing Page + Winning Ads Analyse
 - [x] Kontextspezifische FLUX-Prompts statt generischer Templates
 - [x] Integration in Creative Generator Flow mit generateCreativePrompt Mutation
+
+### Feature - Style-Aware Creative Generation mit Text-Overlay
+- [x] Vision API: Design-System aus Winning Creatives extrahieren (Farbpalette, Layout, Typografie)
+- [x] FLUX: Neues Bild im gleichen visuellen Stil generieren (Style-Referenz)
+- [x] Text-Overlay Engine mit Canvas API (Node.js canvas package)
+- [x] LLM: Headlines im gleichen Stil wie Original generieren
+- [x] Template-System: Eyebrow (rot) → Headline (weiß/grün) → CTA (lila Button)
+- [x] Backend-Procedures: extractDesignSystem, generateStyleAwarePrompt, generateHeadlineVariations, addTextOverlay
+- [ ] Frontend-Integration: Kompletter Pipeline-Flow im Creative Generator
+- [ ] Batch-Generierung: 3-5 Variationen pro Winning Creative
