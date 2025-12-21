@@ -20,6 +20,22 @@ try {
   console.warn('⚠️  Canvas module not available - format adaptation will be skipped');
 }
 
+export interface FormatAdaptationConfigFromUrl {
+  sourceImageUrl: string;
+  targetFormat: 'story' | 'reel';
+  textElements: {
+    eyebrow?: string;
+    headline: string;
+    cta?: string;
+  };
+  designSystem: DesignSystem;
+}
+
+export interface FormatAdaptationConfigFromBuffer {
+  feedImageBuffer: Buffer;
+  targetFormat: 'story' | 'reel';
+}
+
 export interface FormatAdaptationConfig {
   sourceImageUrl: string;
   targetFormat: 'story' | 'reel';
@@ -41,8 +57,55 @@ export interface FormatAdaptationConfig {
  * 4. Center the Feed image in the safe zone
  * 5. Add text overlays respecting Story/Reel safe zones
  */
+/**
+ * Adapt Feed creative buffer to Story/Reel format
+ */
 export async function adaptFeedToVertical(
-  config: FormatAdaptationConfig
+  config: FormatAdaptationConfigFromBuffer
+): Promise<Buffer> {
+  const { feedImageBuffer, targetFormat } = config;
+  
+  const feedSize = 1080; // Feed is 1080x1080
+  const verticalWidth = 1080;
+  const verticalHeight = 1920; // Story/Reel is 1080x1920
+  
+  // Calculate positioning to center feed creative
+  const yOffset = (verticalHeight - feedSize) / 2; // Center vertically
+  
+  // Create dark gradient background
+  const sharp = (await import('sharp')).default;
+  const gradientSvg = `
+    <svg width="${verticalWidth}" height="${verticalHeight}">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#000000;stop-opacity:1" />
+          <stop offset="30%" style="stop-color:#0a0a14;stop-opacity:1" />
+          <stop offset="70%" style="stop-color:#0a0a14;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="${verticalWidth}" height="${verticalHeight}" fill="url(#grad)" />
+    </svg>
+  `;
+  
+  // Composite feed creative onto gradient background
+  const adaptedImage = await sharp(Buffer.from(gradientSvg))
+    .composite([{
+      input: feedImageBuffer,
+      top: Math.round(yOffset),
+      left: 0,
+    }])
+    .png()
+    .toBuffer();
+  
+  return adaptedImage;
+}
+
+/**
+ * Adapt Feed creative URL to Story/Reel format (legacy)
+ */
+export async function adaptFeedToVerticalFromUrl(
+  config: FormatAdaptationConfigFromUrl
 ): Promise<Buffer> {
   if (!createCanvas || !loadImage) {
     throw new Error('Canvas module not available - cannot adapt formats');
@@ -124,13 +187,13 @@ export async function adaptFeedToAllFormats(
   reel: Buffer;
 }> {
   const [storyBuffer, reelBuffer] = await Promise.all([
-    adaptFeedToVertical({
+    adaptFeedToVerticalFromUrl({
       sourceImageUrl: feedImageUrl,
       targetFormat: 'story',
       textElements,
       designSystem,
     }),
-    adaptFeedToVertical({
+    adaptFeedToVerticalFromUrl({
       sourceImageUrl: feedImageUrl,
       targetFormat: 'reel',
       textElements,

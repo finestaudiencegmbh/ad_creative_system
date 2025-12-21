@@ -578,3 +578,25 @@
 - [x] Find where CTA text is generated (currently shows "ALLE AKZEPTIEREN" instead of landing page CTA)
 - [x] Fix CTA text to use landing page CTA or deep analysis CTA
 - [x] Test CTA fix with DCA campaign
+
+
+### Optimization 1: Batch Generation (Feed → Story/Reel Adaptation)
+- [ ] Modify batch generator to generate Feed creative once
+- [ ] Implement Story/Reel adaptation from Feed creative (crop/resize with safe zones)
+- [ ] Save 66% API costs by avoiding 3x separate generation
+- [ ] Test "Alle Formate" generation
+
+### Optimization 2: Creative Library with Performance Tracking
+- [ ] Create database schema for creative library (generated_creatives table)
+- [ ] Store: creative_id, campaign_id, image_url, headline, eyebrow, cta, format, created_at
+- [ ] Add performance metrics: impressions, clicks, ctr, cpl, roas, spend
+- [ ] Create tRPC procedures for creative CRUD operations
+- [ ] Build Creative Library page in frontend
+
+### Optimization 3: A/B Testing Dashboard
+- [ ] Create performance analytics service
+- [ ] Implement creative ranking by performance (CTR, CPL, ROAS)
+- [ ] Build A/B Testing Dashboard page
+- [ ] Show top performers vs. low performers
+- [ ] Extract winning patterns (colors, headlines, visuals)
+- [ ] Feed insights back into prompt generation

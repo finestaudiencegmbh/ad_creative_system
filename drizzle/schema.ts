@@ -78,10 +78,15 @@ export type InsertBrandAsset = typeof brandAssets.$inferInsert;
 export const creatives = mysqlTable("creatives", {
   id: int("id").autoincrement().primaryKey(),
   clientId: int("clientId").notNull().references(() => clients.id, { onDelete: "cascade" }),
+  campaignId: varchar("campaignId", { length: 255 }), // Meta Campaign ID
   name: varchar("name", { length: 255 }),
   fabricJsonData: json("fabricJsonData").$type<Record<string, unknown>>(), // Fabric.js canvas JSON
-  previewImageUrl: text("previewImageUrl"), // URL to rendered image in S3
-  format: mysqlEnum("format", ["feed", "story"]).notNull(),
+  imageUrl: text("imageUrl"), // URL to final creative image in S3
+  previewImageUrl: text("previewImageUrl"), // URL to rendered image in S3 (legacy)
+  headline: text("headline"), // Generated headline
+  eyebrowText: text("eyebrowText"), // Generated eyebrow text
+  ctaText: text("ctaText"), // Generated CTA text
+  format: mysqlEnum("format", ["feed", "story", "reel"]).notNull(),
   status: mysqlEnum("status", ["draft", "published", "archived"]).default("draft").notNull(),
   metaAdId: varchar("metaAdId", { length: 255 }), // Meta Ad ID for performance tracking
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -109,6 +114,8 @@ export const performanceData = mysqlTable("performance_data", {
   ctr: decimal("ctr", { precision: 5, scale: 2 }), // Click-through rate
   cpc: decimal("cpc", { precision: 10, scale: 2 }), // Cost per click
   cpm: decimal("cpm", { precision: 10, scale: 2 }), // Cost per mille
+  costPerLead: decimal("costPerLead", { precision: 10, scale: 2 }), // Cost per lead
+  roas: decimal("roas", { precision: 10, scale: 2 }), // Return on ad spend
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

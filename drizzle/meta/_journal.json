@@ -36,6 +36,20 @@
       "when": 1766339176656,
       "tag": "0004_good_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1766345694193,
+      "tag": "0005_real_landau",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1766345793825,
+      "tag": "0006_common_george_stacy",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,8 @@ try {
   console.warn('⚠️  Canvas module not available - text overlays will be skipped');
 }
 
-export type CreativeFormat = 'feed' | 'story' | 'reel';
+export type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
+export type ActualFormat = Exclude<CreativeFormat, 'all'>;
 
 export interface FormatDimensions {
   width: number;
@@ -34,7 +35,7 @@ export interface FormatDimensions {
   };
 }
 
-export const FORMAT_SPECS: Record<CreativeFormat, FormatDimensions> = {
+export const FORMAT_SPECS: Record<Exclude<CreativeFormat, 'all'>, FormatDimensions> = {
   feed: {
     width: 1080,
     height: 1080,
@@ -95,7 +96,7 @@ export async function addTextOverlay(
     const image = await loadImage(imageUrl);
     
     // Get format specifications
-    const format = config.format || 'feed';
+    const format = (config.format || 'feed') as Exclude<CreativeFormat, 'all'>;
     const formatSpec = FORMAT_SPECS[format];
     
     // Create canvas with same dimensions

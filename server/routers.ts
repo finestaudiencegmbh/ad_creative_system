@@ -1156,7 +1156,7 @@ export const appRouter = router({
     generateBatchCreatives: protectedProcedure
       .input(z.object({
         campaignId: z.string(),
-        format: z.enum(['feed', 'story', 'reel']),
+        format: z.enum(['feed', 'story', 'reel', 'all']),
         count: z.number().min(1).max(10),
         userDescription: z.string().optional(),
         manualLandingPage: z.string().optional(),
@@ -1175,6 +1175,27 @@ export const appRouter = router({
         });
         
         return creatives;
+      }),
+
+    // Performance Analytics - Get top/low performers
+    getTopPerformers: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        const { getTopPerformers } = await import('./performance-analytics');
+        return await getTopPerformers(input.limit || 10);
+      }),
+    
+    getLowPerformers: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        const { getLowPerformers } = await import('./performance-analytics');
+        return await getLowPerformers(input.limit || 10);
+      }),
+    
+    getWinningPatterns: protectedProcedure
+      .query(async () => {
+        const { extractWinningPatterns } = await import('./performance-analytics');
+        return await extractWinningPatterns();
       }),
 
     // Ad Copywriter - Generate professional ad copy from landing page

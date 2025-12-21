@@ -31,6 +31,10 @@ export interface GeneratedCreative {
 export async function generateBatchCreatives(
   config: BatchGenerationConfig
 ): Promise<GeneratedCreative[]> {
+  // Handle "all" format by generating feed and adapting to story/reel
+  if (config.format === 'all') {
+    return generateAllFormats(config);
+  }
   const { extractDesignSystem, generateStyleAwarePrompt, generateHeadlineVariations } = await import('./creative-analyzer');
   const { getAdCreatives, extractImageUrl, extractLandingPageUrl, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
   const { scrapeLandingPage } = await import('./landingpage-scraper');
@@ -145,7 +149,7 @@ export async function generateBatchCreatives(
         console.log(`🎨 Creative ${index}: Generating with Gemini Imagen`);
         
         // Step 1: Generate background image with Gemini Imagen
-        const formatSpec = FORMAT_SPECS[config.format];
+        const formatSpec = FORMAT_SPECS[config.format as Exclude<CreativeFormat, 'all'>];
         
         // Build landing-page-aware prompt for Gemini Imagen
         const landingPageContent = visualDescription || `
@@ -160,7 +164,7 @@ export async function generateBatchCreatives(
           landingPageContent,
           headline: headline.headline,
           designSystem,
-          format: config.format,
+          format: config.format as Exclude<CreativeFormat, 'all'>,
         });
         
         // Generate background image with Gemini Imagen
@@ -203,6 +207,23 @@ export async function generateBatchCreatives(
         const finalUrl = result.url;
         console.log(`✅ Creative ${index} complete: SDXL background + Canvas text overlays`);
         
+        // TODO: Save to database when user context is available
+        // const { getDb } = await import('./db');
+        // const { creatives } = await import('../drizzle/schema');
+        // const database = await getDb();
+        // if (database) {
+        //   await database.insert(creatives).values({
+        //     clientId: ctx.user.id,
+        //     campaignId: config.campaignId,
+        //     imageUrl: finalUrl,
+        //     headline: headline.headline,
+        //     eyebrowText: headline.eyebrow,
+        //     ctaText: headline.cta,
+        //     format: config.format as any,
+        //     status: 'published',
+        //   });
+        // }
+        
         return {
           imageUrl: finalUrl,
           headline: headline.headline,
@@ -218,4 +239,67 @@ export async function generateBatchCreatives(
   );
   
   return creatives;
+}
+
+/**
+ * Generate all formats: Feed once, then adapt to Story/Reel
+ * Saves 66% API costs by avoiding 3x separate generation
+ */
+async function generateAllFormats(
+  config: BatchGenerationConfig
+): Promise<GeneratedCreative[]> {
+  const { adaptFeedToVertical } = await import('./format-adapter');
+  const { addTextOverlaySharp } = await import('./text-overlay-sharp');
+  const { storagePut } = await import('./storage');
+  
+  // Step 1: Generate Feed creatives
+  const feedConfig = { ...config, format: 'feed' as const };
+  const feedCreatives = await generateBatchCreatives(feedConfig);
+  
+  // Step 2: Adapt each Feed creative to Story and Reel
+  const allCreatives: GeneratedCreative[] = [...feedCreatives];
+  
+  for (const feedCreative of feedCreatives) {
+    try {
+      // Download Feed creative
+      const feedResponse = await fetch(feedCreative.imageUrl);
+      const feedBuffer = Buffer.from(await feedResponse.arrayBuffer());
+      
+      // Adapt to Story
+      const storyBuffer = await adaptFeedToVertical({
+        feedImageBuffer: feedBuffer,
+        targetFormat: 'story',
+      });
+      
+      // Adapt to Reel
+      const reelBuffer = await adaptFeedToVertical({
+        feedImageBuffer: feedBuffer,
+        targetFormat: 'reel',
+      });
+      
+      // Upload Story creative
+      const storyKey = feedCreative.imageUrl.replace('feed', 'story').replace('.png', '-story.png');
+      const storyResult = await storagePut(storyKey, storyBuffer, 'image/png');
+      
+      // Upload Reel creative
+      const reelKey = feedCreative.imageUrl.replace('feed', 'reel').replace('.png', '-reel.png');
+      const reelResult = await storagePut(reelKey, reelBuffer, 'image/png');
+      
+      allCreatives.push({
+        ...feedCreative,
+        imageUrl: storyResult.url,
+        format: 'story',
+      });
+      
+      allCreatives.push({
+        ...feedCreative,
+        imageUrl: reelResult.url,
+        format: 'reel',
+      });
+    } catch (error) {
+      console.error('Failed to adapt Feed creative:', error);
+    }
+  }
+  
+  return allCreatives;
 }
