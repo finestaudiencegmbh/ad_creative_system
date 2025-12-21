@@ -326,10 +326,10 @@ export async function getAdCreatives(adId: string): Promise<any> {
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
-  // Get ad with creative field (not /creatives endpoint)
+  // Get ad with creative field including asset_feed_spec for DCA ads
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,creative{id,name,object_story_spec,image_url,video_id,body,link_url,title,call_to_action_type}",
+    fields: "id,name,creative{id,name,object_story_spec,asset_feed_spec,image_url,video_id,body,link_url,title,call_to_action_type,effective_object_story_id,url_tags}",
   });
 
   const url = `${META_API_BASE_URL}/${adId}?${queryParams.toString()}`;
@@ -349,13 +349,6 @@ export async function getAdCreatives(adId: string): Promise<any> {
   }
 
   const data = await response.json();
-  
-  // Debug: Log full response to understand structure
-  console.log('=== META API CREATIVE RESPONSE DEBUG ===');
-  console.log('Ad ID:', adId);
-  console.log('Full response:', JSON.stringify(data, null, 2));
-  console.log('Creative object:', JSON.stringify(data.creative, null, 2));
-  console.log('========================================');
   
   // Return creative object, or empty object if not found
   return data.creative || {};
@@ -403,11 +396,23 @@ export function extractLandingPageUrl(creative: any): string | null {
   // Return null if creative is undefined or null
   if (!creative) return null;
   
-  // Try multiple possible locations for the URL
+  // 1. Try DCA (Dynamic Creative Ads) asset_feed_spec.link_urls
+  if (creative.asset_feed_spec?.link_urls && creative.asset_feed_spec.link_urls.length > 0) {
+    // Return first URL from link_urls array
+    const firstLinkUrl = creative.asset_feed_spec.link_urls[0];
+    if (firstLinkUrl?.website_url) return firstLinkUrl.website_url;
+  }
+  
+  // 2. Try direct link_url field
   if (creative.link_url) return creative.link_url;
+  
+  // 3. Try object_story_spec.link_data.link (standard single image/video ads)
   if (creative.object_story_spec?.link_data?.link) return creative.object_story_spec.link_data.link;
+  
+  // 4. Try object_story_spec.video_data.call_to_action.value.link (video ads)
   if (creative.object_story_spec?.video_data?.call_to_action?.value?.link) {
     return creative.object_story_spec.video_data.call_to_action.value.link;
   }
+  
   return null;
 }

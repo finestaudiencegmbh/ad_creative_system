@@ -943,6 +943,40 @@ export const appRouter = router({
         return targeting;
       }),
 
+    // DEBUG: Get raw creative data from first ad
+    debugGetCreativeData: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getAdCreatives } = await import('./meta-api');
+        const { getAdSetAds, getCampaignAdSets } = await import('./meta-api');
+        
+        // Get all ad sets from campaign
+        const adSets = await getCampaignAdSets(input.campaignId);
+        
+        if (adSets.length === 0) {
+          return { error: 'No ad sets found' };
+        }
+        
+        // Get ads from first ad set
+        const ads = await getAdSetAds(adSets[0].id);
+        
+        if (ads.length === 0) {
+          return { error: 'No ads found' };
+        }
+        
+        // Get creative from first ad
+        const creative = await getAdCreatives(ads[0].id);
+        
+        return {
+          adId: ads[0].id,
+          adName: ads[0].name,
+          creative: creative,
+          creativeKeys: Object.keys(creative || {}),
+        };
+      }),
+
     // Creative Generator - Get winning creatives from campaign
     getWinningCreatives: protectedProcedure
       .input(z.object({

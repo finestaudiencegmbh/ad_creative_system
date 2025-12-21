@@ -174,13 +174,8 @@
 - [x] Falls nur eine URL: Automatisch verwenden
 
 ### Bug Fix - Website-URL Feld in Meta API Creative
-- [ ] Debug: Tatsächliche Meta API Creative Response loggen
-- [ ] Korrektes Feld für Website-URL identifizieren (nicht link_url oder object_story_spec.link_data.link)
-- [ ] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
-- [ ] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)
-
-### Bug Fix - Website-URL Feld in Meta API Creative
-- [ ] Debug: Tatsächliche Meta API Creative Response loggen
-- [ ] Korrektes Feld für Website-URL identifizieren
-- [ ] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
-- [ ] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)
+- [x] Debug: Tatsächliche Meta API Creative Response loggen
+- [x] Korrektes Feld für Website-URL identifizieren (asset_feed_spec.link_urls für DCA)
+- [x] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
+- [x] getAdCreatives erweitert um asset_feed_spec, effective_object_story_id, url_tags
+- [x] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)
