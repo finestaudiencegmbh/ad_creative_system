@@ -461,6 +461,19 @@ export default function CreativeGenerator() {
                           <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
                             {index + 1}
                           </div>
+                          {winner.imageUrl && (
+                            <div className="flex-shrink-0">
+                              <img 
+                                src={winner.imageUrl} 
+                                alt={winner.adName}
+                                className="w-16 h-16 object-cover rounded border border-border"
+                                onError={(e) => {
+                                  // Hide image if loading fails
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{winner.adName}</p>
                             <div className="flex flex-wrap gap-2 mt-1">

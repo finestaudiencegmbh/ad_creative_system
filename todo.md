@@ -179,3 +179,10 @@
 - [x] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
 - [x] getAdCreatives erweitert um asset_feed_spec, effective_object_story_id, url_tags
 - [x] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)
+
+### Feature - Winning Ads Bild-Anzeige
+- [x] Meta API: Bild-URLs aus Creatives abrufen (asset_feed_spec.images, image_url, thumbnail_url)
+- [x] Backend: extractImageUrl Funktion hinzugefügt mit Fallback-Logik
+- [x] Backend: Image URLs in getWinningCreatives Response hinzugefügt
+- [x] Frontend: 64x64px Thumbnails in Top Performer Liste angezeigt
+- [x] Error Handling: Bild wird ausgeblendet wenn URL nicht lädt

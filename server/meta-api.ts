@@ -329,7 +329,7 @@ export async function getAdCreatives(adId: string): Promise<any> {
   // Get ad with creative field including asset_feed_spec for DCA ads
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,creative{id,name,object_story_spec,asset_feed_spec,image_url,video_id,body,link_url,title,call_to_action_type,effective_object_story_id,url_tags}",
+    fields: "id,name,creative{id,name,object_story_spec,asset_feed_spec,image_url,image_hash,thumbnail_url,video_id,body,link_url,title,call_to_action_type,effective_object_story_id,url_tags}",
   });
 
   const url = `${META_API_BASE_URL}/${adId}?${queryParams.toString()}`;
@@ -412,6 +412,40 @@ export function extractLandingPageUrl(creative: any): string | null {
   // 4. Try object_story_spec.video_data.call_to_action.value.link (video ads)
   if (creative.object_story_spec?.video_data?.call_to_action?.value?.link) {
     return creative.object_story_spec.video_data.call_to_action.value.link;
+  }
+  
+  return null;
+}
+
+/**
+ * Extract image URL from ad creative
+ */
+export function extractImageUrl(creative: any): string | null {
+  // Return null if creative is undefined or null
+  if (!creative) return null;
+  
+  // 1. Try thumbnail_url (usually available for most ads)
+  if (creative.thumbnail_url) return creative.thumbnail_url;
+  
+  // 2. Try image_url (direct image URL)
+  if (creative.image_url) return creative.image_url;
+  
+  // 3. Try DCA asset_feed_spec.images (first image)
+  if (creative.asset_feed_spec?.images && creative.asset_feed_spec.images.length > 0) {
+    const firstImage = creative.asset_feed_spec.images[0];
+    if (firstImage?.url) return firstImage.url;
+    if (firstImage?.picture) return firstImage.picture;
+  }
+  
+  // 4. Try object_story_spec.link_data.picture (for link posts)
+  if (creative.object_story_spec?.link_data?.picture) {
+    return creative.object_story_spec.link_data.picture;
+  }
+  
+  // 5. Try to construct URL from image_hash if available
+  if (creative.image_hash) {
+    // Meta CDN URL pattern
+    return `https://scontent.xx.fbcdn.net/v/t45.1600-4/${creative.image_hash}`;
   }
   
   return null;

@@ -34,6 +34,7 @@ interface WinningCreativeScore {
     cpm: number;
   };
   rank: number;
+  imageUrl?: string | null;
 }
 
 /**

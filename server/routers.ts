@@ -989,7 +989,7 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         const { identifyWinningCreatives, getWinningCreativeInsights } = await import('./winning-creatives');
-        const { getCampaignAdSets, getAdSetAds } = await import('./meta-api');
+        const { getCampaignAdSets, getAdSetAds, getAdCreatives, extractImageUrl } = await import('./meta-api');
         
         // Get all ads from campaign
         const adSets = await getCampaignAdSets(input.campaignId, {
@@ -1037,9 +1037,24 @@ export const appRouter = router({
         });
         
         const winners = identifyWinningCreatives(adsWithPerformance, 5);
-        const insights = getWinningCreativeInsights(winners);
         
-        return { winners, insights };
+        // Fetch image URLs for winning ads
+        const winnersWithImages = await Promise.all(
+          winners.map(async (winner) => {
+            try {
+              const creative = await getAdCreatives(winner.adId);
+              const imageUrl = extractImageUrl(creative);
+              return { ...winner, imageUrl };
+            } catch (error) {
+              console.error(`Failed to fetch image for ad ${winner.adId}:`, error);
+              return { ...winner, imageUrl: null };
+            }
+          })
+        );
+        
+        const insights = getWinningCreativeInsights(winnersWithImages);
+        
+        return { winners: winnersWithImages, insights };
       }),
   }),
 });
