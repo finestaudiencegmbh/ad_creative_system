@@ -35,8 +35,7 @@ export async function generateBatchCreatives(
   const { getAdCreatives, extractImageUrl, extractLandingPageUrl, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
   const { scrapeLandingPage } = await import('./landingpage-scraper');
   const { identifyWinningCreatives } = await import('./winning-creatives');
-  const { enhancePromptWithGemini } = await import('./_core/geminiImageGeneration');
-  const { generateSDXLTextImage } = await import('./_core/sdxlTextImage');
+  const { generateImageWithImagen, buildLandingPageAwarePrompt } = await import('./_core/geminiImagen');
   const { addTextOverlaySharp } = await import('./text-overlay-sharp');
   
   // Map format to dimensions
@@ -120,42 +119,36 @@ export async function generateBatchCreatives(
   const creatives = await Promise.all(
     headlines.map(async (headline, index) => {
       try {
-        // Generate style-aware prompt
-        const basePrompt = await generateStyleAwarePrompt(
-          designSystem,
-          landingPageData,
-          config.userDescription
-        );
+        console.log(`🎨 Creative ${index}: Generating with Gemini Imagen`);
         
-        // Enhance prompt with Gemini for better visual quality (background only, no text)
-        const enhancedPrompt = await enhancePromptWithGemini(
-          basePrompt + ' Create a professional advertising background without any text. The text will be added separately as an overlay.',
-          {
-            eyebrowText: headline.eyebrow,
-            headlineText: headline.headline,
-            ctaText: headline.cta,
-            aspectRatio,
-          }
-        );
-        
-        console.log(`🎨 Creative ${index}: Using Gemini-enhanced prompt with SDXL`);
-        
-        // Step 1: Generate background image with SDXL (NO text in prompt)
+        // Step 1: Generate background image with Gemini Imagen
         const formatSpec = FORMAT_SPECS[config.format];
         
-        // Remove text instructions from prompt - SDXL should only generate background
-        const backgroundPrompt = enhancedPrompt.replace(/text overlay.*$/gi, '').replace(/Text elements.*$/gi, '');
+        // Build landing-page-aware prompt for Gemini Imagen
+        const landingPageContent = `
+          Title: ${landingPageData.title || ''}
+          Description: ${landingPageData.description || ''}
+          H1: ${landingPageData.h1 || ''}
+          H2: ${Array.isArray(landingPageData.h2) ? landingPageData.h2.join(', ') : landingPageData.h2 || ''}
+          CTA: ${landingPageData.ctaText || ''}
+        `.trim();
         
-        const generatedImageUrl = await generateSDXLTextImage({
-          prompt: backgroundPrompt + ' professional advertising background, no text, clean composition, space for text overlay',
-          textElements: {
-            eyebrow: headline.eyebrow,
-            headline: headline.headline,
-            cta: headline.cta,
-          },
-          width: formatSpec.width,
-          height: formatSpec.height,
+        const imagenPrompt = buildLandingPageAwarePrompt({
+          landingPageContent,
+          headline: headline.headline,
+          designSystem,
+          format: config.format,
         });
+        
+        // Generate background image with Gemini Imagen
+        const imagenResults = await generateImageWithImagen({
+          prompt: imagenPrompt,
+          numberOfImages: 1,
+          aspectRatio: formatSpec.aspectRatio,
+          imageSize: '1K',
+        });
+        
+        const generatedImageUrl = imagenResults[0].imageUrl;
         
         if (!generatedImageUrl) {
           throw new Error('SDXL image generation failed');

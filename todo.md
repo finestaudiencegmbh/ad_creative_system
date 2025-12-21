@@ -483,3 +483,20 @@
 - [x] Quick Wins identifiziert (Creative Library, Landing Page Library, Templates, Dark Mode)
 - [x] Must-Have Features (Meta Ads Integration, A/B Testing, Batch Preview)
 - [x] Dokumentation: UX_IMPROVEMENT_PROPOSALS.md
+
+### CRITICAL - Replace SDXL with Gemini for Image Generation
+- [ ] Research Gemini image generation API (Imagen 3)
+- [ ] Implement Gemini image generation service
+- [ ] Replace SDXL calls in batch-creative-generator.ts
+- [ ] Test with DCA campaign
+- [ ] Verify images are Landing-Page-relevant (not abstract)
+- [ ] Iterate until perfect
+
+### ✅ COMPLETED - Gemini Imagen Integration (2025-12-21)
+- [x] SDXL durch Gemini Imagen ersetzt
+- [x] Landing-page-aware Prompt Builder implementiert
+- [x] Test erfolgreich: Funnel-Visualisierung passt perfekt zur DCA Methode
+- [x] Keine abstrakten/generischen Bilder mehr
+- [x] Marketing-relevante Visuals mit perfekter Landing Page Brücke
+- [x] Status: Produktionsbereit
+

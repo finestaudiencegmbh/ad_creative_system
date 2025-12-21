@@ -10,4 +10,5 @@ export const ENV = {
   metaAccessToken: process.env.META_ACCESS_TOKEN ?? "",
   metaAdAccountId: process.env.META_AD_ACCOUNT_ID ?? "",
   replicateApiToken: process.env.REPLICATE_API_TOKEN ?? "",
+  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
 };
