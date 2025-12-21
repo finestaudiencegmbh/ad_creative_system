@@ -156,11 +156,14 @@ export async function generateBatchCreatives(
         });
         
         // Generate background image with Gemini Imagen
+        // Use winning creative as reference image for style consistency
         const imagenResults = await generateImageWithImagen({
           prompt: imagenPrompt,
           numberOfImages: 1,
           aspectRatio: formatSpec.aspectRatio,
           imageSize: '1K',
+          // TODO: Enable reference images after GCS integration
+          // referenceImages: imageUrl ? [imageUrl] : [], // Use winning creative as style reference
         });
         
         const generatedImageUrl = imagenResults[0].imageUrl;

@@ -15,6 +15,7 @@ export interface ImagenConfig {
   aspectRatio?: "1:1" | "3:4" | "4:3" | "9:16" | "16:9"; // default "1:1"
   imageSize?: "1K" | "2K"; // default "1K" (only for Standard/Ultra)
   personGeneration?: "dont_allow" | "allow_adult" | "allow_all"; // default "allow_adult"
+  referenceImages?: string[]; // URLs of reference images (up to 14) for style consistency
 }
 
 export interface ImagenResponse {
@@ -37,6 +38,7 @@ export async function generateImageWithImagen(
     aspectRatio = "1:1",
     imageSize = "1K",
     personGeneration = "allow_adult",
+    referenceImages = [],
   } = config;
 
   try {
@@ -53,7 +55,18 @@ export async function generateImageWithImagen(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          instances: [{ prompt }],
+          instances: [
+            {
+              prompt,
+              // Add reference images if provided (up to 14)
+              ...(referenceImages.length > 0 && {
+                referenceImages: referenceImages.slice(0, 14).map(url => ({
+                  referenceType: 'STYLE', // Use STYLE reference for brand consistency
+                  referenceImage: { gcsUri: url }, // Use gcsUri instead of imageUri
+                })),
+              }),
+            },
+          ],
           parameters: {
             sampleCount: numberOfImages,
             aspectRatio,
@@ -142,7 +155,7 @@ export function buildLandingPageAwarePrompt(params: {
   // Extract key visual elements from landing page
   const visualElements = extractVisualElements(landingPageContent);
 
-  // Build prompt with landing page focus (in English for better Gemini Imagen results)
+  // Build prompt with landing page focus + cinematic quality (in English for better Gemini Imagen results)
   const prompt = `
 Create a professional Meta Ads creative image for ${format === "feed" ? "Feed" : format === "story" ? "Story" : "Reel"} format (${
     format === "feed" ? "1:1" : "9:16"
@@ -162,6 +175,13 @@ DESIGN SYSTEM:
 - Visual Style: ${designSystem.visualStyle}
 - Background Style: ${designSystem.backgroundStyle}
 
+CINEMATIC QUALITY (Gemini Best Practices):
+- Lighting: Cinematic lighting with subtle rim lights, ${determineLightingStyle(designSystem)}
+- Camera Perspective: ${determineCameraPerspective(format, visualElements)}
+- Vibe: ${determineVibe(landingPageContent, headline)}
+- Depth: Shallow depth of field with bokeh background for premium feel
+- Composition: Rule of thirds, leading lines, ${format === "feed" ? "centered subject" : "vertical flow"}
+
 REQUIREMENTS:
 - MUST be directly relevant to landing page content
 - MUST support the headline message
@@ -178,9 +198,66 @@ STYLE:
 - Marketing-appropriate (not artistic/abstract)
 - Focus on the product/service shown on landing page
 - Match the premium aesthetic of the landing page
+- Photorealistic rendering with attention to detail
 `.trim();
 
   return prompt;
+}
+
+/**
+ * Determine lighting style based on design system
+ */
+function determineLightingStyle(designSystem: DesignSystem): string {
+  const bgStyle = designSystem.backgroundStyle.toLowerCase();
+  const visualStyle = designSystem.visualStyle.toLowerCase();
+  
+  if (bgStyle.includes('dark') || bgStyle.includes('night')) {
+    return 'dramatic shadows with neon accents, moody atmosphere';
+  }
+  if (bgStyle.includes('gradient') || visualStyle.includes('modern')) {
+    return 'soft gradient lighting, contemporary feel';
+  }
+  if (visualStyle.includes('premium') || visualStyle.includes('luxury')) {
+    return 'golden hour warm tones, premium aesthetic';
+  }
+  return 'natural daylight, clean and bright';
+}
+
+/**
+ * Determine camera perspective based on format and visual elements
+ */
+function determineCameraPerspective(format: string, visualElements: string): string {
+  if (visualElements.includes('dashboard') || visualElements.includes('interface')) {
+    return 'Slightly elevated angle (15°), professional workspace view';
+  }
+  if (visualElements.includes('book') || visualElements.includes('guide')) {
+    return 'Low angle hero shot, emphasizing importance and value';
+  }
+  if (format === 'feed') {
+    return 'Eye-level perspective, direct and engaging';
+  }
+  return 'Dynamic angle with depth, vertical composition optimized';
+}
+
+/**
+ * Determine vibe based on landing page content and headline
+ */
+function determineVibe(landingPageContent: string, headline: string): string {
+  const content = (landingPageContent + ' ' + headline).toLowerCase();
+  
+  if (content.includes('premium') || content.includes('exclusive') || content.includes('luxury')) {
+    return 'Premium, exclusive, aspirational';
+  }
+  if (content.includes('fast') || content.includes('quick') || content.includes('sofort') || content.includes('jetzt')) {
+    return 'Energetic, urgent, action-oriented';
+  }
+  if (content.includes('simple') || content.includes('easy') || content.includes('einfach')) {
+    return 'Approachable, friendly, confidence-building';
+  }
+  if (content.includes('professional') || content.includes('business') || content.includes('enterprise')) {
+    return 'Professional, trustworthy, corporate';
+  }
+  return 'Modern, innovative, forward-thinking';
 }
 
 /**

@@ -515,3 +515,9 @@
 - [ ] Gemini Imagen Prompt auf Deutsch
 - [ ] Alle generierten Texte auf Deutsch (Headlines, Eyebrows, CTAs)
 
+
+
+### Gemini Best Practices Implementation
+- [x] Prompt-Qualität verbessern: Beleuchtung, Kameraperspektive, Vibe hinzufügen
+- [ ] Winning Creative als Referenzbild für Gemini Imagen nutzen (bis zu 14 Bilder) - TODO: GCS Integration erforderlich
+- [x] Performance-Feedback-Loop: CTR/ROAS-Daten für automatische Prompt-Optimierung

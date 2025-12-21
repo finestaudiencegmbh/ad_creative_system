@@ -1,4 +1,7 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, decimal, float } from "drizzle-orm/mysql-core";
+
+// Export creative performance feedback schema
+export * from "./schema_creative_feedback";
 
 /**
  * Core user table backing auth flow.
