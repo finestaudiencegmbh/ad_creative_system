@@ -551,3 +551,30 @@
 - [x] Landing Page Deep-Analyse implementieren (Zielgruppe, Probleme, Lösungen, CTA, Tone-of-Voice)
 - [x] Creative Generator mit gelernten Layout-Patterns aktualisieren
 - [x] Headline-Generierung mit Landing Page Deep-Analyse verbessern
+
+
+### Creative Pattern Analysis from User Examples
+- [x] Analyze 13 successful creatives with Gemini Vision
+- [x] Extract text positions (Eyebrow, Headline, CTA exact coordinates)
+- [x] Extract typography specs (font sizes, colors, shadows, weights)
+- [x] Extract layout patterns (symmetry, spacing, safe zones)
+- [x] Extract color scheme (Purple/Lila, Black, White, accents)
+- [x] Extract visual elements (icons, frames, backgrounds)
+- [x] Update text-overlay-sharp.ts with learned patterns
+- [x] Update geminiImagen.ts prompts to match visual style
+- [x] Test generation with new patterns
+
+
+### Layout/CI Separation for Multi-Customer Support
+- [x] Keep layout patterns fixed (positions, sizes, safe zones from learned patterns)
+- [x] Make eyebrow/headline/CTA colors dynamic from landing page extraction
+- [x] Make visual style dynamic based on customer brand (not always cyberpunk)
+- [x] Extract primary/accent colors from landing page for each customer
+- [x] Adapt Gemini Imagen prompts to customer's brand style (not fixed cyberpunk)
+- [x] Test with different landing page to verify personalization works
+
+
+### URGENT: CTA Text Bug Fix
+- [x] Find where CTA text is generated (currently shows "ALLE AKZEPTIEREN" instead of landing page CTA)
+- [x] Fix CTA text to use landing page CTA or deep analysis CTA
+- [x] Test CTA fix with DCA campaign

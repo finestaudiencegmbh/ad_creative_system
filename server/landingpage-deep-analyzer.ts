@@ -82,7 +82,7 @@ Analysiere folgende Aspekte:
    - Welche emotionalen Trigger werden genutzt? (Angst, Dringlichkeit, Social Proof, FOMO, etc.)
 
 4. CALL-TO-ACTION:
-   - Was ist der primäre CTA?
+   - Was ist der primäre CTA? (NICHT Cookie-Banner CTAs wie "Alle akzeptieren", "Accept all cookies", etc.!)
    - Gibt es einen sekundären CTA?
    - Welche Dringlichkeit wird kommuniziert? (Zeitlich begrenzt, Scarcity, etc.)
 
@@ -91,6 +91,7 @@ WICHTIG:
 - Achte auf die genaue Ansprache (Du vs. Sie)
 - Identifiziere die stärksten emotionalen Trigger
 - Finde die Kern-Botschaft, die in jedem Ad Text vorkommen sollte
+- IGNORIERE Cookie-Banner CTAs! Suche nach dem HAUPT-CTA der Landing Page (z.B. "Jetzt starten", "Mehr erfahren", "Kostenlos testen")
 
 Gib die Analyse in folgendem JSON-Format zurück (OHNE Markdown-Formatierung):
 {

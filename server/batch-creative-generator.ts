@@ -187,18 +187,19 @@ export async function generateBatchCreatives(
         const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
         
         // Step 3: Add text overlays using Sharp + SVG
-        const imageWithText = await addTextOverlaySharp({
+         const finalBuffer = await addTextOverlaySharp({
           imageBuffer,
           eyebrowText: headline.eyebrow,
           headlineText: headline.headline,
           ctaText: headline.cta,
           format: config.format,
-        });
+          designSystem,
+        });;
         
         // Step 3: Upload final creative to S3
         const randomSuffix = Math.random().toString(36).substring(7);
         const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
-        const result = await storagePut(fileKey, imageWithText, 'image/png');
+        const result = await storagePut(fileKey, finalBuffer, 'image/png');
         const finalUrl = result.url;
         console.log(`✅ Creative ${index} complete: SDXL background + Canvas text overlays`);
         

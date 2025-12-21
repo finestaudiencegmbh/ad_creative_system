@@ -8,12 +8,13 @@ import { calculateSafeZones, getTypographySpecs } from './safe-zone-calculator';
 
 type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
 
-interface TextOverlayConfig {
+export interface TextOverlayConfig {
   imageBuffer: Buffer;
   eyebrowText?: string;
   headlineText: string;
   ctaText?: string;
   format: CreativeFormat;
+  designSystem?: { colorPalette: string[] };
 }
 
 interface FormatConfig {
@@ -32,12 +33,12 @@ const formatConfigs: Record<Exclude<CreativeFormat, 'all'>, FormatConfig> = {
   feed: {
     width: 1080,
     height: 1080,
-    safeZoneTop: 0,
-    safeZoneBottom: 0,
-    eyebrowFontSize: 38, // Updated from learned patterns
-    headlineFontSize: 70, // Updated from learned patterns
-    ctaFontSize: 43, // Updated from learned patterns
-    lineHeight: 1.2, // Tighter for better readability
+    safeZoneTop: 74,  // Learned from user creatives
+    safeZoneBottom: 19,  // Learned from user creatives
+    eyebrowFontSize: 37,  // Learned from user creatives
+    headlineFontSize: 68,  // Learned from user creatives
+    ctaFontSize: 32,
+    lineHeight: 1.2,
   },
   story: {
     width: 1080,
@@ -121,6 +122,20 @@ function generateTextSVG(config: TextOverlayConfig): string {
   let currentY = centerY - totalHeight / 2;
 
   const svgElements: string[] = [];
+  
+  // Extract colors from design system or use defaults
+  // Eyebrow: Prefer red/warm accent colors
+  const eyebrowColor = config.designSystem?.colorPalette?.find((c: string) => 
+    c.toUpperCase().match(/#[A-F][0-9A-F]{1}0000/) || // Red colors like #FF0000, #A00000
+    c.toUpperCase().match(/#[E-F][0-9A-F]{4}/) || // Bright reds
+    c.toUpperCase().match(/#[3-4][0-9A-F]FF[0-9A-F]{2}/) // Neon greens like #39FF14, #26FF00
+  ) || '#FF0000';
+  
+  // CTA: Prefer green colors
+  const ctaColor = config.designSystem?.colorPalette?.find((c: string) => 
+    c.toUpperCase().match(/#00[6-8][0-9A-F]{3}/) || // Green colors like #008000, #006600
+    c.toUpperCase().match(/#[0-6][A-F]1[B-F]9[A-F]/) // Purple colors like #5E259F, #6A1B9A
+  ) || '#008000';
 
   // Eyebrow text (small, uppercase, colored)
   if (config.eyebrowText) {
@@ -145,7 +160,7 @@ function generateTextSVG(config: TextOverlayConfig): string {
         font-family="Arial, sans-serif"
         font-size="${eyebrowFontSize}"
         font-weight="700"
-        fill="#00ff88"
+        fill="${eyebrowColor}"
         text-anchor="middle"
         letter-spacing="2"
         filter="url(#eyebrow-shadow)"
@@ -200,8 +215,8 @@ function generateTextSVG(config: TextOverlayConfig): string {
         y="${currentY - ctaFontSize}"
         width="${ctaBoxWidth}"
         height="${ctaBoxHeight}"
-        fill="#00ff88"
-        rx="8"
+        fill="${ctaColor}"
+        rx="9"
       />
       <text
         x="${width / 2}"

@@ -206,21 +206,21 @@ STYLE:
 
 /**
  * Determine lighting style based on design system
+ * ALWAYS uses dark/neon cyberpunk aesthetic for user's brand
  */
 function determineLightingStyle(designSystem: DesignSystem): string {
+  // ALWAYS use dark background with neon accents for user's brand
   const bgStyle = designSystem.backgroundStyle.toLowerCase();
   const visualStyle = designSystem.visualStyle.toLowerCase();
   
-  if (bgStyle.includes('dark') || bgStyle.includes('night')) {
-    return 'dramatic shadows with neon accents, moody atmosphere';
-  }
-  if (bgStyle.includes('gradient') || visualStyle.includes('modern')) {
-    return 'soft gradient lighting, contemporary feel';
-  }
   if (visualStyle.includes('premium') || visualStyle.includes('luxury')) {
-    return 'golden hour warm tones, premium aesthetic';
+    return 'dark background with purple/pink neon glow, dramatic shadows, premium cyberpunk aesthetic';
   }
-  return 'natural daylight, clean and bright';
+  if (bgStyle.includes('tech') || bgStyle.includes('digital')) {
+    return 'dark background with blue/green neon highlights, futuristic tech lighting, high contrast';
+  }
+  // Default: dark/neon cyberpunk style
+  return 'dark background (#000000) with bright neon accents (green #26FF00, purple #5E259F), cyberpunk lighting, high contrast, moody atmosphere';
 }
 
 /**
@@ -241,23 +241,25 @@ function determineCameraPerspective(format: string, visualElements: string): str
 
 /**
  * Determine vibe based on landing page content and headline
+ * ALWAYS uses dark/neon cyberpunk aesthetic for user's brand
  */
 function determineVibe(landingPageContent: string, headline: string): string {
   const content = (landingPageContent + ' ' + headline).toLowerCase();
   
+  // ALWAYS use dark/neon cyberpunk vibe for user's brand
   if (content.includes('premium') || content.includes('exclusive') || content.includes('luxury')) {
-    return 'Premium, exclusive, aspirational';
+    return 'Dark, premium cyberpunk aesthetic, exclusive futuristic vibe, high-tech luxury, neon-lit sophistication';
   }
   if (content.includes('fast') || content.includes('quick') || content.includes('sofort') || content.includes('jetzt')) {
-    return 'Energetic, urgent, action-oriented';
+    return 'Energetic dark theme, dynamic neon elements, fast-paced cyberpunk, urgent futuristic atmosphere';
   }
   if (content.includes('simple') || content.includes('easy') || content.includes('einfach')) {
-    return 'Approachable, friendly, confidence-building';
+    return 'Clean dark design, minimal neon accents, accessible futuristic style, approachable cyberpunk';
   }
   if (content.includes('professional') || content.includes('business') || content.includes('enterprise')) {
-    return 'Professional, trustworthy, corporate';
+    return 'Professional dark aesthetic, corporate cyberpunk, trustworthy futuristic design, business-grade neon tech';
   }
-  return 'Modern, innovative, forward-thinking';
+  return 'Dark, futuristic, cyberpunk, high-tech, neon-lit, modern, innovative, 3D rendered';
 }
 
 /**
