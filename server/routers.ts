@@ -1252,6 +1252,8 @@ export const appRouter = router({
         format: z.enum(['feed', 'story', 'reel']),
         count: z.number().min(1).max(10),
         userDescription: z.string().optional(),
+        manualLandingPage: z.string().optional(),
+        adSetId: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { generateBatchCreatives } = await import('./batch-creative-generator');
@@ -1261,6 +1263,8 @@ export const appRouter = router({
           format: input.format,
           count: input.count,
           userDescription: input.userDescription,
+          manualLandingPage: input.manualLandingPage,
+          adSetId: input.adSetId,
         });
         
         return creatives;

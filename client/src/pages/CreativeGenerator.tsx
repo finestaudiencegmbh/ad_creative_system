@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { startOfMonth, endOfMonth, format as formatDate } from "date-fns";
 
-type CreativeFormat = 'feed' | 'story' | 'reel';
+type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
 
 interface GeneratedCreative {
   imageUrl: string;
@@ -25,6 +25,10 @@ interface GeneratedCreative {
 export default function CreativeGenerator() {
   // Step 1: Campaign selection
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [manualLandingPage, setManualLandingPage] = useState<string>("");
+  
+  // Step 1b: Ad Set selection (optional)
+  const [selectedAdSetId, setSelectedAdSetId] = useState<string>("");
   
   // Step 2: Format selection
   const [format, setFormat] = useState<CreativeFormat>("feed");
@@ -69,6 +73,8 @@ export default function CreativeGenerator() {
     { enabled: !!selectedCampaignId }
   );
 
+  // Note: Ad set selection will use ad set IDs from campaign data
+
   const generateBatchMutation = trpc.ai.generateBatchCreatives.useMutation();
 
   const handleGenerate = async () => {
@@ -91,15 +97,26 @@ export default function CreativeGenerator() {
     try {
       toast.info("⚡ Analysiere Winning Ads und extrahiere Design-System...");
       
-      const creatives = await generateBatchMutation.mutateAsync({
-        campaignId: selectedCampaignId,
-        format,
-        count: batchCount,
-        userDescription: description || undefined,
-      });
+      // If "all" formats selected, generate for each format
+      const formatsToGenerate: ('feed' | 'story' | 'reel')[] = 
+        format === 'all' ? ['feed', 'story', 'reel'] : [format as 'feed' | 'story' | 'reel'];
       
-      setGeneratedCreatives(creatives);
-      toast.success(`✅ ${creatives.length} Creative${creatives.length > 1 ? 's' : ''} erfolgreich generiert!`);
+      const allCreatives: GeneratedCreative[] = [];
+      
+      for (const fmt of formatsToGenerate) {
+        const creatives = await generateBatchMutation.mutateAsync({
+          campaignId: selectedCampaignId,
+          format: fmt,
+          count: batchCount,
+          userDescription: description || undefined,
+          manualLandingPage: manualLandingPage || undefined,
+          adSetId: selectedAdSetId || undefined,
+        });
+        allCreatives.push(...creatives);
+      }
+      
+      setGeneratedCreatives(allCreatives);
+      toast.success(`✅ ${allCreatives.length} Creative${allCreatives.length > 1 ? 's' : ''} erfolgreich generiert!`);
     } catch (error) {
       console.error('Generation error:', error);
       toast.error("Fehler beim Generieren der Creatives");
@@ -137,10 +154,11 @@ export default function CreativeGenerator() {
 
   const activeCampaigns = campaignsData?.filter(c => c.status === 'ACTIVE') || [];
 
-  const formatSpecs = {
+  const formatSpecs: Record<CreativeFormat, { label: string; size: string; description: string }> = {
     feed: { label: 'Feed (1:1)', size: '1080 × 1080 px', description: 'Quadratisches Format für News Feed' },
     story: { label: 'Story (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Stories (Safe Zones: Top 14%, Bottom 20%)' },
     reel: { label: 'Reel (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Reels (Safe Zones: Top 25%, Bottom 30%)' },
+    all: { label: 'Alle Formate', size: 'Feed + Story + Reel', description: 'Generiert Creatives in allen drei Formaten' },
   };
 
   return (
@@ -200,6 +218,42 @@ export default function CreativeGenerator() {
                     </p>
                   </div>
                 )}
+
+                {/* Manual Landing Page Override */}
+                <div className="space-y-2">
+                  <Label htmlFor="manualLandingPage" className="text-sm">
+                    Manuelle Landingpage (Optional)
+                  </Label>
+                  <input
+                    id="manualLandingPage"
+                    type="url"
+                    placeholder="https://..."
+                    value={manualLandingPage}
+                    onChange={(e) => setManualLandingPage(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Falls automatische Erkennung fehlschlägt, kannst du hier manuell eine URL eingeben
+                  </p>
+                </div>
+
+                {/* Ad Set Selection (Optional) */}
+                <div className="space-y-2">
+                  <Label htmlFor="adSetId" className="text-sm">
+                    Anzeigengruppe (Optional)
+                  </Label>
+                  <input
+                    id="adSetId"
+                    type="text"
+                    placeholder="Ad Set ID für Targeting-Kontext"
+                    value={selectedAdSetId}
+                    onChange={(e) => setSelectedAdSetId(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Für zielgruppenspezifische Creatives kannst du eine Ad Set ID angeben
+                  </p>
+                </div>
 
                 {winningCreativesLoading && selectedCampaignId && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -224,3 +224,10 @@
 - [x] Frontend: Komplette Integration des Batch-Flows
 - [x] Frontend: Grid-View für multiple Creatives
 - [x] Download: Einzelne Creatives (ZIP-Download optional)
+
+
+### Bug Fixes - Creative Generator UI Features
+- [x] Manuelle Landingpage-Eingabe wieder hinzufügen (falls automatische Erkennung fehlschlägt)
+- [x] Anzeigengruppen-Auswahl für Targeting-Kontext wieder hinzufügen
+- [x] "Alle Formate" Option wieder hinzufügen (generiert Feed + Story + Reel)
+- [x] Canvas Error beheben: Text-Overlay vollständig optional machen (kein Error im Frontend)

@@ -4,8 +4,21 @@
  * Adds text overlays to generated images using Canvas API
  */
 
-import { createCanvas, loadImage, registerFont } from 'canvas';
 import type { DesignSystem } from './creative-analyzer';
+
+// Canvas is optional - gracefully handle if not available
+let createCanvas: any;
+let loadImage: any;
+let registerFont: any;
+
+try {
+  const canvas = require('canvas');
+  createCanvas = canvas.createCanvas;
+  loadImage = canvas.loadImage;
+  registerFont = canvas.registerFont;
+} catch (error) {
+  console.warn('⚠️  Canvas module not available - text overlays will be skipped');
+}
 
 export type CreativeFormat = 'feed' | 'story' | 'reel';
 
@@ -72,6 +85,11 @@ export async function addTextOverlay(
   imageUrl: string,
   config: TextOverlayConfig
 ): Promise<Buffer> {
+  // Check if canvas is available
+  if (!createCanvas || !loadImage) {
+    throw new Error('Canvas module not available - cannot add text overlays');
+  }
+  
   try {
     // Load the generated image
     const image = await loadImage(imageUrl);

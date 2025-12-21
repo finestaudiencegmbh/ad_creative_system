@@ -13,6 +13,8 @@ export interface BatchGenerationConfig {
   format: CreativeFormat;
   count: number;
   userDescription?: string;
+  manualLandingPage?: string;
+  adSetId?: string;
 }
 
 export interface GeneratedCreative {
