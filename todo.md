@@ -349,3 +349,11 @@
 - [x] Generierung läuft weiter im Hintergrund wenn Modal geschlossen
 - [x] Backdrop mit Gradient der Akzentfarbe (lila/violett)
 - [x] Modal bleibt weiß, nur Hintergrund wird abgedunkelt
+
+### CRITICAL BUG - SDXL Output Format Error
+- [x] "Invalid SDXL output format" Fehler bei Creative-Generierung
+- [x] sdxlTextImage.ts geprüft: Output-Format Parameter
+- [x] Replicate API Dokumentation geprüft: Output ist uri[]
+- [x] Verbessertes Error Handling implementiert mit detailliertem Logging
+- [x] Unterstützung für Array, String und Object Output-Formate
+- [ ] Testen mit echten Replicate Credits

@@ -59,10 +59,28 @@ Style: Modern advertising creative, professional typography, clean layout, high 
       }
     );
 
-    const imageUrl = Array.isArray(output) ? output[0] : output;
+    console.log(`🔍 SDXL raw output:`, JSON.stringify(output, null, 2));
+    console.log(`🔍 Output type: ${typeof output}, isArray: ${Array.isArray(output)}`);
+
+    // Handle different output formats
+    let imageUrl: string | undefined;
     
-    if (typeof imageUrl !== 'string') {
-      throw new Error('Invalid SDXL output format');
+    if (Array.isArray(output)) {
+      imageUrl = output[0];
+      console.log(`📊 Array output, first element: ${imageUrl}`);
+    } else if (typeof output === 'string') {
+      imageUrl = output;
+      console.log(`📊 String output: ${imageUrl}`);
+    } else if (output && typeof output === 'object') {
+      // Try to extract URL from object
+      const obj = output as any;
+      imageUrl = obj.url || obj.uri || obj.output || obj[0];
+      console.log(`📊 Object output, extracted: ${imageUrl}`);
+    }
+    
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      console.error(`❌ Invalid SDXL output format. Output:`, output);
+      throw new Error(`Invalid SDXL output format: expected string URL, got ${typeof output}. Raw output: ${JSON.stringify(output)}`);
     }
 
     console.log(`✅ SDXL image generated: ${imageUrl}`);
