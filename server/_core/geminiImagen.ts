@@ -142,41 +142,42 @@ export function buildLandingPageAwarePrompt(params: {
   // Extract key visual elements from landing page
   const visualElements = extractVisualElements(landingPageContent);
 
-  // Build prompt with landing page focus (in German)
+  // Build prompt with landing page focus (in English for better Gemini Imagen results)
   const prompt = `
-Erstelle ein professionelles Meta Ads Creative-Bild für ${format === "feed" ? "Feed" : format === "story" ? "Story" : "Reel"}-Format (${
+Create a professional Meta Ads creative image for ${format === "feed" ? "Feed" : format === "story" ? "Story" : "Reel"} format (${
     format === "feed" ? "1:1" : "9:16"
-  } Seitenverhältnis).
+  } aspect ratio).
 
-LANDING PAGE KONTEXT:
+LANDING PAGE CONTEXT:
 ${landingPageContent}
 
-VISUELLE ELEMENTE ZU INKLUDIEREN:
+VISUAL ELEMENTS TO INCLUDE:
 ${visualElements}
 
-HEADLINE ZU UNTERSTÜTZEN:
+HEADLINE TO SUPPORT:
 "${headline}"
 
 DESIGN SYSTEM:
-- Farbpalette: ${designSystem.colorPalette.join(', ')}
-- Visueller Stil: ${designSystem.visualStyle}
-- Hintergrund-Stil: ${designSystem.backgroundStyle}
+- Color Palette: ${designSystem.colorPalette.join(', ')}
+- Visual Style: ${designSystem.visualStyle}
+- Background Style: ${designSystem.backgroundStyle}
 
-ANFORDERUNGEN:
-- MUSS direkt relevant zum Landing Page Inhalt sein
-- MUSS die Headline-Botschaft unterstützen
-- KEINE generischen/abstrakten Visuals (keine zufälligen Smartphones, Netzwerke, geometrische Formen)
-- Verwende Landing Page Farbschema
-- Professionell, hochwertig, marketing-fokussiert
-- ${format === "feed" ? "Quadratische Komposition" : "Vertikale Komposition"}
-- Lasse Platz für Text-Overlays (oben und unten)
+REQUIREMENTS:
+- MUST be directly relevant to landing page content
+- MUST support the headline message
+- NO generic/abstract visuals (no random smartphones, networks, geometric shapes)
+- Use landing page color scheme
+- Professional, high-quality, marketing-focused
+- ${format === "feed" ? "Square composition" : "Vertical composition"}
+- Leave space for text overlays (top and bottom)
+- NO TEXT IN IMAGE - text will be added separately as overlay
 
-STIL:
-- Modern, sauber, professionell
-- Hochwertige Fotografie oder digitale Illustration
-- Marketing-gerecht (nicht künstlerisch/abstrakt)
-- Fokus auf das Produkt/Service der Landing Page
-- WICHTIG: Bild muss auf Deutsch sein und zur deutschen Landing Page passen
+STYLE:
+- Modern, clean, professional
+- High-quality photography or digital illustration
+- Marketing-appropriate (not artistic/abstract)
+- Focus on the product/service shown on landing page
+- Match the premium aesthetic of the landing page
 `.trim();
 
   return prompt;
