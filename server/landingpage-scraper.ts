@@ -15,6 +15,9 @@ export interface LandingPageData {
   ogImage: string | null;
   keywords: string | null;
   h1: string | null;
+  h2: string | null; // First H2 (subheadline)
+  heroImages: string[]; // Images in hero section
+  ctaText: string | null; // First CTA button text
   error?: string;
 }
 
@@ -56,6 +59,27 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
     
     // First H1 heading
     const h1 = $('h1').first().text().trim() || null;
+    
+    // First H2 (subheadline)
+    const h2 = $('h2').first().text().trim() || null;
+    
+    // Extract hero images (first 3 images in body)
+    const heroImages: string[] = [];
+    $('img').slice(0, 3).each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) {
+        // Convert relative URLs to absolute
+        try {
+          const absoluteUrl = new URL(src, url).href;
+          heroImages.push(absoluteUrl);
+        } catch {
+          // Skip invalid URLs
+        }
+      }
+    });
+    
+    // Extract first CTA button text
+    const ctaText = $('button, a.button, a.btn, [class*="cta"]').first().text().trim() || null;
 
     return {
       url,
@@ -66,6 +90,9 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
       ogImage,
       keywords,
       h1,
+      h2,
+      heroImages,
+      ctaText,
     };
   } catch (error) {
     return {
@@ -77,6 +104,9 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
       ogImage: null,
       keywords: null,
       h1: null,
+      h2: null,
+      heroImages: [],
+      ctaText: null,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

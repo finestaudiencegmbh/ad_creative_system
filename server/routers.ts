@@ -1056,6 +1056,77 @@ export const appRouter = router({
         
         return { winners: winnersWithImages, insights };
       }),
+
+    // Creative Generator - Generate contextual prompt
+    generateCreativePrompt: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        userDescription: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { analyzeWinningCreatives, generateContextualPrompt } = await import('./creative-analyzer');
+        const { getAdCreatives, extractImageUrl, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
+        const { scrapeLandingPage, getBestTitle } = await import('./landingpage-scraper');
+        
+        // Get winning ads images
+        const adSets = await getCampaignAdSets(input.campaignId);
+        const allAds = [];
+        for (const adSet of adSets) {
+          const ads = await getAdSetAds(adSet.id);
+          allAds.push(...ads);
+        }
+        
+        // Get top 3 ad images
+        const imageUrls: string[] = [];
+        for (const ad of allAds.slice(0, 3)) {
+          try {
+            const creative = await getAdCreatives(ad.id);
+            const imageUrl = extractImageUrl(creative);
+            if (imageUrl) imageUrls.push(imageUrl);
+          } catch (error) {
+            console.error(`Failed to fetch image for ad ${ad.id}:`, error);
+          }
+        }
+        
+        // Analyze winning creatives
+        const creativeAnalysis = await analyzeWinningCreatives(imageUrls);
+        
+        // Get landing page data (use first ad's URL)
+        let landingPageData = null;
+        if (allAds.length > 0) {
+          try {
+            const creative = await getAdCreatives(allAds[0].id);
+            const { extractLandingPageUrl } = await import('./meta-api');
+            const url = extractLandingPageUrl(creative);
+            if (url) {
+              landingPageData = await scrapeLandingPage(url);
+            }
+          } catch (error) {
+            console.error('Failed to scrape landing page:', error);
+          }
+        }
+        
+        if (!landingPageData) {
+          throw new Error('Could not extract landing page data');
+        }
+        
+        // Generate contextual prompt
+        const prompt = await generateContextualPrompt(
+          landingPageData,
+          creativeAnalysis,
+          input.userDescription
+        );
+        
+        return {
+          prompt,
+          analysis: creativeAnalysis,
+          landingPage: {
+            h1: landingPageData.h1,
+            h2: landingPageData.h2,
+            ctaText: landingPageData.ctaText,
+          },
+        };
+      }),
   }),
 });
 

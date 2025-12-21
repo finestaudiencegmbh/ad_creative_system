@@ -191,3 +191,10 @@
 - [x] Seitentitel ("Startseite") aus Beschreibungsfeld entfernen
 - [x] Feld standardmäßig leer lassen für manuelle Eingabe
 - [x] Hilfreichen Placeholder-Text hinzugefügt
+
+### Feature - Intelligente Creative-Analyse für Prompt-Generierung
+- [x] Landing Page Hero-Section detailliert scrapen (H1, H2, CTA, Hero-Bilder)
+- [x] Winning Ads Bilder mit Vision API analysieren (visuelle Elemente, Komposition, Farben)
+- [x] LLM-basierter Prompt-Generator: Kombiniert Landing Page + Winning Ads Analyse
+- [x] Kontextspezifische FLUX-Prompts statt generischer Templates
+- [x] Integration in Creative Generator Flow mit generateCreativePrompt Mutation

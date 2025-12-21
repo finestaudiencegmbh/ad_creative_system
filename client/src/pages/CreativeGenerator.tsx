@@ -82,6 +82,7 @@ export default function CreativeGenerator() {
   // Auto-filling with page title ("Startseite") is not useful
 
   const generateImageMutation = trpc.ai.generateImage.useMutation();
+  const generatePromptMutation = trpc.ai.generateCreativePrompt.useMutation();
 
   const handleGenerate = async () => {
     // Validation
@@ -98,90 +99,54 @@ export default function CreativeGenerator() {
     toast.info("Creative wird generiert... Das dauert ca. 10-20 Sekunden");
 
     try {
-      // Build context for AI
-      const context = [];
-      
-      if (landingPageData?.data) {
-        context.push(`Landingpage: ${landingPageData.data.title}`);
-        context.push(`Beschreibung: ${landingPageData.data.description}`);
-      }
-      
-      if (audienceData) {
-        const targeting = [];
-        if (audienceData.age_min && audienceData.age_max) {
-          targeting.push(`Alter: ${audienceData.age_min}-${audienceData.age_max}`);
-        }
-        if (audienceData.genders) {
-          targeting.push(`Geschlecht: ${audienceData.genders.map((g: number) => g === 1 ? 'Männlich' : 'Weiblich').join(', ')}`);
-        }
-        if (targeting.length > 0) {
-          context.push(`Zielgruppe: ${targeting.join(', ')}`);
-        }
-      }
-      
-      if (winningCreativesData?.insights) {
-        context.push(`Performance-Insights: ${winningCreativesData.insights}`);
-      }
-      
-      if (description) {
-        context.push(`Zusätzliche Beschreibung: ${description}`);
-      }
-
       // Determine aspect ratio based on format
       let aspectRatio: "1:1" | "16:9" | "9:16" | "3:4" | "4:3" = "3:4";
       if (format === "feed") aspectRatio = "3:4";
       if (format === "story" || format === "reel") aspectRatio = "9:16";
 
-      // Build proper advertising creative prompt
       let prompt = "";
       
-      // Detect if it's B2B/Lead-Gen/Service based on landing page content
-      const isB2BLeadGen = landingPageData?.data?.description?.toLowerCase().includes('lead') ||
-                          landingPageData?.data?.description?.toLowerCase().includes('kundengewinnung') ||
-                          landingPageData?.data?.description?.toLowerCase().includes('unternehmer') ||
-                          landingPageData?.data?.title?.toLowerCase().includes('meta ads') ||
-                          landingPageData?.data?.title?.toLowerCase().includes('marketing');
-      
-      if (isB2BLeadGen) {
-        // B2B Lead-Gen Creative Style
-        prompt = "Professional B2B marketing ad creative, clean modern design, ";
-        prompt += "showing business results and metrics, dashboard screenshots or WhatsApp conversation with leads, ";
-        prompt += "professional business setting, data-driven visuals, success indicators, ";
-        prompt += "corporate color scheme, high-end business photography, ";
+      // Use intelligent prompt generation if campaign is selected
+      if (selectedCampaignId) {
+        toast.info("⚡ Analysiere Winning Ads und Landing Page...");
+        
+        try {
+          const promptData = await generatePromptMutation.mutateAsync({
+            campaignId: selectedCampaignId,
+            userDescription: description || undefined,
+          });
+          
+          prompt = promptData.prompt;
+          
+          toast.success("✅ Intelligente Analyse abgeschlossen!");
+          console.log('Generated Contextual Prompt:', prompt);
+          console.log('Creative Analysis:', promptData.analysis);
+          console.log('Landing Page:', promptData.landingPage);
+        } catch (error) {
+          console.error('Prompt generation failed, using fallback:', error);
+          toast.warning('⚠️ Fallback zu Standard-Prompt');
+          
+          // Fallback to basic prompt
+          prompt = "Professional B2B marketing ad creative showing dashboard with metrics, " +
+                   "clean modern design, business data visualization, " +
+                   "professional color scheme, high quality";
+        }
       } else {
-        // Product/E-Commerce Creative Style
-        prompt = "Professional advertising creative, high quality product photography, modern minimalist design, ";
-      }
-      
-      if (landingPageData?.data?.title) {
-        prompt += `Context: ${landingPageData.data.title}, `;
-      }
-      
-      if (landingPageData?.data?.description) {
-        const desc = landingPageData.data.description.substring(0, 200); // Limit length
-        prompt += `${desc}, `;
-      }
-      
-      if (audienceData) {
-        if (audienceData.age_min && audienceData.age_max) {
-          const avgAge = (audienceData.age_min + audienceData.age_max) / 2;
-          if (avgAge < 30) {
-            prompt += "youthful and energetic style, vibrant colors, ";
-          } else if (avgAge < 50) {
-            prompt += "professional and trustworthy style, clean design, ";
-          } else {
-            prompt += "elegant and sophisticated style, premium quality, ";
-          }
+        // Manual URL - use basic prompt
+        prompt = "Professional advertising creative, modern design, high quality";
+        if (description) {
+          prompt += `, ${description}`;
         }
       }
       
-      if (description) {
-        prompt += `${description}, `;
+      // Add format-specific guidance
+      if (format === "story" || format === "reel") {
+        prompt += ", vertical format optimized for mobile viewing";
       }
       
-      prompt += "no text overlay, no watermarks, commercial photography, studio lighting, 4k quality";
+      prompt += ", no text overlay, no watermarks, professional composition";
       
-      console.log('FLUX Prompt:', prompt);
+      console.log('Final FLUX Prompt:', prompt);
 
       const result = await generateImageMutation.mutateAsync({
         prompt,
