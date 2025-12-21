@@ -1152,7 +1152,28 @@ export const appRouter = router({
         });
       }),
 
-    // Creative Generator - Generate batch creatives
+    // Creative Generator V2 - 4-Step Workflow (Deep Analysis + Claude + Gemini)
+    generateBatchCreativesV2: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        landingPageUrl: z.string(),
+        formats: z.array(z.enum(['feed', 'story', 'reel'])),
+        count: z.number().min(1).max(10),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateBatchCreativesV2 } = await import('./batch-creative-generator-v2');
+        
+        const results = await generateBatchCreativesV2({
+          campaignId: input.campaignId,
+          landingPageUrl: input.landingPageUrl,
+          formats: input.formats,
+          count: input.count,
+        });
+        
+        return results;
+      }),
+
+    // Creative Generator - Generate batch creatives (OLD)
     generateBatchCreatives: protectedProcedure
       .input(z.object({
         campaignId: z.string(),
