@@ -4,34 +4,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Trophy, TrendingUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Sparkles, Loader2, Trophy, Download, Image as ImageIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { startOfMonth, endOfMonth, format as formatDate } from "date-fns";
 
+type CreativeFormat = 'feed' | 'story' | 'reel';
+
+interface GeneratedCreative {
+  imageUrl: string;
+  headline: string;
+  eyebrowText?: string;
+  ctaText?: string;
+  format: CreativeFormat;
+}
+
 export default function CreativeGenerator() {
   // Step 1: Campaign selection
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
-  const [manualUrl, setManualUrl] = useState("");
   
-  // Step 2: Ad Set selection (optional)
-  const [selectedAdSetId, setSelectedAdSetId] = useState<string>("");
+  // Step 2: Format selection
+  const [format, setFormat] = useState<CreativeFormat>("feed");
   
-  // Step 3: Format selection
-  const [format, setFormat] = useState<string>("feed");
+  // Step 3: Batch count
+  const [batchCount, setBatchCount] = useState<number>(3);
   
-  // Step 3b: Batch count
-  const [batchCount, setBatchCount] = useState<number>(1);
-  
-  // Step 4: Description (optional, auto-filled)
+  // Step 4: Description (optional)
   const [description, setDescription] = useState("");
   
   // State
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedCreatives, setGeneratedCreatives] = useState<GeneratedCreative[]>([]);
 
   // Fetch campaigns
   const now = new Date();
@@ -45,28 +51,10 @@ export default function CreativeGenerator() {
     },
   });
 
-  // Fetch ad sets when campaign is selected
-  const { data: adSetsData, isLoading: adSetsLoading } = trpc.adsets.listByCampaign.useQuery(
-    {
-      campaignId: selectedCampaignId,
-      timeRange: {
-        since: formatDate(startDate, 'yyyy-MM-dd'),
-        until: formatDate(endDate, 'yyyy-MM-dd'),
-      },
-    },
-    { enabled: !!selectedCampaignId }
-  );
-
   // Fetch landing page data when campaign is selected
   const { data: landingPageData, isLoading: landingPageLoading } = trpc.ai.getLandingPageFromCampaign.useQuery(
     { campaignId: selectedCampaignId },
     { enabled: !!selectedCampaignId }
-  );
-
-  // Fetch audience targeting when ad set is selected
-  const { data: audienceData } = trpc.ai.getAudienceTargeting.useQuery(
-    { adSetId: selectedAdSetId },
-    { enabled: !!selectedAdSetId }
   );
 
   // Fetch winning creatives when campaign is selected
@@ -81,16 +69,12 @@ export default function CreativeGenerator() {
     { enabled: !!selectedCampaignId }
   );
 
-  // Note: Description field is intentionally left empty for manual input
-  // Auto-filling with page title ("Startseite") is not useful
-
-  const generateImageMutation = trpc.ai.generateImage.useMutation();
-  const generatePromptMutation = trpc.ai.generateCreativePrompt.useMutation();
+  const generateBatchMutation = trpc.ai.generateBatchCreatives.useMutation();
 
   const handleGenerate = async () => {
     // Validation
-    if (!selectedCampaignId && !manualUrl) {
-      toast.error("Bitte wähle eine Kampagne aus oder gib eine Landingpage-URL ein");
+    if (!selectedCampaignId) {
+      toast.error("Bitte wähle eine Kampagne aus");
       return;
     }
     if (!format) {
@@ -99,80 +83,65 @@ export default function CreativeGenerator() {
     }
 
     setIsGenerating(true);
-    toast.info("Creative wird generiert... Das dauert ca. 10-20 Sekunden");
+    setGeneratedCreatives([]);
+    
+    const estimatedTime = batchCount * 15; // ~15 seconds per creative
+    toast.info(`Generiere ${batchCount} Creative${batchCount > 1 ? 's' : ''}... Das dauert ca. ${estimatedTime}-${estimatedTime + 10} Sekunden`);
 
     try {
-      // Determine aspect ratio based on format
-      let aspectRatio: "1:1" | "16:9" | "9:16" | "3:4" | "4:3" = "3:4";
-      if (format === "feed") aspectRatio = "3:4";
-      if (format === "story" || format === "reel") aspectRatio = "9:16";
-
-      let prompt = "";
+      toast.info("⚡ Analysiere Winning Ads und extrahiere Design-System...");
       
-      // Use intelligent prompt generation if campaign is selected
-      if (selectedCampaignId) {
-        toast.info("⚡ Analysiere Winning Ads und Landing Page...");
-        
-        try {
-          const promptData = await generatePromptMutation.mutateAsync({
-            campaignId: selectedCampaignId,
-            userDescription: description || undefined,
-          });
-          
-          prompt = promptData.prompt;
-          
-          toast.success("✅ Intelligente Analyse abgeschlossen!");
-          console.log('Generated Contextual Prompt:', prompt);
-          console.log('Creative Analysis:', promptData.analysis);
-          console.log('Landing Page:', promptData.landingPage);
-        } catch (error) {
-          console.error('Prompt generation failed, using fallback:', error);
-          toast.warning('⚠️ Fallback zu Standard-Prompt');
-          
-          // Fallback to basic prompt
-          prompt = "Professional B2B marketing ad creative showing dashboard with metrics, " +
-                   "clean modern design, business data visualization, " +
-                   "professional color scheme, high quality";
-        }
-      } else {
-        // Manual URL - use basic prompt
-        prompt = "Professional advertising creative, modern design, high quality";
-        if (description) {
-          prompt += `, ${description}`;
-        }
-      }
-      
-      // Add format-specific guidance
-      if (format === "story" || format === "reel") {
-        prompt += ", vertical format optimized for mobile viewing";
-      }
-      
-      prompt += ", no text overlay, no watermarks, professional composition";
-      
-      console.log('Final FLUX Prompt:', prompt);
-
-      const result = await generateImageMutation.mutateAsync({
-        prompt,
-        aspectRatio,
-        numOutputs: 1,
+      const creatives = await generateBatchMutation.mutateAsync({
+        campaignId: selectedCampaignId,
+        format,
+        count: batchCount,
+        userDescription: description || undefined,
       });
-
-      if (result.imageUrls && result.imageUrls.length > 0) {
-        setGeneratedImageUrl(result.imageUrls[0]);
-        toast.success("Creative erfolgreich generiert!");
-      } else {
-        toast.error("Keine Bilder generiert");
-      }
+      
+      setGeneratedCreatives(creatives);
+      toast.success(`✅ ${creatives.length} Creative${creatives.length > 1 ? 's' : ''} erfolgreich generiert!`);
     } catch (error) {
       console.error('Generation error:', error);
-      toast.error("Fehler beim Generieren des Creatives");
+      toast.error("Fehler beim Generieren der Creatives");
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const handleDownload = async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `creative-${format}-${index + 1}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Creative heruntergeladen");
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error("Fehler beim Herunterladen");
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    for (let i = 0; i < generatedCreatives.length; i++) {
+      await handleDownload(generatedCreatives[i].imageUrl, i);
+      // Small delay between downloads
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  };
+
   const activeCampaigns = campaignsData?.filter(c => c.status === 'ACTIVE') || [];
-  const activeAdSets = adSetsData?.filter(a => a.status === 'ACTIVE') || [];
+
+  const formatSpecs = {
+    feed: { label: 'Feed (1:1)', size: '1080 × 1080 px', description: 'Quadratisches Format für News Feed' },
+    story: { label: 'Story (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Stories (Safe Zones: Top 14%, Bottom 20%)' },
+    reel: { label: 'Reel (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Reels (Safe Zones: Top 25%, Bottom 30%)' },
+  };
 
   return (
     <DashboardLayout>
@@ -180,7 +149,7 @@ export default function CreativeGenerator() {
         <div>
           <h1 className="text-3xl font-bold">Creative Generator</h1>
           <p className="text-muted-foreground mt-2">
-            Intelligente Creative-Generierung basierend auf deinen Kampagnen-Daten
+            KI-gestützte Creative-Generierung mit Style-Aware Prompts und Text-Overlays
           </p>
         </div>
 
@@ -191,7 +160,7 @@ export default function CreativeGenerator() {
               <CardHeader>
                 <CardTitle>1. Kampagne auswählen</CardTitle>
                 <CardDescription>
-                  Wähle eine Kampagne aus, um automatisch die Landingpage zu erkennen
+                  Wähle eine Kampagne aus, um Winning Ads und Landing Page zu analysieren
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -229,157 +198,103 @@ export default function CreativeGenerator() {
                     <p className="text-xs text-green-700 break-all">
                       {landingPageData.url}
                     </p>
-                    {landingPageData.data?.title && (
-                      <p className="text-xs text-green-700 mt-1">
-                        <strong>Titel:</strong> {landingPageData.data.title}
-                      </p>
-                    )}
                   </div>
                 )}
 
-                {landingPageData?.error && (
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-xs text-yellow-800">
-                      ⚠️ {landingPageData.error}
+                {winningCreativesLoading && selectedCampaignId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analysiere Winning Ads...
+                  </div>
+                )}
+
+                {winningCreativesData && winningCreativesData.winners.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      <Trophy className="inline h-3 w-3 mr-1 text-yellow-500" />
+                      Top Performer (wird für Style-Analyse verwendet)
                     </p>
+                    <div className="space-y-2">
+                      {winningCreativesData.winners.slice(0, 3).map((winner, idx) => (
+                        <div key={winner.adId} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                          {winner.imageUrl ? (
+                            <img 
+                              src={winner.imageUrl} 
+                              alt={`Top ${idx + 1}`}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-muted-foreground/20 rounded flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{winner.adName}</p>
+                            <div className="flex gap-2 text-xs text-muted-foreground">
+                              <span>CPL: {winner.metrics.costPerLead.toFixed(2)}€</span>
+                              <span>CTR: {winner.metrics.outboundCtr.toFixed(2)}%</span>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            #{idx + 1}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Oder
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="manualUrl">Landingpage-URL (manuell)</Label>
-                  <Input
-                    id="manualUrl"
-                    type="url"
-                    placeholder="https://beispiel.de/landingpage"
-                    value={manualUrl}
-                    onChange={(e) => setManualUrl(e.target.value)}
-                    disabled={!!selectedCampaignId}
-                  />
-                </div>
               </CardContent>
             </Card>
 
-            {/* Step 2: Ad Set Selection (Optional) */}
-            {selectedCampaignId && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>2. Anzeigengruppe (Optional)</CardTitle>
-                  <CardDescription>
-                    Wähle eine Anzeigengruppe für Zielgruppen-Kontext
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="adset">Anzeigengruppe</Label>
-                    <Select value={selectedAdSetId} onValueChange={setSelectedAdSetId}>
-                      <SelectTrigger id="adset">
-                        <SelectValue placeholder="Anzeigengruppe auswählen (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {adSetsLoading && (
-                          <div className="p-2 text-sm text-muted-foreground">Lade Anzeigengruppen...</div>
-                        )}
-                        {activeAdSets.map((adset) => (
-                          <SelectItem key={adset.id} value={adset.id}>
-                            {adset.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {audienceData && (
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-xs text-blue-800 font-medium mb-2">
-                        Zielgruppen-Targeting:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {audienceData.age_min && audienceData.age_max && (
-                          <Badge variant="secondary" className="text-xs">
-                            Alter: {audienceData.age_min}-{audienceData.age_max}
-                          </Badge>
-                        )}
-                        {audienceData.genders && audienceData.genders.length > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {audienceData.genders.map((g: number) => g === 1 ? 'Männlich' : 'Weiblich').join(', ')}
-                          </Badge>
-                        )}
-                        {audienceData.geo_locations?.countries && (
-                          <Badge variant="secondary" className="text-xs">
-                            {audienceData.geo_locations.countries.join(', ')}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 3: Format Selection */}
+            {/* Step 2: Format Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>3. Format auswählen</CardTitle>
+                <CardTitle>2. Format auswählen</CardTitle>
                 <CardDescription>
-                  Wähle das gewünschte Creative-Format
+                  Wähle das Zielformat für deine Creatives
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="format">Format</Label>
-                  <Select value={format} onValueChange={setFormat}>
-                    <SelectTrigger id="format">
-                      <SelectValue placeholder="Format auswählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="feed">Feed (1080×1080, 1:1)</SelectItem>
-                      <SelectItem value="story">Story (1080×1920, 9:16)</SelectItem>
-                      <SelectItem value="reel">Reel (1080×1920, 9:16)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <CardContent>
+                <RadioGroup value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
+                  {Object.entries(formatSpecs).map(([key, spec]) => (
+                    <div key={key} className="flex items-start space-x-3 space-y-0">
+                      <RadioGroupItem value={key} id={key} />
+                      <Label htmlFor={key} className="font-normal cursor-pointer flex-1">
+                        <div>
+                          <div className="font-medium">{spec.label}</div>
+                          <div className="text-xs text-muted-foreground">{spec.size}</div>
+                          <div className="text-xs text-muted-foreground mt-1">{spec.description}</div>
+                        </div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </CardContent>
+            </Card>
 
-                {(format === "story" || format === "reel") && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800 font-medium mb-1">
-                      ⚠️ Safe Zone beachten
-                    </p>
-                    <p className="text-xs text-blue-700">
-                      {format === "story" 
-                        ? "Story: Text wird automatisch in der mittleren 66% Zone platziert (Oben 14% und unten 20% sind für UI-Elemente reserviert)."
-                        : "Reel: Text wird automatisch in der mittleren 45% Zone platziert (Oben 25% und unten 30% sind für UI-Elemente reserviert)."}
-                    </p>
-                  </div>
-                )}
-                
+            {/* Step 3: Batch Count */}
+            <Card>
+              <CardHeader>
+                <CardTitle>3. Anzahl Creatives</CardTitle>
+                <CardDescription>
+                  Wie viele Variationen sollen generiert werden?
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="batchCount">Anzahl Creatives</Label>
+                  <Label htmlFor="count">Anzahl (1-10)</Label>
                   <Select value={batchCount.toString()} onValueChange={(v) => setBatchCount(parseInt(v))}>
-                    <SelectTrigger id="batchCount">
-                      <SelectValue placeholder="Anzahl auswählen" />
+                    <SelectTrigger id="count">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
-                        <SelectItem key={count} value={count.toString()}>
-                          {count} Creative{count > 1 ? 's' : ''}
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} Creative{num > 1 ? 's' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Generiere mehrere Variationen gleichzeitig mit verschiedenen Headlines
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -387,142 +302,133 @@ export default function CreativeGenerator() {
             {/* Step 4: Description (Optional) */}
             <Card>
               <CardHeader>
-                <CardTitle>4. Beschreibung (Optional)</CardTitle>
+                <CardTitle>4. Zusätzliche Beschreibung (Optional)</CardTitle>
                 <CardDescription>
-                  Beschreibe dein Angebot für bessere Creative-Generierung
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="description">Zusätzliche Beschreibung</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Beschreibe dein Angebot, z.B. 'Mehr qualifizierte Leads für Marketing-Agenturen' oder 'Skalierbare Kundengewinnung für Coaches'"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                <Button 
-                  onClick={handleGenerate} 
-                  disabled={isGenerating || (!selectedCampaignId && !manualUrl)}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {isGenerating ? "Generiere..." : "Creative generieren"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            {/* Winning Creatives */}
-            {selectedCampaignId && winningCreativesData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-yellow-500" />
-                    Top Performer
-                  </CardTitle>
-                  <CardDescription>
-                    Beste Werbeanzeigen in dieser Kampagne
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {winningCreativesLoading ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Analysiere Performance...
-                    </div>
-                  ) : winningCreativesData.winners.length > 0 ? (
-                    <div className="space-y-3">
-                      {winningCreativesData.winners.slice(0, 3).map((winner, index) => (
-                        <div key={winner.adId} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                            {index + 1}
-                          </div>
-                          {winner.imageUrl && (
-                            <div className="flex-shrink-0">
-                              <img 
-                                src={winner.imageUrl} 
-                                alt={winner.adName}
-                                className="w-16 h-16 object-cover rounded border border-border"
-                                onError={(e) => {
-                                  // Hide image if loading fails
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{winner.adName}</p>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {winner.metrics.roasOrderVolume > 0 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  ROAS: {winner.metrics.roasOrderVolume.toFixed(2)}x
-                                </Badge>
-                              )}
-                              {winner.metrics.costPerLead > 0 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  CPL: €{winner.metrics.costPerLead.toFixed(2)}
-                                </Badge>
-                              )}
-                              <Badge variant="secondary" className="text-xs">
-                                Score: {winner.score.toFixed(1)}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {winningCreativesData.insights && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mt-3">
-                          <div className="flex items-start gap-2">
-                            <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-xs text-blue-800">
-                              {winningCreativesData.insights}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Keine Performance-Daten verfügbar
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Vorschau</CardTitle>
-                <CardDescription>
-                  Generiertes Creative
+                  Ergänze spezifische Anforderungen oder lasse das Feld leer für automatische Generierung
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-center bg-muted rounded-lg aspect-[3/4] min-h-[400px]">
-                  {isGenerating ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Creative wird generiert...</p>
-                    </div>
-                  ) : generatedImageUrl ? (
-                    <img 
-                      src={generatedImageUrl} 
-                      alt="Generated Creative" 
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <p className="text-muted-foreground">
-                      Keine Vorschau verfügbar
-                    </p>
+                <Textarea
+                  placeholder="z.B. Mehr qualifizierte Leads für Marketing-Agenturen, moderne Farbpalette, professionelle Atmosphäre"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Generate Button */}
+            <Button
+              onClick={handleGenerate}
+              disabled={!selectedCampaignId || isGenerating}
+              className="w-full"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generiere {batchCount} Creative{batchCount > 1 ? 's' : ''}...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  {batchCount} Creative{batchCount > 1 ? 's' : ''} generieren
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Right Column: Results */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Generierte Creatives</CardTitle>
+                    <CardDescription>
+                      {generatedCreatives.length > 0 
+                        ? `${generatedCreatives.length} Creative${generatedCreatives.length > 1 ? 's' : ''} bereit zum Download`
+                        : 'Wähle eine Kampagne und starte die Generierung'
+                      }
+                    </CardDescription>
+                  </div>
+                  {generatedCreatives.length > 1 && (
+                    <Button onClick={handleDownloadAll} variant="outline" size="sm">
+                      <Download className="mr-2 h-4 w-4" />
+                      Alle herunterladen
+                    </Button>
                   )}
                 </div>
+              </CardHeader>
+              <CardContent>
+                {isGenerating && (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <div className="text-center space-y-2">
+                      <p className="font-medium">Generierung läuft...</p>
+                      <p className="text-sm text-muted-foreground">
+                        1. Analysiere Winning Ads<br />
+                        2. Extrahiere Design-System<br />
+                        3. Generiere Style-Aware Prompts<br />
+                        4. Erstelle Bilder mit FLUX<br />
+                        5. Füge Text-Overlays hinzu
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!isGenerating && generatedCreatives.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">
+                      Noch keine Creatives generiert
+                    </p>
+                  </div>
+                )}
+
+                {!isGenerating && generatedCreatives.length > 0 && (
+                  <div className="grid gap-4">
+                    {generatedCreatives.map((creative, index) => (
+                      <div key={index} className="border rounded-lg overflow-hidden">
+                        <div className="aspect-square relative bg-muted">
+                          <img
+                            src={creative.imageUrl}
+                            alt={`Creative ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="p-4 space-y-3">
+                          <div>
+                            {creative.eyebrowText && (
+                              <p className="text-xs font-medium text-primary mb-1">
+                                {creative.eyebrowText}
+                              </p>
+                            )}
+                            <p className="font-semibold">{creative.headline}</p>
+                            {creative.ctaText && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {creative.ctaText}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary">
+                              {formatSpecs[creative.format].label}
+                            </Badge>
+                            <Button
+                              onClick={() => handleDownload(creative.imageUrl, index)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Herunterladen
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

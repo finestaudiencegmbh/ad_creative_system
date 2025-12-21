@@ -1245,6 +1245,27 @@ export const appRouter = router({
         return { url };
       }),
 
+    // Creative Generator - Generate batch creatives
+    generateBatchCreatives: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        format: z.enum(['feed', 'story', 'reel']),
+        count: z.number().min(1).max(10),
+        userDescription: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateBatchCreatives } = await import('./batch-creative-generator');
+        
+        const creatives = await generateBatchCreatives({
+          campaignId: input.campaignId,
+          format: input.format,
+          count: input.count,
+          userDescription: input.userDescription,
+        });
+        
+        return creatives;
+      }),
+
     // Creative Generator - Generate contextual prompt
     generateCreativePrompt: protectedProcedure
       .input(z.object({

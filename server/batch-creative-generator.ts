@@ -127,19 +127,27 @@ export async function generateBatchCreatives(
           throw new Error('Image generation failed');
         }
         
-        // Add text overlay
-        const imageBuffer = await addTextOverlay(generatedImageUrl, {
-          eyebrowText: headline.eyebrow,
-          headlineText: headline.headline,
-          ctaText: headline.cta,
-          designSystem,
-          format: config.format,
-        });
-        
-        // Upload final creative to S3
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
-        const { url: finalUrl } = await storagePut(fileKey, imageBuffer, 'image/png');
+        // Try to add text overlay (optional - skip if canvas not available)
+        let finalUrl = generatedImageUrl;
+        try {
+          const imageBuffer = await addTextOverlay(generatedImageUrl, {
+            eyebrowText: headline.eyebrow,
+            headlineText: headline.headline,
+            ctaText: headline.cta,
+            designSystem,
+            format: config.format,
+          });
+          
+          // Upload final creative with text overlay to S3
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
+          const result = await storagePut(fileKey, imageBuffer, 'image/png');
+          finalUrl = result.url;
+          console.log(`✅ Text overlay added to creative ${index}`);
+        } catch (overlayError) {
+          console.warn(`⚠️  Text overlay skipped for creative ${index} (canvas not available):`, overlayError);
+          // Use generated image without text overlay
+        }
         
         return {
           imageUrl: finalUrl,

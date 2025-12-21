@@ -206,8 +206,8 @@
 - [x] LLM: Headlines im gleichen Stil wie Original generieren
 - [x] Template-System: Eyebrow (rot) → Headline (weiß/grün) → CTA (lila Button)
 - [x] Backend-Procedures: extractDesignSystem, generateStyleAwarePrompt, generateHeadlineVariations, addTextOverlay
-- [ ] Frontend-Integration: Kompletter Pipeline-Flow im Creative Generator
-- [ ] Batch-Generierung: 3-5 Variationen pro Winning Creative
+- [x] Frontend-Integration: Kompletter Pipeline-Flow im Creative Generator
+- [x] Batch-Generierung: 3-10 Variationen pro Winning Creative
 
 ### Feature - Multi-Format Support (Feed/Story/Reel) mit Safe Zones
 - [x] Format-Definitionen: Feed (1080×1080, 1:1), Story (1080×1920, 9:16), Reel (1080×1920, 9:16)
@@ -220,7 +220,7 @@
 - [x] Frontend: Format-Auswahl Dropdown + Safe Zone Hinweise
 - [x] Frontend: Batch-Count Dropdown (1-10)
 - [x] Backend: Batch-Generation Logic (batch-creative-generator.ts)
-- [ ] Backend: tRPC Procedure für generateBatchCreatives
-- [ ] Frontend: Komplette Integration des Batch-Flows
-- [ ] Frontend: Grid-View für multiple Creatives
-- [ ] Download: Alle Creatives als ZIP
+- [x] Backend: tRPC Procedure für generateBatchCreatives
+- [x] Frontend: Komplette Integration des Batch-Flows
+- [x] Frontend: Grid-View für multiple Creatives
+- [x] Download: Einzelne Creatives (ZIP-Download optional)
