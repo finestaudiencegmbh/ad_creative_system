@@ -287,48 +287,51 @@ export async function generateHeadlineVariations(
         },
         {
           role: 'user',
-          content: `Generate ${count} headline variations based on this WINNING creative that already performs well:
+          content: `Du bist ein professioneller Werbetexter für Meta Ads. Erstelle ${count} natürliche, verkaufsstarke Headlines auf Deutsch.
 
-WINNING CREATIVE ANALYSIS:
-- Original Headline: "${originalHeadline}"
-- Why it works: This headline is already proven to convert
-- Style to replicate: ${originalHeadline.includes('DIESER') || originalHeadline.includes('DER') ? 'Direct, specific, result-focused' : 'Benefit-driven, emotional'}
-- Formatting: ${originalHeadline === originalHeadline.toUpperCase() ? 'ALL CAPS for urgency' : 'Mixed case'}
-- Numbers: ${/\d/.test(originalHeadline) ? 'Uses specific numbers/results' : 'No numbers'}
-
-LANDING PAGE CONTEXT (PRIMARY SOURCE FOR CONTENT):
-- Main Message: ${landingPageData.h1 || 'N/A'}
-- Value Proposition: ${landingPageData.h2 || 'N/A'}
-- Description: ${landingPageData.description || 'N/A'}
+LANDING PAGE KONTEXT:
+- Hauptbotschaft: ${landingPageData.h1 || 'N/A'}
+- Wertversprechen: ${landingPageData.h2 || 'N/A'}
+- Beschreibung: ${landingPageData.description || 'N/A'}
 - CTA: ${landingPageData.ctaText || 'N/A'}
 
-**CRITICAL REQUIREMENTS:**
-1. **Perfect German:** No spelling/grammar errors (ä, ö, ü, ß must be correct)
-2. **Match winning style:** Replicate structure, tone, formatting of original
-3. **Landing page alignment:** Use actual value propositions from landing page, not generic claims
-4. **Proven patterns:** If original uses numbers → use numbers. If original is urgent → be urgent.
-5. **Marketing relevance:** No 0815 statements. Use specific benefits from landing page.
-6. **CTA quality:** Match the style of landing page CTA (e.g., "Jetzt X erhalten" not generic "Mehr erfahren")
+ORIGINAL WINNING HEADLINE (als Inspiration):
+"${originalHeadline}"
 
-**EXAMPLES OF GOOD vs BAD:**
-GOOD: "DIESER FUNNEL GENERIERT 70-380 QUALIFIZIERTE LEADS" (specific, numbers, proven)
-BAD: "Mehr Leads für dein Business" (generic, no proof, boring)
+**WICHTIGSTE REGEL: LESBARKEIT!**
+Die Headlines MUSS natürlich klingen und flüssig lesbar sein. Keine Keyword-Stuffing, keine unnatürlichen Konstruktionen!
 
-GOOD: "DCA STRATEGIE LANDINGPAGE 3" (specific, references actual content)
-BAD: "Neue Marketing Strategie" (vague, could be anything)
+**ANFORDERUNGEN:**
+1. **Natürliches Deutsch:** Schreibe wie ein Mensch, nicht wie ein Keyword-Generator
+2. **Klare Struktur:** Jede Headline hat EINEN klaren Fokus, nicht 5 Features auf einmal
+3. **Perfekte Grammatik:** Korrekte Satzstellung, keine Rechtschreibfehler (ä, ö, ü, ß)
+4. **Benefit-fokussiert:** Was bekommt der Kunde? (nicht "Kopiere unsere Methode", sondern "10.000 Leads in 25 Minuten")
+5. **Kurz & prägnant:** Maximal 60 Zeichen für Headline (ohne Eyebrow/CTA)
 
-For each variation, provide:
-- eyebrow: Short category/context text (e.g., "GEHEIMNIS ENTLÜFTET", "COPY-PASTE-VORLAGEN")
-- headline: Main headline matching winning style (e.g., "DIESER FUNNEL GENERIERT 70-380 QUALIFIZIERTE LEADS")
-- cta: Action-oriented CTA matching landing page offer (e.g., "JETZT MEHR ERFAHREN", "Funnel-Templates gratis erhalten")
+**GUTE vs. SCHLECHTE HEADLINES:**
 
-**QUALITY CHECK:** Before returning, verify:
-- ✓ All German words spelled correctly (especially ä, ö, ü, ß)
-- ✓ Headlines reference actual landing page content
-- ✓ Style matches winning creative structure
-- ✓ No generic marketing fluff
+✅ GUT: "10.000 Leads in 25 Minuten – ohne Technikwissen"
+   (Klar, lesbar, ein Benefit)
 
-Format as JSON array.`,
+❌ SCHLECHT: "10.000 Premium Leads: Kopiere Unsere DCA Methode In Nur 25 Min."
+   (Zu viele Infos, unnatürliche Großschreibung, schwer lesbar)
+
+✅ GUT: "Mehr Leads für dein Marketing – startklar in 25 Minuten"
+   (Natürlich, flüssig, klar)
+
+❌ SCHLECHT: "Lead-Generierung Neu Definiert: Unser Meta-Ads-System"
+   (Gestelzt, zu vage, kein konkreter Benefit)
+
+**STRUKTUR:**
+- **eyebrow:** Kurze Kategorie (z.B. "META ADS SYSTEM", "DCA METHODE", "LEAD-GENERIERUNG")
+- **headline:** Hauptbotschaft – MUSS natürlich und lesbar sein! (z.B. "10.000 Leads in 25 Minuten")
+- **cta:** Klare Handlungsaufforderung (z.B. "JETZT STARTEN", "SYSTEM KOPIEREN", "MEHR ERFAHREN")
+
+**QUALITÄTSKONTROLLE:**
+Lies jede Headline laut vor. Klingt sie natürlich? Würde ein Mensch so sprechen?
+Wenn NEIN → umschreiben!
+
+Format als JSON array.`,
         },
       ],
       response_format: {
