@@ -500,3 +500,18 @@
 - [x] Marketing-relevante Visuals mit perfekter Landing Page Brücke
 - [x] Status: Produktionsbereit
 
+
+### CRITICAL - Landing Page Screenshot Analysis
+- [ ] Implement Landing Page Screenshot Capture (Puppeteer)
+- [ ] Implement Gemini Vision Analysis (extract visual descriptions)
+- [ ] Integrate visual descriptions into Gemini Imagen prompt
+- [ ] Test with DCA landing page
+- [ ] Verify images match landing page visuals
+- [ ] Iterate until perfect
+
+
+### CRITICAL - German Language Support
+- [ ] Gemini Vision Analyse auf Deutsch
+- [ ] Gemini Imagen Prompt auf Deutsch
+- [ ] Alle generierten Texte auf Deutsch (Headlines, Eyebrows, CTAs)
+

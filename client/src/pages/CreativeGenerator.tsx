@@ -598,7 +598,7 @@ export default function CreativeGenerator() {
             {/* Generate Button */}
             <Button
               onClick={handleGenerate}
-              disabled={!selectedCampaignId || isGenerating}
+              disabled={!selectedCampaignId || !format || !batchCount || isGenerating}
               className="w-full"
               size="lg"
             >

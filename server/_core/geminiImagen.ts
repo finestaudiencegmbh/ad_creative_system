@@ -142,40 +142,41 @@ export function buildLandingPageAwarePrompt(params: {
   // Extract key visual elements from landing page
   const visualElements = extractVisualElements(landingPageContent);
 
-  // Build prompt with landing page focus
+  // Build prompt with landing page focus (in German)
   const prompt = `
-Create a professional Meta Ads creative image for ${format} format (${
+Erstelle ein professionelles Meta Ads Creative-Bild für ${format === "feed" ? "Feed" : format === "story" ? "Story" : "Reel"}-Format (${
     format === "feed" ? "1:1" : "9:16"
-  } aspect ratio).
+  } Seitenverhältnis).
 
-LANDING PAGE CONTEXT:
+LANDING PAGE KONTEXT:
 ${landingPageContent}
 
-VISUAL ELEMENTS TO INCLUDE:
+VISUELLE ELEMENTE ZU INKLUDIEREN:
 ${visualElements}
 
-HEADLINE TO SUPPORT:
+HEADLINE ZU UNTERSTÜTZEN:
 "${headline}"
 
 DESIGN SYSTEM:
-- Color Palette: ${designSystem.colorPalette.join(', ')}
-- Visual Style: ${designSystem.visualStyle}
-- Background Style: ${designSystem.backgroundStyle}
+- Farbpalette: ${designSystem.colorPalette.join(', ')}
+- Visueller Stil: ${designSystem.visualStyle}
+- Hintergrund-Stil: ${designSystem.backgroundStyle}
 
-REQUIREMENTS:
-- MUST be directly relevant to the landing page content
-- MUST support the headline message
-- NO generic/abstract visuals (no random smartphones, networks, geometric shapes)
-- Use landing page color scheme
-- Professional, high-quality, marketing-focused
-- ${format === "feed" ? "Square composition" : "Vertical composition"}
-- Leave space for text overlays (top and bottom)
+ANFORDERUNGEN:
+- MUSS direkt relevant zum Landing Page Inhalt sein
+- MUSS die Headline-Botschaft unterstützen
+- KEINE generischen/abstrakten Visuals (keine zufälligen Smartphones, Netzwerke, geometrische Formen)
+- Verwende Landing Page Farbschema
+- Professionell, hochwertig, marketing-fokussiert
+- ${format === "feed" ? "Quadratische Komposition" : "Vertikale Komposition"}
+- Lasse Platz für Text-Overlays (oben und unten)
 
-STYLE:
-- Modern, clean, professional
-- High-quality photo or digital illustration
-- Marketing-appropriate (not artistic/abstract)
-- Focus on the product/service shown on landing page
+STIL:
+- Modern, sauber, professionell
+- Hochwertige Fotografie oder digitale Illustration
+- Marketing-gerecht (nicht künstlerisch/abstrakt)
+- Fokus auf das Produkt/Service der Landing Page
+- WICHTIG: Bild muss auf Deutsch sein und zur deutschen Landing Page passen
 `.trim();
 
   return prompt;

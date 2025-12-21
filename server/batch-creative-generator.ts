@@ -37,6 +37,7 @@ export async function generateBatchCreatives(
   const { identifyWinningCreatives } = await import('./winning-creatives');
   const { generateImageWithImagen, buildLandingPageAwarePrompt } = await import('./_core/geminiImagen');
   const { addTextOverlaySharp } = await import('./text-overlay-sharp');
+  const { captureLandingPageScreenshot, analyzeLandingPageVisuals } = await import('./landingpage-screenshot');
   
   // Map format to dimensions
   const FORMAT_SPECS = {
@@ -108,6 +109,20 @@ export async function generateBatchCreatives(
     error: undefined,
   };
   
+  // Capture screenshot and analyze visuals with Gemini Vision
+  let visualDescription = '';
+  if (landingPageUrl) {
+    try {
+      console.log(`📸 Capturing landing page screenshot: ${landingPageUrl}`);
+      const screenshot = await captureLandingPageScreenshot(landingPageUrl);
+      console.log(`🔍 Analyzing visuals with Gemini Vision...`);
+      visualDescription = await analyzeLandingPageVisuals(screenshot.base64);
+      console.log(`✅ Visual analysis complete: ${visualDescription.substring(0, 100)}...`);
+    } catch (error) {
+      console.error(`⚠️ Screenshot analysis failed, falling back to text-only:`, error);
+    }
+  }
+  
   // Generate headline variations
   const baseHeadline = landingPageData.h1 || landingPageData.title || 'Mehr Leads für dein Business';
   const headlines = await generateHeadlineVariations(baseHeadline, landingPageData, config.count);
@@ -125,7 +140,7 @@ export async function generateBatchCreatives(
         const formatSpec = FORMAT_SPECS[config.format];
         
         // Build landing-page-aware prompt for Gemini Imagen
-        const landingPageContent = `
+        const landingPageContent = visualDescription || `
           Title: ${landingPageData.title || ''}
           Description: ${landingPageData.description || ''}
           H1: ${landingPageData.h1 || ''}
