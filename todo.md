@@ -231,3 +231,8 @@
 - [x] Anzeigengruppen-Auswahl für Targeting-Kontext wieder hinzufügen
 - [x] "Alle Formate" Option wieder hinzufügen (generiert Feed + Story + Reel)
 - [x] Canvas Error beheben: Text-Overlay vollständig optional machen (kein Error im Frontend)
+
+### UX Improvement - Loading Animation
+- [x] Ersetze technische Lade-Schritte mit animierter Ladeanimation
+- [x] Zeige wechselnde Fun Facts über Facebook/Instagram während der Generierung
+- [x] Schöne visuelle Animation statt nüchterner Schrittliste

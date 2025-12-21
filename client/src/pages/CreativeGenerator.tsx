@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sparkles, Loader2, Trophy, Download, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { startOfMonth, endOfMonth, format as formatDate } from "date-fns";
+import { getRandomFunFact } from "@/lib/funFacts";
 
 type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
 
@@ -42,6 +43,18 @@ export default function CreativeGenerator() {
   // State
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCreatives, setGeneratedCreatives] = useState<GeneratedCreative[]>([]);
+  const [currentFunFact, setCurrentFunFact] = useState(getRandomFunFact());
+  
+  // Rotate fun facts every 4 seconds during generation
+  useEffect(() => {
+    if (!isGenerating) return;
+    
+    const interval = setInterval(() => {
+      setCurrentFunFact(getRandomFunFact());
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   // Fetch campaigns
   const now = new Date();
@@ -416,16 +429,20 @@ export default function CreativeGenerator() {
               </CardHeader>
               <CardContent>
                 {isGenerating && (
-                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <div className="text-center space-y-2">
-                      <p className="font-medium">Generierung läuft...</p>
-                      <p className="text-sm text-muted-foreground">
-                        1. Analysiere Winning Ads<br />
-                        2. Extrahiere Design-System<br />
-                        3. Generiere Style-Aware Prompts<br />
-                        4. Erstelle Bilder mit FLUX<br />
-                        5. Füge Text-Overlays hinzu
+                  <div className="flex flex-col items-center justify-center py-16 space-y-6">
+                    <div className="relative">
+                      <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                      <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-primary/20" />
+                    </div>
+                    <div className="text-center space-y-3 max-w-md">
+                      <p className="text-lg font-semibold">Generierung läuft...</p>
+                      <div className="min-h-[60px] flex items-center justify-center">
+                        <p className="text-sm text-muted-foreground animate-fade-in">
+                          {currentFunFact}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground/60">
+                        Dies kann 30-60 Sekunden dauern
                       </p>
                     </div>
                   </div>
