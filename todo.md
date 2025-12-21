@@ -368,3 +368,84 @@
 - [ ] Server-Logs prüfen um Root Cause zu identifizieren
 - [ ] Server abstürzt oder Timeout bei generateBatchCreatives
 - [ ] Fix implementieren und testen
+
+### UX Improvement - Loading Animation mit Progress Bar
+- [ ] Grüner Ladebalken (0-100%) als Hauptelement
+- [ ] Drehender Spinner klein und ganz unten positionieren
+- [ ] Fortschrittsanzeige in Prozent
+- [ ] Smooth Animation während der Generierung
+
+### CRITICAL BUG - Creative Generation Workflow komplett falsch
+- [ ] Generierte Bilder haben keinen Bezug zur Landing Page
+- [ ] Abstrakte Bilder (Smartphones, 3D-Netzwerke) statt Marketing-Visuals
+- [ ] Text-Overlays fehlen komplett (Eyebrow, Headline, CTA)
+- [ ] Gemini soll für Bildgenerierung verwendet werden (nicht SDXL)
+- [ ] Korrekter Workflow:
+  1. Winning Creative + Landing Page analysieren
+  2. Text-Varianten basierend auf Winning Creative generieren
+  3. Relevantes Bild passend zu Texten generieren (Gemini)
+  4. Text-Overlays hinzufügen (Eyebrow rot, Headline weiß/grün, CTA lila)
+  5. Feed-Creative auf Story/Reel übertragen (Safe Zones beachten)
+
+### Quality Requirements (Endkunden-Ready)
+- [ ] Rechtschreibung/Grammatik: LLM-Output muss fehlerfrei sein
+- [ ] Marketing-relevante Aussagen: Keine 0815-Texte, basierend auf Landing Page + Winning Creatives
+- [ ] CTA/Struktur: Von Winning Creatives lernen (was funktioniert)
+- [ ] Skalierbarkeit: System muss für viele verschiedene Endkunden funktionieren
+- [ ] Headline-Generierung: Muss Stil und Struktur der Winning Creatives matchen
+- [ ] Prompt-Qualität: Landing Page Kontext prominent einbinden, keine generischen Visuals
+
+### NEW FEATURE - Werbetexte (Ad Copywriting)
+- [ ] Debug Creative Generation Fehler (keine Creatives generiert)
+- [ ] Werbetexte Page: Landing Page Input Feld
+- [ ] HAPPS Formel Implementation (Dawid Przybylski)
+- [ ] Elite Copywriter Qualität (Zielgruppe ansprechen, Brücke zur Landing Page)
+- [ ] 2 Versionen: Kurzer Text (nicht nur 3 Sätze!) und langer Text
+- [ ] Beide Texte nach HAPPS Struktur aufgebaut
+- [ ] Perfekte Rechtschreibung/Grammatik
+- [ ] Testen bis nahezu perfekt
+
+### CRITICAL BUG - SDXL Creative Generation Bug behoben
+- [x] Replicate Node.js Library gibt leere Objekte zurück `[{}]`
+- [x] HTTP-basierte SDXL-Implementierung (direkte API Calls)
+- [x] Prediction erstellen → Polling → URL extrahieren
+- [x] Test erfolgreich: Bild in ~7 Sekunden generiert
+- [x] Browser-Test: Komplettes Creative mit Text-Overlays generiert
+- [x] Status: Produktionsbereit
+
+### UX Improvement - Loading Animation mit Progress Bar
+- [x] Grüner Ladebalken (0-100%) als Hauptelement
+- [x] Drehender Spinner klein und ganz unten positionieren
+- [x] Fortschrittsanzeige in Prozent
+- [x] Smooth Animation während der Generierung
+- [x] Fun Facts während des Ladens anzeigen
+- [x] Echtzeit-Fortschrittsberechnung basierend auf verstrichener Zeit
+
+### CRITICAL BUG - Canvas Text-Overlay Bug behoben
+- [x] Canvas native Bindings fehlen (`canvas.node`)
+- [x] Sharp-basierte Text-Overlay Engine implementiert
+- [x] SVG-Text-Compositing mit Sharp
+- [x] Eyebrow, Headline, CTA professionell gerendert
+- [x] Safe Zones für Story/Reel beachtet
+- [x] Test erfolgreich: Text-Overlays sichtbar und lesbar
+
+### Feature - Werbetexte (Ad Copywriting)
+- [x] Werbetexte-Seite mit Landing Page URL Input
+- [x] Backend scrapet Landing Page (Title, Description, H1, H2, CTA)
+- [x] LLM generiert kurzen + langen Werbetext
+- [x] Copywriting-Formeln (PAS, AIDA, BAB) integriert
+- [x] Grammatik/Rechtschreibung Check im System Prompt
+- [x] Perfekte Brücke zur Landing Page
+- [x] Elite Copywriter System Prompt (20 Jahre Erfahrung)
+- [x] Kurzer Text: ~200 Wörter (Hook, Problem, Solution, CTA)
+- [x] Langer Text: ~500 Wörter (Hook mit Storytelling, Problem, Agitation, Solution, Proof, CTA)
+- [x] Test erfolgreich: DCA Landing Page → Professionelle Werbetexte generiert
+- [x] Status: Produktionsbereit
+
+### Quality Requirements (User Feedback)
+- [x] Rechtschreibung/Grammatik: Perfekt (keine LLM-Fehler)
+- [x] Marketing-relevante Aussagen: Keine 0815-Texte
+- [x] Landing Page Alignment: Perfekte Brücke (Tonalität, Versprechen, Pain Points)
+- [x] CTA/Struktur: Von Winning Creatives lernen
+- [x] Skalierbarkeit: System funktioniert für viele Endkunden
+

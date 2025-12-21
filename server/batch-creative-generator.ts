@@ -37,7 +37,14 @@ export async function generateBatchCreatives(
   const { identifyWinningCreatives } = await import('./winning-creatives');
   const { enhancePromptWithGemini } = await import('./_core/geminiImageGeneration');
   const { generateSDXLTextImage } = await import('./_core/sdxlTextImage');
-  const { FORMAT_SPECS } = await import('./text-overlay');
+  const { addTextOverlaySharp } = await import('./text-overlay-sharp');
+  
+  // Map format to dimensions
+  const FORMAT_SPECS = {
+    feed: { aspectRatio: '1:1' as const, width: 1080, height: 1080 },
+    story: { aspectRatio: '9:16' as const, width: 1080, height: 1920 },
+    reel: { aspectRatio: '9:16' as const, width: 1080, height: 1920 },
+  };
   const { storagePut } = await import('./storage');
   
   // Get winning creative
@@ -120,20 +127,27 @@ export async function generateBatchCreatives(
           config.userDescription
         );
         
-        // Enhance prompt with Gemini for better visual quality
-        const enhancedPrompt = await enhancePromptWithGemini(basePrompt, {
-          eyebrowText: headline.eyebrow,
-          headlineText: headline.headline,
-          ctaText: headline.cta,
-          aspectRatio,
-        });
+        // Enhance prompt with Gemini for better visual quality (background only, no text)
+        const enhancedPrompt = await enhancePromptWithGemini(
+          basePrompt + ' Create a professional advertising background without any text. The text will be added separately as an overlay.',
+          {
+            eyebrowText: headline.eyebrow,
+            headlineText: headline.headline,
+            ctaText: headline.cta,
+            aspectRatio,
+          }
+        );
         
         console.log(`🎨 Creative ${index}: Using Gemini-enhanced prompt with SDXL`);
         
-        // Generate image with SDXL (includes text rendering)
+        // Step 1: Generate background image with SDXL (NO text in prompt)
         const formatSpec = FORMAT_SPECS[config.format];
+        
+        // Remove text instructions from prompt - SDXL should only generate background
+        const backgroundPrompt = enhancedPrompt.replace(/text overlay.*$/gi, '').replace(/Text elements.*$/gi, '');
+        
         const generatedImageUrl = await generateSDXLTextImage({
-          prompt: enhancedPrompt,
+          prompt: backgroundPrompt + ' professional advertising background, no text, clean composition, space for text overlay',
           textElements: {
             eyebrow: headline.eyebrow,
             headline: headline.headline,
@@ -147,17 +161,27 @@ export async function generateBatchCreatives(
           throw new Error('SDXL image generation failed');
         }
         
-        // Download generated image
-        const imageResponse = await fetch(generatedImageUrl);
-        const imageArrayBuffer = await imageResponse.arrayBuffer();
-        const imageBuffer = Buffer.from(imageArrayBuffer);
+        console.log(`✅ Background generated, adding text overlays...`);
         
-        // Upload final creative to S3
+        // Step 2: Download generated image
+        const imageResponse = await fetch(generatedImageUrl);
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        
+        // Step 3: Add text overlays using Sharp + SVG
+        const imageWithText = await addTextOverlaySharp({
+          imageBuffer,
+          eyebrowText: headline.eyebrow,
+          headlineText: headline.headline,
+          ctaText: headline.cta,
+          format: config.format,
+        });
+        
+        // Step 3: Upload final creative to S3
         const randomSuffix = Math.random().toString(36).substring(7);
         const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
-        const result = await storagePut(fileKey, imageBuffer, 'image/png');
+        const result = await storagePut(fileKey, imageWithText, 'image/png');
         const finalUrl = result.url;
-        console.log(`✅ Creative ${index} complete: Gemini prompt optimization → SDXL text-aware generation`);
+        console.log(`✅ Creative ${index} complete: SDXL background + Canvas text overlays`);
         
         return {
           imageUrl: finalUrl,

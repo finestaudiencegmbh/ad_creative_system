@@ -1152,6 +1152,59 @@ export const appRouter = router({
         });
       }),
 
+    // Creative Generator - Generate batch creatives
+    generateBatchCreatives: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        format: z.enum(['feed', 'story', 'reel']),
+        count: z.number().min(1).max(10),
+        userDescription: z.string().optional(),
+        manualLandingPage: z.string().optional(),
+        adSetId: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateBatchCreatives } = await import('./batch-creative-generator');
+        
+        const creatives = await generateBatchCreatives({
+          campaignId: input.campaignId,
+          format: input.format,
+          count: input.count,
+          userDescription: input.userDescription,
+          manualLandingPage: input.manualLandingPage,
+          adSetId: input.adSetId,
+        });
+        
+        return creatives;
+      }),
+
+    // Ad Copywriter - Generate professional ad copy from landing page
+    generateAdCopy: protectedProcedure
+      .input(z.object({
+        landingPageUrl: z.string().url(),
+      }))
+      .mutation(async ({ input }) => {
+        const { scrapeLandingPage } = await import('./landingpage-scraper');
+        const { generateAdCopy } = await import('./ad-copywriter');
+        
+        // Scrape landing page
+        const landingPageData = await scrapeLandingPage(input.landingPageUrl);
+        
+        // Build content string from landing page data
+        const content = [
+          landingPageData.title && `Title: ${landingPageData.title}`,
+          landingPageData.description && `Description: ${landingPageData.description}`,
+          landingPageData.h1 && `H1: ${landingPageData.h1}`,
+          landingPageData.h2 && `H2: ${landingPageData.h2}`,
+          landingPageData.ctaText && `CTA: ${landingPageData.ctaText}`,
+          landingPageData.ogDescription && `OG Description: ${landingPageData.ogDescription}`,
+        ].filter(Boolean).join('\n\n');
+        
+        // Generate ad copy
+        const adCopy = await generateAdCopy(content, input.landingPageUrl);
+        
+        return adCopy;
+      }),
+
     // Creative Generator - Get landing page data from campaign
     getLandingPageFromCampaign: protectedProcedure
       .input(z.object({
@@ -1562,31 +1615,6 @@ export const appRouter = router({
         const { url } = await storagePut(fileKey, imageBuffer, 'image/png');
         
         return { url };
-      }),
-
-    // Creative Generator - Generate batch creatives
-    generateBatchCreatives: protectedProcedure
-      .input(z.object({
-        campaignId: z.string(),
-        format: z.enum(['feed', 'story', 'reel']),
-        count: z.number().min(1).max(10),
-        userDescription: z.string().optional(),
-        manualLandingPage: z.string().optional(),
-        adSetId: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { generateBatchCreatives } = await import('./batch-creative-generator');
-        
-        const creatives = await generateBatchCreatives({
-          campaignId: input.campaignId,
-          format: input.format,
-          count: input.count,
-          userDescription: input.userDescription,
-          manualLandingPage: input.manualLandingPage,
-          adSetId: input.adSetId,
-        });
-        
-        return creatives;
       }),
 
     // Creative Generator - Generate contextual prompt

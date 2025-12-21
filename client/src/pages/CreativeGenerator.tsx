@@ -67,6 +67,7 @@ export default function CreativeGenerator() {
   const [generatedCreatives, setGeneratedCreatives] = useState<GeneratedCreative[]>([]);
   const [currentFunFact, setCurrentFunFact] = useState(getRandomFunFact());
   const [usedFacts, setUsedFacts] = useState<Set<string>>(new Set());
+  const [progress, setProgress] = useState(0);
   
   // Collapsible state
   const [step2Open, setStep2Open] = useState(false);
@@ -98,6 +99,29 @@ export default function CreativeGenerator() {
     
     return () => clearInterval(interval);
   }, [isGenerating, usedFacts]);
+
+  // Progress bar animation (0-100% over 60 seconds)
+  useEffect(() => {
+    if (!isGenerating) {
+      setProgress(0);
+      return;
+    }
+    
+    const startTime = Date.now();
+    const duration = 60000; // 60 seconds
+    
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min(100, (elapsed / duration) * 100);
+      setProgress(newProgress);
+      
+      if (newProgress >= 100) {
+        clearInterval(interval);
+      }
+    }, 100); // Update every 100ms for smooth animation
+    
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   // Fetch campaigns
   const now = new Date();
@@ -609,7 +633,7 @@ export default function CreativeGenerator() {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Loading Modal - Centered Popup */}
+                {/* Loading Modal - Centered Popup with Progress Bar */}
                 {isGenerating && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center">
                     {/* Backdrop with gradient */}
@@ -633,20 +657,36 @@ export default function CreativeGenerator() {
                         </svg>
                       </button>
                       <div className="flex flex-col items-center justify-center space-y-6">
-                        <div className="relative">
-                          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-                          <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-primary/20" />
-                        </div>
-                        <div className="text-center space-y-3">
+                        <div className="text-center space-y-3 w-full">
                           <p className="text-lg font-semibold">Generierung läuft...</p>
                           <div className="min-h-[60px] flex items-center justify-center">
                             <p className="text-sm text-muted-foreground animate-fade-in px-4">
                               🎯 {currentFunFact}
                             </p>
                           </div>
-                          <p className="text-xs text-muted-foreground/60">
-                            Dies kann 30-60 Sekunden dauern
-                          </p>
+                          
+                          {/* Progress Bar */}
+                          <div className="w-full space-y-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-100 ease-out"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs text-muted-foreground/60">
+                                {Math.round(progress)}%
+                              </p>
+                              <p className="text-xs text-muted-foreground/60">
+                                ~{Math.max(0, Math.round(60 - (progress / 100) * 60))}s verbleibend
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Small Spinner at Bottom */}
+                          <div className="flex justify-center pt-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary/60" />
+                          </div>
                         </div>
                       </div>
                     </div>

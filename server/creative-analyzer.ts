@@ -283,31 +283,50 @@ export async function generateHeadlineVariations(
       messages: [
         {
           role: 'system',
-          content: 'You are an expert copywriter for advertising creatives. Generate headline variations that match the style and structure of successful ads.',
+          content: 'You are an expert German copywriter for high-converting Facebook/Instagram advertising creatives. You write flawless German with perfect grammar, spelling, and punctuation. You analyze winning ads and replicate what works.',
         },
         {
           role: 'user',
-          content: `Generate ${count} headline variations based on this winning creative:
+          content: `Generate ${count} headline variations based on this WINNING creative that already performs well:
 
-ORIGINAL HEADLINE:
-"${originalHeadline}"
+WINNING CREATIVE ANALYSIS:
+- Original Headline: "${originalHeadline}"
+- Why it works: This headline is already proven to convert
+- Style to replicate: ${originalHeadline.includes('DIESER') || originalHeadline.includes('DER') ? 'Direct, specific, result-focused' : 'Benefit-driven, emotional'}
+- Formatting: ${originalHeadline === originalHeadline.toUpperCase() ? 'ALL CAPS for urgency' : 'Mixed case'}
+- Numbers: ${/\d/.test(originalHeadline) ? 'Uses specific numbers/results' : 'No numbers'}
 
-LANDING PAGE CONTEXT:
+LANDING PAGE CONTEXT (PRIMARY SOURCE FOR CONTENT):
 - Main Message: ${landingPageData.h1 || 'N/A'}
 - Value Proposition: ${landingPageData.h2 || 'N/A'}
+- Description: ${landingPageData.description || 'N/A'}
 - CTA: ${landingPageData.ctaText || 'N/A'}
 
-Generate variations that:
-1. Match the EXACT style and structure of the original
-2. Use similar formatting (uppercase, numbers, punctuation)
-3. Keep the same emotional tone and urgency
-4. Incorporate landing page value proposition
-5. Include numbers/results if original does
+**CRITICAL REQUIREMENTS:**
+1. **Perfect German:** No spelling/grammar errors (ä, ö, ü, ß must be correct)
+2. **Match winning style:** Replicate structure, tone, formatting of original
+3. **Landing page alignment:** Use actual value propositions from landing page, not generic claims
+4. **Proven patterns:** If original uses numbers → use numbers. If original is urgent → be urgent.
+5. **Marketing relevance:** No 0815 statements. Use specific benefits from landing page.
+6. **CTA quality:** Match the style of landing page CTA (e.g., "Jetzt X erhalten" not generic "Mehr erfahren")
+
+**EXAMPLES OF GOOD vs BAD:**
+GOOD: "DIESER FUNNEL GENERIERT 70-380 QUALIFIZIERTE LEADS" (specific, numbers, proven)
+BAD: "Mehr Leads für dein Business" (generic, no proof, boring)
+
+GOOD: "DCA STRATEGIE LANDINGPAGE 3" (specific, references actual content)
+BAD: "Neue Marketing Strategie" (vague, could be anything)
 
 For each variation, provide:
-- eyebrow: Short text above headline (e.g., "Copy-Paste-Vorlagen für Werbetreibende")
-- headline: Main headline (e.g., "DIESER FUNNEL GENERIERT 70-380 QUALIFIZIERTE LEADS")
-- cta: Call-to-action button text (e.g., "Jetzt Funnel-Templates gratis erhalten")
+- eyebrow: Short category/context text (e.g., "GEHEIMNIS ENTLÜFTET", "COPY-PASTE-VORLAGEN")
+- headline: Main headline matching winning style (e.g., "DIESER FUNNEL GENERIERT 70-380 QUALIFIZIERTE LEADS")
+- cta: Action-oriented CTA matching landing page offer (e.g., "JETZT MEHR ERFAHREN", "Funnel-Templates gratis erhalten")
+
+**QUALITY CHECK:** Before returning, verify:
+- ✓ All German words spelled correctly (especially ä, ö, ü, ß)
+- ✓ Headlines reference actual landing page content
+- ✓ Style matches winning creative structure
+- ✓ No generic marketing fluff
 
 Format as JSON array.`,
         },
