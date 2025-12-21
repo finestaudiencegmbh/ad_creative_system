@@ -92,6 +92,12 @@ export default function CreativeGenerator() {
     { enabled: !!selectedCampaignId }
   );
 
+  // Fetch ad sets when campaign is selected
+  const { data: adSetsData, isLoading: adSetsLoading } = trpc.campaigns.getAdSets.useQuery(
+    { campaignId: selectedCampaignId },
+    { enabled: !!selectedCampaignId }
+  );
+
   // Fetch winning creatives when campaign is selected
   const { data: winningCreativesData, isLoading: winningCreativesLoading } = trpc.ai.getWinningCreatives.useQuery(
     {
@@ -273,16 +279,26 @@ export default function CreativeGenerator() {
                   <Label htmlFor="adSetId" className="text-sm">
                     Anzeigengruppe (Optional)
                   </Label>
-                  <input
-                    id="adSetId"
-                    type="text"
-                    placeholder="Ad Set ID für Targeting-Kontext"
-                    value={selectedAdSetId}
-                    onChange={(e) => setSelectedAdSetId(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  />
+                  <Select value={selectedAdSetId} onValueChange={setSelectedAdSetId} disabled={!selectedCampaignId}>
+                    <SelectTrigger id="adSetId">
+                      <SelectValue placeholder="Anzeigengruppe auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {adSetsLoading && (
+                        <div className="p-2 text-sm text-muted-foreground">Lade Anzeigengruppen...</div>
+                      )}
+                      {adSetsData && adSetsData.length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">Keine aktiven Anzeigengruppen gefunden</div>
+                      )}
+                      {adSetsData?.map((adSet) => (
+                        <SelectItem key={adSet.id} value={adSet.id}>
+                          {adSet.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">
-                    Für zielgruppenspezifische Creatives kannst du eine Ad Set ID angeben
+                    Für zielgruppenspezifische Creatives kannst du eine Anzeigengruppe auswählen
                   </p>
                 </div>
 

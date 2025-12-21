@@ -257,3 +257,10 @@
 - [x] Mehr Fun Facts hinzugefügt (25 → 65 Facts)
 - [x] Anzeigedauer erhöht (4s → 8s)
 - [x] Shuffle-Algorithmus ohne Wiederholungen implementiert
+
+
+### UX Improvement - Ad Set Selection
+- [x] Replace Ad Set ID text input with Select dropdown
+- [x] Fetch active ad sets from selected campaign via tRPC
+- [x] Show ad set names in dropdown (not IDs)
+- [x] Keep field optional

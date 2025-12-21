@@ -177,6 +177,28 @@ export const appRouter = router({
           throw error;
         }
       }),
+
+    getAdSets: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const adSets = await getCampaignAdSets(input.campaignId);
+          
+          // Return ad sets with id and name, filter for active ones
+          return adSets
+            .filter(adSet => adSet.status === 'ACTIVE')
+            .map(adSet => ({
+              id: adSet.id,
+              name: adSet.name,
+              status: adSet.status,
+            }));
+        } catch (error) {
+          console.error("Error fetching ad sets:", error);
+          throw error;
+        }
+      }),
   }),
 
   // ============================================
