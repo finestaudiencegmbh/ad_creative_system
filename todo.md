@@ -166,3 +166,9 @@
 
 ### Bug Fix - Creative Generator link_url Error
 - [x] TypeError: Cannot read properties of undefined (reading 'link_url') - Null-Check hinzufügen
+
+### Bug Fix - Landing Page URL auf Ad-Ebene
+- [x] Landing Page URL liegt auf Ad-Ebene, nicht Kampagnen-Ebene
+- [x] Logic anpassen: Alle Ads der Kampagne abrufen und URLs extrahieren
+- [x] Falls mehrere URLs: Häufigste URL automatisch verwenden
+- [x] Falls nur eine URL: Automatisch verwenden

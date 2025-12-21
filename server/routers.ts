@@ -861,48 +861,74 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getAdCreatives, extractLandingPageUrl } = await import('./meta-api');
         const { scrapeLandingPage, getBestDescription, getBestTitle } = await import('./landingpage-scraper');
-        const { getAdSetAds } = await import('./meta-api');
+        const { getAdSetAds, getCampaignAdSets } = await import('./meta-api');
         
-        // Get campaign ad sets
-        const { getCampaignAdSets } = await import('./meta-api');
+        // Get all ad sets from campaign
         const adSets = await getCampaignAdSets(input.campaignId);
         
         if (adSets.length === 0) {
           return { url: null, data: null, error: 'No ad sets found in campaign' };
         }
         
-        // Get ads from first ad set
-        const ads = await getAdSetAds(adSets[0].id);
+        // Collect all ads from all ad sets
+        const allAds: any[] = [];
+        for (const adSet of adSets) {
+          try {
+            const ads = await getAdSetAds(adSet.id);
+            allAds.push(...ads);
+          } catch (error) {
+            console.error(`Error fetching ads for ad set ${adSet.id}:`, error);
+          }
+        }
         
-        if (ads.length === 0) {
+        if (allAds.length === 0) {
           return { url: null, data: null, error: 'No ads found in campaign' };
         }
         
-        // Get creatives from first ad
-        const creative = await getAdCreatives(ads[0].id);
+        // Extract landing page URLs from all ads
+        const urlCounts = new Map<string, number>();
         
-        if (!creative || Object.keys(creative).length === 0) {
-          return { url: null, data: null, error: 'No creatives found' };
+        for (const ad of allAds) {
+          try {
+            const creative = await getAdCreatives(ad.id);
+            if (creative && Object.keys(creative).length > 0) {
+              const url = extractLandingPageUrl(creative);
+              if (url) {
+                urlCounts.set(url, (urlCounts.get(url) || 0) + 1);
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching creative for ad ${ad.id}:`, error);
+          }
         }
         
-        // Extract landing page URL
-        const url = extractLandingPageUrl(creative);
+        if (urlCounts.size === 0) {
+          return { url: null, data: null, error: 'No landing page URL found in any ad creative' };
+        }
         
-        if (!url) {
-          return { url: null, data: null, error: 'No landing page URL found in creative' };
+        // Find the most common URL (in case there are multiple)
+        let mostCommonUrl = '';
+        let maxCount = 0;
+        for (const [url, count] of Array.from(urlCounts.entries())) {
+          if (count > maxCount) {
+            mostCommonUrl = url;
+            maxCount = count;
+          }
         }
         
         // Scrape landing page
-        const scrapedData = await scrapeLandingPage(url);
+        const scrapedData = await scrapeLandingPage(mostCommonUrl);
         
         return {
-          url,
+          url: mostCommonUrl,
           data: {
             title: getBestTitle(scrapedData),
             description: getBestDescription(scrapedData),
             ogImage: scrapedData.ogImage,
           },
           error: scrapedData.error,
+          urlsFound: urlCounts.size,
+          totalAdsChecked: allAds.length,
         };
       }),
 
