@@ -879,14 +879,14 @@ export const appRouter = router({
         }
         
         // Get creatives from first ad
-        const creatives = await getAdCreatives(ads[0].id);
+        const creative = await getAdCreatives(ads[0].id);
         
-        if (creatives.length === 0) {
+        if (!creative || Object.keys(creative).length === 0) {
           return { url: null, data: null, error: 'No creatives found' };
         }
         
         // Extract landing page URL
-        const url = extractLandingPageUrl(creatives[0]);
+        const url = extractLandingPageUrl(creative);
         
         if (!url) {
           return { url: null, data: null, error: 'No landing page URL found in creative' };

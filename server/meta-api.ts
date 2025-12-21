@@ -349,7 +349,8 @@ export async function getAdCreatives(adId: string): Promise<any> {
   }
 
   const data = await response.json();
-  return data.creative || null;
+  // Return creative object, or empty object if not found
+  return data.creative || {};
 }
 
 /**
@@ -391,6 +392,9 @@ export async function getAdSetTargeting(adSetId: string): Promise<any> {
  * Extract landing page URL from ad creative
  */
 export function extractLandingPageUrl(creative: any): string | null {
+  // Return null if creative is undefined or null
+  if (!creative) return null;
+  
   // Try multiple possible locations for the URL
   if (creative.link_url) return creative.link_url;
   if (creative.object_story_spec?.link_data?.link) return creative.object_story_spec.link_data.link;

@@ -163,3 +163,6 @@
 - [x] Prompt-Builder anpassen: Lead-Gen spezifische Creatives statt generische Produktfotos
 - [x] Branche/Kategorie-Erkennung aus Landingpage-Kontext (z.B. "Marketing-Dienstleistung", "Lead-Generierung")
 - [x] Fallback-Logik wenn Landingpage-Scraping keine aussagekräftigen Daten liefert
+
+### Bug Fix - Creative Generator link_url Error
+- [x] TypeError: Cannot read properties of undefined (reading 'link_url') - Null-Check hinzufügen
