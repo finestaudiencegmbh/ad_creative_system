@@ -1280,6 +1280,7 @@ export const appRouter = router({
     getWinningCreatives: protectedProcedure
       .input(z.object({
         campaignId: z.string(),
+        adSetId: z.string().optional(),
         datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
         timeRange: z.object({
           since: z.string(),
@@ -1291,19 +1292,29 @@ export const appRouter = router({
         const { getCampaignAdSets, getAdSetAds, getAdCreatives, extractImageUrl } = await import('./meta-api');
         const { getSalesData } = await import('./db');
         
-        // Get all ads from campaign
-        const adSets = await getCampaignAdSets(input.campaignId, {
-          datePreset: input.datePreset,
-          timeRange: input.timeRange,
-        });
-        
-        const allAds = [];
-        for (const adSet of adSets) {
-          const ads = await getAdSetAds(adSet.id, {
+        // Get all ads from campaign or specific ad set
+        let allAds = [];
+        if (input.adSetId) {
+          // Filter by specific ad set
+          const ads = await getAdSetAds(input.adSetId, {
             datePreset: input.datePreset,
             timeRange: input.timeRange,
           });
-          allAds.push(...ads);
+          allAds = ads;
+        } else {
+          // Get all ads from all ad sets in campaign
+          const adSets = await getCampaignAdSets(input.campaignId, {
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+          
+          for (const adSet of adSets) {
+            const ads = await getAdSetAds(adSet.id, {
+              datePreset: input.datePreset,
+              timeRange: input.timeRange,
+            });
+            allAds.push(...ads);
+          }
         }
         
         // Load sales data for ROAS calculation

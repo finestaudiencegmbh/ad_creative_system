@@ -327,3 +327,25 @@
 - [x] ROAS in Winning Creatives Liste anzeigen (Creative Generator) - bereits implementiert
 - [x] ROAS grün hervorheben wenn verfügbar - bereits implementiert
 - [x] Hinweis wenn ROAS überall 0 ist - gelbe Info-Box hinzugefügt
+
+### Creative Generator UX Fixes - Progressive Disclosure
+- [x] Schritt 2: Keine Vorauswahl, Placeholder "Format wählen"
+- [x] Schritt 3: Keine Vorauswahl, Placeholder "Anzahl wählen"
+- [x] Schritt 2 collapsed und disabled bis Schritt 1 ausgefüllt
+- [x] Schritt 3 collapsed und disabled bis Schritt 2 ausgefüllt
+- [x] Schritt 4 collapsed und disabled bis Schritt 3 ausgefüllt
+- [x] Checkbox grün nur wenn Nutzer Wert ausgewählt hat (nicht vorausgefüllt)
+- [x] Schritt 4 (optional) Checkbox immer grün sobald Schritt 3 ausgefüllt
+
+### Winning Creatives - Ad Set Filtering
+- [x] getWinningCreatives Procedure: Optional adSetId Parameter hinzugefügt
+- [x] Wenn adSetId vorhanden: Nur Ads aus dieser Anzeigengruppe filtern
+- [x] Frontend: adSetId an getWinningCreatives übergeben
+- [x] Progressive Disclosure funktioniert (Schritte 2-4 disabled bis vorheriger Schritt ausgefüllt)
+- [ ] Testen: Anzeigengruppe auswählen → nur Creatives aus dieser Anzeigengruppe (manuelle Tests erforderlich)
+
+### Loading Modal UX Improvements
+- [x] X-Button hinzugefügt (Modal kann geschlossen werden)
+- [x] Generierung läuft weiter im Hintergrund wenn Modal geschlossen
+- [x] Backdrop mit Gradient der Akzentfarbe (lila/violett)
+- [x] Modal bleibt weiß, nur Hintergrund wird abgedunkelt

@@ -58,8 +58,8 @@ export default function CreativeGenerator() {
   const [manualLandingPage, setManualLandingPage] = useState("");
   
   // Format & batch settings
-  const [format, setFormat] = useState<CreativeFormat>("feed");
-  const [batchCount, setBatchCount] = useState(3);
+  const [format, setFormat] = useState<CreativeFormat | null>(null);
+  const [batchCount, setBatchCount] = useState<number | null>(null);
   const [description, setDescription] = useState("");
   
   // State
@@ -119,9 +119,12 @@ export default function CreativeGenerator() {
     { enabled: !!selectedCampaignId }
   );
 
-  // Fetch winning creatives
+  // Fetch winning creatives (filtered by ad set if selected)
   const { data: winningCreativesData, isLoading: winningCreativesLoading } = trpc.ai.getWinningCreatives.useQuery(
-    { campaignId: selectedCampaignId },
+    { 
+      campaignId: selectedCampaignId,
+      adSetId: selectedAdSetId || undefined,
+    },
     { enabled: !!selectedCampaignId }
   );
 
@@ -159,14 +162,24 @@ export default function CreativeGenerator() {
   // Check if steps are completed
   const step1Complete = !!selectedCampaignId;
   const step2Complete = !!format;
-  const step3Complete = batchCount > 0;
-  const step4Complete = true; // Optional field, always complete
+  const step3Complete = batchCount !== null && batchCount > 0;
+  const step4Complete = step3Complete; // Optional field, complete when step 3 is complete
 
   const generateBatchCreativesMutation = trpc.ai.generateBatchCreatives.useMutation();
 
   const handleGenerate = async () => {
     if (!selectedCampaignId) {
       toast.error("Bitte wähle eine Kampagne aus");
+      return;
+    }
+
+    if (!format) {
+      toast.error("Bitte wähle ein Format aus");
+      return;
+    }
+
+    if (!batchCount || batchCount <= 0) {
+      toast.error("Bitte wähle eine Anzahl aus");
       return;
     }
 
@@ -189,7 +202,7 @@ export default function CreativeGenerator() {
         setGeneratedCreatives(prev => [...prev, ...result]);
       }
 
-      toast.success(`${formats.length * batchCount} Creatives erfolgreich generiert!`);
+      toast.success(`${formats.length * (batchCount || 1)} Creatives erfolgreich generiert!`);
     } catch (error: any) {
       console.error("Generation error:", error);
       toast.error(error.message || "Fehler bei der Generierung");
@@ -445,10 +458,10 @@ export default function CreativeGenerator() {
             </Card>
 
             {/* Step 2: Format Selection - Collapsible */}
-            <Collapsible open={step2Open} onOpenChange={setStep2Open}>
-              <Card>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <Collapsible open={step2Open} onOpenChange={(open) => step1Complete && setStep2Open(open)}>
+              <Card className={!step1Complete ? 'opacity-50 pointer-events-none' : ''}>
+                <CollapsibleTrigger asChild disabled={!step1Complete}>
+                  <CardHeader className={`cursor-pointer transition-colors ${step1Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-5 h-5 rounded flex items-center justify-center ${step2Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -465,7 +478,7 @@ export default function CreativeGenerator() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent>
-                    <RadioGroup value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
+                    <RadioGroup value={format || ""} onValueChange={(v) => setFormat(v as CreativeFormat)} disabled={!step1Complete}>
                       {Object.entries(formatSpecs).map(([key, spec]) => (
                         <div key={key} className="flex items-start space-x-3 space-y-0">
                           <RadioGroupItem value={key} id={key} />
@@ -485,10 +498,10 @@ export default function CreativeGenerator() {
             </Collapsible>
 
             {/* Step 3: Batch Count - Collapsible */}
-            <Collapsible open={step3Open} onOpenChange={setStep3Open}>
-              <Card>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <Collapsible open={step3Open} onOpenChange={(open) => step2Complete && setStep3Open(open)}>
+              <Card className={!step2Complete ? 'opacity-50 pointer-events-none' : ''}>
+                <CollapsibleTrigger asChild disabled={!step2Complete}>
+                  <CardHeader className={`cursor-pointer transition-colors ${step2Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-5 h-5 rounded flex items-center justify-center ${step3Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -507,9 +520,9 @@ export default function CreativeGenerator() {
                   <CardContent>
                     <div className="space-y-2">
                       <Label htmlFor="count">Anzahl (1-10)</Label>
-                      <Select value={batchCount.toString()} onValueChange={(v) => setBatchCount(parseInt(v))}>
+                      <Select value={batchCount?.toString() || ""} onValueChange={(v) => setBatchCount(parseInt(v))} disabled={!step2Complete}>
                         <SelectTrigger id="count">
-                          <SelectValue />
+                          <SelectValue placeholder="Anzahl wählen" />
                         </SelectTrigger>
                         <SelectContent>
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -526,10 +539,10 @@ export default function CreativeGenerator() {
             </Collapsible>
 
             {/* Step 4: Description - Collapsible */}
-            <Collapsible open={step4Open} onOpenChange={setStep4Open}>
-              <Card>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <Collapsible open={step4Open} onOpenChange={(open) => step3Complete && setStep4Open(open)}>
+              <Card className={!step3Complete ? 'opacity-50 pointer-events-none' : ''}>
+                <CollapsibleTrigger asChild disabled={!step3Complete}>
+                  <CardHeader className={`cursor-pointer transition-colors ${step3Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-5 h-5 rounded flex items-center justify-center ${step4Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -547,6 +560,7 @@ export default function CreativeGenerator() {
                 <CollapsibleContent>
                   <CardContent>
                     <Textarea
+                      disabled={!step3Complete}
                       placeholder="z.B. Mehr qualifizierte Leads für Marketing-Agenturen, moderne Farbpalette, professionelle Atmosphäre"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -567,12 +581,12 @@ export default function CreativeGenerator() {
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Generiere {batchCount} Creative{batchCount > 1 ? 's' : ''}...
+                  Generiere {batchCount || 1} Creative{(batchCount || 1) > 1 ? 's' : ''}...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  {batchCount} Creative{batchCount > 1 ? 's' : ''} generieren
+                  {batchCount || 1} Creative{(batchCount || 1) > 1 ? 's' : ''} generieren
                 </>
               )}
             </Button>
@@ -598,11 +612,26 @@ export default function CreativeGenerator() {
                 {/* Loading Modal - Centered Popup */}
                 {isGenerating && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Backdrop */}
-                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+                    {/* Backdrop with gradient */}
+                    <div 
+                      className="absolute inset-0 backdrop-blur-sm" 
+                      style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%)' }}
+                      onClick={() => setIsGenerating(false)}
+                    />
                     
                     {/* Modal Content */}
-                    <div className="relative bg-card border rounded-lg shadow-2xl p-12 max-w-md w-full mx-4">
+                    <div className="relative bg-white dark:bg-card border rounded-lg shadow-2xl p-12 max-w-md w-full mx-4">
+                      {/* X Button */}
+                      <button
+                        onClick={() => setIsGenerating(false)}
+                        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Modal schließen"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
                       <div className="flex flex-col items-center justify-center space-y-6">
                         <div className="relative">
                           <Loader2 className="h-16 w-16 animate-spin text-primary" />
