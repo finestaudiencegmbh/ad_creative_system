@@ -521,3 +521,33 @@
 - [x] Prompt-Qualität verbessern: Beleuchtung, Kameraperspektive, Vibe hinzufügen
 - [ ] Winning Creative als Referenzbild für Gemini Imagen nutzen (bis zu 14 Bilder) - TODO: GCS Integration erforderlich
 - [x] Performance-Feedback-Loop: CTR/ROAS-Daten für automatische Prompt-Optimierung
+
+
+### Creative Layout Learning (aus Top-Performer Ads)
+- [ ] Top-Performer Creatives aus Meta API laden (mit Performance-Ranking)
+- [ ] Gemini Vision: Text-Positionen analysieren (Eyebrow, Headline, CTA)
+- [ ] Safe Zones extrahieren (Bereiche wo KEIN Text liegen darf)
+- [ ] Typografie-Specs lernen (Schatten, Stroke, Kontrast für Lesbarkeit)
+- [ ] Layout-Patterns in Creative Generator integrieren
+
+### Landing Page Deep-Analyse für Werbetexte
+- [ ] Zielgruppen-Ansprache aus Landing Page extrahieren
+- [ ] Probleme/Schmerzpunkte identifizieren
+- [ ] Lösungs-Versprechen analysieren
+- [ ] Call-to-Action übernehmen (exakt wie auf Landing Page)
+- [ ] Tone-of-Voice lernen (Du/Sie, formal/casual, Sprache)
+- [ ] Ad Copy Generator mit Landing Page Kontext verbessern
+
+
+### Gemini Best Practices Implementation (COMPLETED)
+- [x] Prompt-Qualität verbessern: Beleuchtung, Kameraperspektive, Vibe hinzufügen
+- [ ] Winning Creative als Referenzbild für Gemini Imagen nutzen (bis zu 14 Bilder) - TODO: GCS Integration erforderlich
+- [x] Performance-Feedback-Loop: CTR/ROAS-Daten für automatische Prompt-Optimierung
+
+### Creative Layout Learning & Landing Page Deep Analysis (COMPLETED)
+- [x] Top-Performer Creatives aus Meta API laden
+- [x] Mit Gemini Vision Text-Positionen analysieren (Safe Zones)
+- [x] Typografie-Specs lernen (Schatten, Stroke, Kontrast)
+- [x] Landing Page Deep-Analyse implementieren (Zielgruppe, Probleme, Lösungen, CTA, Tone-of-Voice)
+- [x] Creative Generator mit gelernten Layout-Patterns aktualisieren
+- [x] Headline-Generierung mit Landing Page Deep-Analyse verbessern

@@ -7,6 +7,7 @@
 
 import { invokeLLM } from './_core/llm';
 import type { LandingPageData } from './landingpage-scraper';
+import type { LandingPageDeepAnalysis } from './landingpage-deep-analyzer';
 
 export interface CreativeAnalysis {
   visualElements: string; // Description of visual elements (dashboard, chat, metrics, etc.)
@@ -276,7 +277,8 @@ Output ONLY the prompt text, no explanations.`,
 export async function generateHeadlineVariations(
   originalHeadline: string,
   landingPageData: LandingPageData,
-  count: number = 3
+  count: number = 3,
+  deepAnalysis?: LandingPageDeepAnalysis
 ): Promise<{ eyebrow: string; headline: string; cta: string }[]> {
   try {
     const response = await invokeLLM({
@@ -294,6 +296,43 @@ LANDING PAGE KONTEXT:
 - Wertversprechen: ${landingPageData.h2 || 'N/A'}
 - Beschreibung: ${landingPageData.description || 'N/A'}
 - CTA: ${landingPageData.ctaText || 'N/A'}
+
+${deepAnalysis ? `
+DEEP ANALYSIS (WICHTIG - NUTZE DIESE INFOS!):
+
+ZIELGRUPPE:
+${deepAnalysis.targetAudience.description}
+
+SCHMERZPUNKTE:
+${deepAnalysis.targetAudience.painPoints.join('\n')}
+
+ZIELE:
+${deepAnalysis.targetAudience.desires.join('\n')}
+
+HAUPTVERSPRECHEN:
+${deepAnalysis.solution.mainPromise}
+
+BENEFITS:
+${deepAnalysis.solution.benefits.join('\n')}
+
+USPs:
+${deepAnalysis.solution.uniqueSellingPoints.join('\n')}
+
+TONE-OF-VOICE:
+${deepAnalysis.messaging.toneOfVoice}
+
+KEY PHRASES (NUTZE DIESE!):
+${deepAnalysis.messaging.keyPhrases.join(', ')}
+
+EMOTIONALE TRIGGER (NUTZE DIESE!):
+${deepAnalysis.messaging.emotionalTriggers.join(', ')}
+
+CTA:
+${deepAnalysis.callToAction.primary}
+
+DRINGLICHKEIT:
+${deepAnalysis.callToAction.urgency}
+` : ''}
 
 ORIGINAL WINNING HEADLINE (als Inspiration):
 "${originalHeadline}"

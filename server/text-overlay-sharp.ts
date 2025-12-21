@@ -4,6 +4,7 @@
  */
 
 import sharp from 'sharp';
+import { calculateSafeZones, getTypographySpecs } from './safe-zone-calculator';
 
 type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
 
@@ -26,36 +27,37 @@ interface FormatConfig {
   lineHeight: number;
 }
 
+// Format configs now use learned safe zones and typography
 const formatConfigs: Record<Exclude<CreativeFormat, 'all'>, FormatConfig> = {
   feed: {
     width: 1080,
     height: 1080,
     safeZoneTop: 0,
     safeZoneBottom: 0,
-    eyebrowFontSize: 28,
-    headlineFontSize: 56,
-    ctaFontSize: 32,
-    lineHeight: 1.3,
+    eyebrowFontSize: 38, // Updated from learned patterns
+    headlineFontSize: 70, // Updated from learned patterns
+    ctaFontSize: 43, // Updated from learned patterns
+    lineHeight: 1.2, // Tighter for better readability
   },
   story: {
     width: 1080,
     height: 1920,
-    safeZoneTop: 269, // 14% of 1920
-    safeZoneBottom: 384, // 20% of 1920
-    eyebrowFontSize: 32,
-    headlineFontSize: 64,
-    ctaFontSize: 36,
-    lineHeight: 1.3,
+    safeZoneTop: 192, // 10% of 1920 (learned from top performers)
+    safeZoneBottom: 192, // 10% of 1920
+    eyebrowFontSize: 38,
+    headlineFontSize: 70,
+    ctaFontSize: 43,
+    lineHeight: 1.2,
   },
   reel: {
     width: 1080,
     height: 1920,
-    safeZoneTop: 480, // 25% of 1920
-    safeZoneBottom: 576, // 30% of 1920
-    eyebrowFontSize: 32,
-    headlineFontSize: 64,
-    ctaFontSize: 36,
-    lineHeight: 1.3,
+    safeZoneTop: 192, // 10% of 1920
+    safeZoneBottom: 192, // 10% of 1920
+    eyebrowFontSize: 38,
+    headlineFontSize: 70,
+    ctaFontSize: 43,
+    lineHeight: 1.2,
   },
 };
 
@@ -124,6 +126,19 @@ function generateTextSVG(config: TextOverlayConfig): string {
   if (config.eyebrowText) {
     currentY += eyebrowFontSize;
     svgElements.push(`
+      <defs>
+        <filter id="eyebrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+          <feOffset dx="0" dy="2" result="offsetblur"/>
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.8"/>
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
       <text
         x="${width / 2}"
         y="${currentY}"
@@ -133,12 +148,28 @@ function generateTextSVG(config: TextOverlayConfig): string {
         fill="#00ff88"
         text-anchor="middle"
         letter-spacing="2"
+        filter="url(#eyebrow-shadow)"
       >${escapeXml(config.eyebrowText.toUpperCase())}</text>
     `);
     currentY += spacing;
   }
 
-  // Headline text (large, bold, white, multi-line)
+  // Headline text (large, bold, white, multi-line with strong shadow)
+  svgElements.push(`
+    <defs>
+      <filter id="headline-shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+        <feOffset dx="0" dy="4" result="offsetblur"/>
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.9"/>
+        </feComponentTransfer>
+        <feMerge>
+          <feMergeNode/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+  `);
   headlineLines.forEach((line, index) => {
     currentY += headlineFontSize * lineHeight;
     svgElements.push(`
@@ -150,6 +181,7 @@ function generateTextSVG(config: TextOverlayConfig): string {
         font-weight="900"
         fill="#ffffff"
         text-anchor="middle"
+        filter="url(#headline-shadow)"
       >${escapeXml(line)}</text>
     `);
   });

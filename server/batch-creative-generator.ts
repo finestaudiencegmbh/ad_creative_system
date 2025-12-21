@@ -38,6 +38,7 @@ export async function generateBatchCreatives(
   const { generateImageWithImagen, buildLandingPageAwarePrompt } = await import('./_core/geminiImagen');
   const { addTextOverlaySharp } = await import('./text-overlay-sharp');
   const { captureLandingPageScreenshot, analyzeLandingPageVisuals } = await import('./landingpage-screenshot');
+  const { analyzeLandingPageForAdCopy } = await import('./landingpage-deep-analyzer');
   
   // Map format to dimensions
   const FORMAT_SPECS = {
@@ -106,11 +107,13 @@ export async function generateBatchCreatives(
     ogDescription: null,
     ogImage: null,
     keywords: null,
+    bodyText: null,
     error: undefined,
   };
   
   // Capture screenshot and analyze visuals with Gemini Vision
   let visualDescription = '';
+  let deepAnalysis;
   if (landingPageUrl) {
     try {
       console.log(`📸 Capturing landing page screenshot: ${landingPageUrl}`);
@@ -118,14 +121,19 @@ export async function generateBatchCreatives(
       console.log(`🔍 Analyzing visuals with Gemini Vision...`);
       visualDescription = await analyzeLandingPageVisuals(screenshot.base64);
       console.log(`✅ Visual analysis complete: ${visualDescription.substring(0, 100)}...`);
+      
+      // Deep analysis for better ad copy
+      console.log(`🧠 Performing deep landing page analysis...`);
+      deepAnalysis = await analyzeLandingPageForAdCopy(landingPageUrl);
+      console.log(`✅ Deep analysis complete`);
     } catch (error) {
       console.error(`⚠️ Screenshot analysis failed, falling back to text-only:`, error);
     }
   }
   
-  // Generate headline variations
+  // Generate headline variations with deep analysis
   const baseHeadline = landingPageData.h1 || landingPageData.title || 'Mehr Leads für dein Business';
-  const headlines = await generateHeadlineVariations(baseHeadline, landingPageData, config.count);
+  const headlines = await generateHeadlineVariations(baseHeadline, landingPageData, config.count, deepAnalysis);
   
   // Generate aspect ratio based on format
   const aspectRatio = FORMAT_SPECS[config.format].aspectRatio as '1:1' | '9:16';

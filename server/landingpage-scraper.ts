@@ -18,6 +18,7 @@ export interface LandingPageData {
   h2: string | null; // First H2 (subheadline)
   heroImages: string[]; // Images in hero section
   ctaText: string | null; // First CTA button text
+  bodyText: string | null; // Full body text content
   error?: string;
 }
 
@@ -32,19 +33,20 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
       throw new Error('Invalid URL protocol. Only HTTP and HTTPS are supported.');
     }
 
-    // Fetch the page
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AdCreativeBot/1.0)',
-      },
-      redirect: 'follow',
+    // Use Puppeteer to render the page (handles JS and compressed content)
+    const puppeteer = await import('puppeteer');
+    const browser = await puppeteer.default.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
 
-    const html = await response.text();
+    // Get HTML content after JS execution
+    const html = await page.content();
+    await browser.close();
+
     const $ = cheerio.load(html);
 
     // Extract metadata
@@ -80,6 +82,10 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
     
     // Extract first CTA button text
     const ctaText = $('button, a.button, a.btn, [class*="cta"]').first().text().trim() || null;
+    
+    // Extract full body text (remove scripts, styles, etc.)
+    $('script, style, noscript, iframe').remove();
+    const bodyText = $('body').text().replace(/\s+/g, ' ').trim() || null;
 
     return {
       url,
@@ -93,6 +99,7 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
       h2,
       heroImages,
       ctaText,
+      bodyText,
     };
   } catch (error) {
     return {
@@ -107,7 +114,8 @@ export async function scrapeLandingPage(url: string): Promise<LandingPageData> {
       h2: null,
       heroImages: [],
       ctaText: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      bodyText: null,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }

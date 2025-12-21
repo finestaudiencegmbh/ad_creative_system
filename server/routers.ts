@@ -1511,6 +1511,7 @@ export const appRouter = router({
           ogDescription: null,
           ogImage: null,
           keywords: null,
+          bodyText: null,
           error: undefined,
         };
         
@@ -1562,6 +1563,7 @@ export const appRouter = router({
           ogDescription: null,
           ogImage: null,
           keywords: null,
+          bodyText: null,
           error: undefined,
         };
         
