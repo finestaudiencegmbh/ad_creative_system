@@ -350,10 +350,21 @@
 - [x] Backdrop mit Gradient der Akzentfarbe (lila/violett)
 - [x] Modal bleibt weiß, nur Hintergrund wird abgedunkelt
 
-### CRITICAL BUG - SDXL Output Format Error
+### CRITICAL BUG - SDXL Empty Object Response
 - [x] "Invalid SDXL output format" Fehler bei Creative-Generierung
 - [x] sdxlTextImage.ts geprüft: Output-Format Parameter
 - [x] Replicate API Dokumentation geprüft: Output ist uri[]
 - [x] Verbessertes Error Handling implementiert mit detailliertem Logging
 - [x] Unterstützung für Array, String und Object Output-Formate
-- [ ] Testen mit echten Replicate Credits
+- [x] Getestet mit echten Replicate Credits - Credits werden abgezogen
+- [x] Problem: Replicate gibt leeres Objekt zurück: [{}]
+- [x] SDXL Model Version geprüft (alt: 39ed52f2, veraltet - 2 Jahre alt)
+- [x] Auf neueste SDXL Version aktualisiert (neu: 7762fd07 - Latest)
+- [x] Parameter validiert (alle korrekt)
+- [ ] Testen mit neuer Version
+
+### CRITICAL BUG - Failed to Fetch Error
+- [ ] "Failed to fetch" Fehler bei Creative-Generierung
+- [ ] Server-Logs prüfen um Root Cause zu identifizieren
+- [ ] Server abstürzt oder Timeout bei generateBatchCreatives
+- [ ] Fix implementieren und testen
