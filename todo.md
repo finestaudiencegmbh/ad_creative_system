@@ -157,3 +157,9 @@
 ### Bug Fixes - Creative Generator
 - [x] Meta API Error #100: "creatives" Feld nicht direkt auf Ad-Node zugreifbar - richtigen Endpoint verwenden
 - [x] FLUX Prompt verbessern: Generiert Text-Infografiken statt echte Werbemotive - besseren Prompt-Builder implementieren
+
+### FLUX Prompt Verbesserung - Lead-Gen Creatives
+- [x] Landingpage-Scraping für finest-audience.com/v3 testen
+- [x] Prompt-Builder anpassen: Lead-Gen spezifische Creatives statt generische Produktfotos
+- [x] Branche/Kategorie-Erkennung aus Landingpage-Kontext (z.B. "Marketing-Dienstleistung", "Lead-Generierung")
+- [x] Fallback-Logik wenn Landingpage-Scraping keine aussagekräftigen Daten liefert

@@ -137,14 +137,33 @@ export default function CreativeGenerator() {
       if (format === "story" || format === "reel") aspectRatio = "9:16";
 
       // Build proper advertising creative prompt
-      let prompt = "Professional advertising creative, high quality product photography, modern minimalist design, ";
+      let prompt = "";
+      
+      // Detect if it's B2B/Lead-Gen/Service based on landing page content
+      const isB2BLeadGen = landingPageData?.data?.description?.toLowerCase().includes('lead') ||
+                          landingPageData?.data?.description?.toLowerCase().includes('kundengewinnung') ||
+                          landingPageData?.data?.description?.toLowerCase().includes('unternehmer') ||
+                          landingPageData?.data?.title?.toLowerCase().includes('meta ads') ||
+                          landingPageData?.data?.title?.toLowerCase().includes('marketing');
+      
+      if (isB2BLeadGen) {
+        // B2B Lead-Gen Creative Style
+        prompt = "Professional B2B marketing ad creative, clean modern design, ";
+        prompt += "showing business results and metrics, dashboard screenshots or WhatsApp conversation with leads, ";
+        prompt += "professional business setting, data-driven visuals, success indicators, ";
+        prompt += "corporate color scheme, high-end business photography, ";
+      } else {
+        // Product/E-Commerce Creative Style
+        prompt = "Professional advertising creative, high quality product photography, modern minimalist design, ";
+      }
       
       if (landingPageData?.data?.title) {
-        prompt += `for ${landingPageData.data.title}, `;
+        prompt += `Context: ${landingPageData.data.title}, `;
       }
       
       if (landingPageData?.data?.description) {
-        prompt += `${landingPageData.data.description}, `;
+        const desc = landingPageData.data.description.substring(0, 200); // Limit length
+        prompt += `${desc}, `;
       }
       
       if (audienceData) {
