@@ -852,6 +852,135 @@ export const appRouter = router({
           },
         });
       }),
+
+    // Creative Generator - Get landing page data from campaign
+    getLandingPageFromCampaign: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getAdCreatives, extractLandingPageUrl } = await import('./meta-api');
+        const { scrapeLandingPage, getBestDescription, getBestTitle } = await import('./landingpage-scraper');
+        const { getAdSetAds } = await import('./meta-api');
+        
+        // Get campaign ad sets
+        const { getCampaignAdSets } = await import('./meta-api');
+        const adSets = await getCampaignAdSets(input.campaignId);
+        
+        if (adSets.length === 0) {
+          return { url: null, data: null, error: 'No ad sets found in campaign' };
+        }
+        
+        // Get ads from first ad set
+        const ads = await getAdSetAds(adSets[0].id);
+        
+        if (ads.length === 0) {
+          return { url: null, data: null, error: 'No ads found in campaign' };
+        }
+        
+        // Get creatives from first ad
+        const creatives = await getAdCreatives(ads[0].id);
+        
+        if (creatives.length === 0) {
+          return { url: null, data: null, error: 'No creatives found' };
+        }
+        
+        // Extract landing page URL
+        const url = extractLandingPageUrl(creatives[0]);
+        
+        if (!url) {
+          return { url: null, data: null, error: 'No landing page URL found in creative' };
+        }
+        
+        // Scrape landing page
+        const scrapedData = await scrapeLandingPage(url);
+        
+        return {
+          url,
+          data: {
+            title: getBestTitle(scrapedData),
+            description: getBestDescription(scrapedData),
+            ogImage: scrapedData.ogImage,
+          },
+          error: scrapedData.error,
+        };
+      }),
+
+    // Creative Generator - Get audience targeting from ad set
+    getAudienceTargeting: protectedProcedure
+      .input(z.object({
+        adSetId: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getAdSetTargeting } = await import('./meta-api');
+        const targeting = await getAdSetTargeting(input.adSetId);
+        return targeting;
+      }),
+
+    // Creative Generator - Get winning creatives from campaign
+    getWinningCreatives: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        datePreset: z.enum(["today", "last_7d", "last_30d", "this_month", "last_90d"]).optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }).optional(),
+      }))
+      .query(async ({ input }) => {
+        const { identifyWinningCreatives, getWinningCreativeInsights } = await import('./winning-creatives');
+        const { getCampaignAdSets, getAdSetAds } = await import('./meta-api');
+        
+        // Get all ads from campaign
+        const adSets = await getCampaignAdSets(input.campaignId, {
+          datePreset: input.datePreset,
+          timeRange: input.timeRange,
+        });
+        
+        const allAds = [];
+        for (const adSet of adSets) {
+          const ads = await getAdSetAds(adSet.id, {
+            datePreset: input.datePreset,
+            timeRange: input.timeRange,
+          });
+          allAds.push(...ads);
+        }
+        
+        // Transform to performance data format
+        const adsWithPerformance = allAds.map(ad => {
+          const insights = ad.insights?.data?.[0];
+          const spend = parseFloat(insights?.spend || '0');
+          const impressions = parseInt(insights?.impressions || '0');
+          const outboundClicks = insights?.outbound_clicks?.find(a => a.action_type === 'outbound_click');
+          const leads = insights?.actions?.find(a => a.action_type === 'lead');
+          
+          const outboundClickCount = parseInt(outboundClicks?.value || '0');
+          const leadCount = parseInt(leads?.value || '0');
+          const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
+          const outboundCtr = impressions > 0 ? (outboundClickCount / impressions) * 100 : 0;
+          const costPerOutboundClick = outboundClickCount > 0 ? spend / outboundClickCount : 0;
+          const costPerLead = leadCount > 0 ? spend / leadCount : 0;
+          
+          return {
+            id: ad.id,
+            name: ad.name,
+            roasOrderVolume: 0, // Would need sales data
+            roasCashCollect: 0, // Would need sales data
+            costPerLead,
+            costPerOutboundClick,
+            outboundCtr,
+            cpm,
+            spend,
+            leads: leadCount,
+            impressions,
+          };
+        });
+        
+        const winners = identifyWinningCreatives(adsWithPerformance, 5);
+        const insights = getWinningCreativeInsights(winners);
+        
+        return { winners, insights };
+      }),
   }),
 });
 

@@ -139,3 +139,17 @@
 - [x] UI: Visueller Indikator wenn Lead-Zahl manuell korrigiert wurde
 - [x] Automatische Neuberechnung von CPL und CVR nach Lead-Korrektur
 - [x] Implementierung auf allen Ebenen (Dashboard, CampaignDetail, AdSetDetail)
+
+### Intelligenter Creative Generator
+- [x] Meta API erweitern: Creative-Daten abrufen (Bilder, Videos, Texte, Website-URLs)
+- [x] Meta API erweitern: Zielgruppen-Definitionen aus Ad Sets auslesen (Alter, Geschlecht, Interessen, Standort)
+- [x] Landingpage-Scraping: Title, Description, Open Graph Tags extrahieren
+- [x] Performance-Ranking: Top-Performer nach ROAS → CPL → Kosten/Klick → Outbound CTR & CPM
+- [x] Creative Generator UI: Kampagnen-Auswahl mit automatischer Landingpage-Erkennung
+- [x] Creative Generator UI: Anzeigengruppen-Auswahl (Optional) für Zielgruppen-Kontext
+- [x] Creative Generator UI: Format-Auswahl (Alle/Feed/Story/Reel) - Standard: Alle
+- [x] Creative Generator UI: Beschreibung (Optional) - automatisch aus Landingpage befüllt
+- [x] Winning Creative Analysis: Best Performer identifizieren und als Vorlage nutzen
+- [x] FLUX Integration: Bildgenerierung basierend auf Landingpage + Zielgruppe + Winning Creatives
+- [x] GPT-4 Integration: Textgenerierung (Headlines, Primary Text) basierend auf Kontext
+- [x] Format-spezifische Generierung: Feed (1080x1080), Story (1080x1920), Reel (1080x1920)

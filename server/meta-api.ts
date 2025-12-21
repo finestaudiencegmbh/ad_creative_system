@@ -315,3 +315,86 @@ export async function testMetaConnection(): Promise<{
     };
   }
 }
+
+/**
+ * Fetch creative data for a specific ad (images, videos, text, website URL)
+ */
+export async function getAdCreatives(adId: string): Promise<any[]> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "id,name,object_story_spec,image_url,video_id,body,link_url,title,call_to_action_type",
+  });
+
+  const url = `${META_API_BASE_URL}/${adId}/creatives?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return data.data || [];
+}
+
+/**
+ * Fetch audience targeting data for a specific ad set
+ */
+export async function getAdSetTargeting(adSetId: string): Promise<any> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "targeting",
+  });
+
+  const url = `${META_API_BASE_URL}/${adSetId}?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return data.targeting || null;
+}
+
+/**
+ * Extract landing page URL from ad creative
+ */
+export function extractLandingPageUrl(creative: any): string | null {
+  // Try multiple possible locations for the URL
+  if (creative.link_url) return creative.link_url;
+  if (creative.object_story_spec?.link_data?.link) return creative.object_story_spec.link_data.link;
+  if (creative.object_story_spec?.video_data?.call_to_action?.value?.link) {
+    return creative.object_story_spec.video_data.call_to_action.value.link;
+  }
+  return null;
+}
