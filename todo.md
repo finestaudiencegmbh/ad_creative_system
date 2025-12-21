@@ -264,3 +264,61 @@
 - [x] Fetch active ad sets from selected campaign via tRPC
 - [x] Show ad set names in dropdown (not IDs)
 - [x] Keep field optional
+
+
+### ROAS Integration in Winning Ads
+- [x] ROAS aus manuell eingetragenen Verkäufen berechnen (getSalesData in db.ts)
+- [x] ROAS-Logik bereits in Ranking integriert (40% Gewichtung)
+- [x] ROAS in getWinningCreatives berechnen und zurückgeben
+- [x] ROAS in Winning Ads UI anzeigen (neben CPL & CTR) - grün hervorgehoben
+- [ ] Info-Hinweis wenn ROAS überall 0 ist: "ROAS-Daten nicht verfügbar"
+
+### UX Improvement - Loading Screen als Modal
+- [x] Loading Screen von statischem Bereich zu zentriertem Modal umbauen
+- [x] Modal erscheint beim Klick auf "Generieren" Button
+- [x] Modal mit Backdrop (dunkler Hintergrund)
+- [x] Fun Facts Animation im Modal zentriert
+
+### CRITICAL BUG - Creative Generation schlägt fehl
+- [x] Nutzer kann keine Creatives generieren (lädt aber zeigt dann "Noch keine Creatives generiert")
+- [x] Server-Logs prüfen um Fehlerursache zu identifizieren
+- [x] Root Cause identifiziert: REPLICATE_API_TOKEN fehlt
+- [ ] Replicate API Token mit Vitest validieren
+- [ ] Kompletten Flow testen (Kampagne auswählen → Format wählen → Generieren)
+
+### Performance Page - Filter Implementation
+- [x] Kampagnen-Dropdown hinzufügen (alle aktiven Kampagnen)
+- [x] Anzeigengruppen-Dropdown hinzufügen (optional, abhängig von gewählter Kampagne)
+- [x] Top 3 Performer nach Filter filtern
+- [x] Top 3 Flops nach Filter filtern
+- [x] Kampagnen-Übersicht nach Filter filtern (falls Kampagne gewählt, nur diese zeigen)
+- [x] "Alle Kampagnen" Option als Standard
+- [x] TypeScript Fehler in getPerformanceData beheben
+- [x] Frontend TypeScript Fehler beheben
+
+### Creative Generator UX - Collapsible Steps
+- [x] Schritt 2 (Format auswählen) als ausklappbares Dropdown
+- [x] Schritt 3 (Anzahl Creatives) als ausklappbares Dropdown
+- [x] Schritt 4 (Beschreibung) als ausklappbares Dropdown
+- [x] Checkboxen hinzufügen: Grün wenn ausgefüllt, Grau wenn leer
+- [x] Schritte automatisch ausklappen wenn vorheriger Schritt abgeschlossen
+- [x] Schritt 1 (Kampagne) bleibt immer sichtbar
+- [x] TypeScript Fehler beheben (getLandingPage procedure)
+
+### Zielgruppen-Targeting Anzeige
+- [x] Alter anzeigen (z.B. 25-45)
+- [x] Geschlecht anzeigen (Männer/Frauen/Alle)
+- [x] Land/Region anzeigen (z.B. Deutschland, Österreich)
+- [x] Detaillierte Targeting-Angaben anzeigen (Interessen, Verhaltensweisen, demografische Merkmale)
+- [x] Targeting-Daten von Meta API abrufen (getAdSetTargeting)
+- [x] UI unter Anzeigengruppe-Dropdown implementieren
+
+### CRITICAL BUG - Verkäufe werden nicht kaskadiert
+- [x] Verkauf auf Creative-Ebene eingetragen → fehlt in Anzeigengruppe & Kampagne
+- [x] Verkauf auf Anzeigengruppen-Ebene eingetragen → fehlt in Kampagne
+- [x] getSalesData Logik anpassen: Creative-Verkäufe zu Anzeigengruppe aggregieren
+- [x] getSalesData Logik anpassen: Anzeigengruppen-Verkäufe zu Kampagne aggregieren
+- [x] Dashboard ROAS-Berechnung aktualisieren (bereits vorhanden)
+- [x] Meta API Funktionen hinzugefügt: getAdDetails, getAdSetDetails
+- [x] Sales creation Procedure aktualisiert: Auto-populate parent IDs
+- [x] Tests für Verkaufs-Aggregation schreiben (8/8 passed)

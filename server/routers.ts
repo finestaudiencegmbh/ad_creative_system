@@ -57,7 +57,7 @@ export const appRouter = router({
             let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
-                action => action.action_type === "lead" || 
+                (action: any) => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
               leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
@@ -72,7 +72,7 @@ export const appRouter = router({
             let outboundClicks = 0;
             if (insights?.outbound_clicks) {
               const outboundClickAction = insights.outbound_clicks.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
             }
@@ -81,7 +81,7 @@ export const appRouter = router({
             let costPerOutboundClick = 0;
             if (insights?.cost_per_outbound_click) {
               const costAction = insights.cost_per_outbound_click.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
             }
@@ -199,6 +199,251 @@ export const appRouter = router({
           throw error;
         }
       }),
+
+    getPerformanceData: protectedProcedure
+      .input(z.object({
+        campaignId: z.string().optional(),
+        adSetId: z.string().optional(),
+        timeRange: z.object({
+          since: z.string(),
+          until: z.string(),
+        }),
+      }))
+      .query(async ({ input }) => {
+        try {
+          const { identifyWinningCreatives } = await import('./winning-creatives');
+          
+          // Calculate date range for sales filtering
+          const startDate = new Date(input.timeRange.since);
+          const endDate = new Date(input.timeRange.until);
+
+          // Fetch ads based on filters
+          let allAds: any[] = [];
+          
+          if (input.adSetId) {
+            // Specific ad set
+            allAds = await getAdSetAds(input.adSetId, {
+              timeRange: input.timeRange,
+            });
+          } else if (input.campaignId) {
+            // All ad sets in campaign
+            const adSets = await getCampaignAdSets(input.campaignId, {
+              timeRange: input.timeRange,
+            });
+            for (const adSet of adSets) {
+              const ads = await getAdSetAds(adSet.id, {
+                timeRange: input.timeRange,
+              });
+              allAds.push(...ads);
+            }
+          } else {
+            // All campaigns
+            const campaigns = await getMetaCampaigns({
+              timeRange: input.timeRange,
+            });
+            for (const campaign of campaigns) {
+              if (campaign.status === 'ACTIVE') {
+                const adSets = await getCampaignAdSets(campaign.id, {
+                  timeRange: input.timeRange,
+                });
+                for (const adSet of adSets) {
+                  const ads = await getAdSetAds(adSet.id, {
+                    timeRange: input.timeRange,
+                  });
+                  allAds.push(...ads);
+                }
+              }
+            }
+          }
+
+          // Transform ads to performance data
+          const adsWithPerformance = await Promise.all(allAds.map(async ad => {
+            const insights = ad.insights?.data?.[0];
+            
+            // Extract metrics
+            let leadsFromMeta = 0;
+            if (insights?.actions) {
+              const leadAction = insights.actions.find(
+                (action: any) => action.action_type === "lead" || 
+                         action.action_type === "offsite_conversion.fb_pixel_lead"
+              );
+              leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
+            }
+
+            const leadCorrection = await db.getLeadCorrectionByEntity({ metaAdId: ad.id });
+            const leads = leadCorrection ? leadCorrection.correctedLeadCount : leadsFromMeta;
+
+            let outboundClicks = 0;
+            if (insights?.outbound_clicks) {
+              const outboundClickAction = insights.outbound_clicks.find(
+                (action: any) => action.action_type === "outbound_click"
+              );
+              outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+            }
+
+            const impressions = insights ? parseInt(insights.impressions) : 0;
+            const spend = insights ? parseFloat(insights.spend) : 0;
+            const cpm = insights ? parseFloat(insights.cpm) : 0;
+            
+            const costPerLead = leads > 0 ? spend / leads : 0;
+            const outboundCtr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+            
+            let costPerOutboundClick = 0;
+            if (insights?.cost_per_outbound_click) {
+              const costAction = insights.cost_per_outbound_click.find(
+                (action: any) => action.action_type === "outbound_click"
+              );
+              costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
+            }
+
+            // Fetch sales for ROAS
+            const sales = await db.getSalesByEntity({
+              metaAdId: ad.id,
+              startDate,
+              endDate,
+            });
+
+            const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+            const totalCashCollect = sales.reduce((sum, sale) => sum + parseFloat(sale.cashCollect), 0);
+            const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
+            const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
+
+            return {
+              id: ad.id,
+              name: ad.name,
+              roasOrderVolume,
+              roasCashCollect,
+              costPerLead,
+              costPerOutboundClick,
+              outboundCtr,
+              cpm,
+              spend,
+              leads,
+              impressions,
+            };
+          }));
+
+          // Get top performers and flops
+          const topPerformers = identifyWinningCreatives(adsWithPerformance, 3);
+          // For flops, reverse sort by score (lowest scores first)
+          const allScored = identifyWinningCreatives(adsWithPerformance, adsWithPerformance.length);
+          const topFlops = allScored.slice(-3).reverse();
+
+          // Get campaign overview
+          let campaignOverview: any[] = [];
+          if (input.campaignId) {
+            // Single campaign
+            const campaign = await getMetaCampaigns({
+              timeRange: input.timeRange,
+            }).then(campaigns => campaigns.find(c => c.id === input.campaignId));
+            
+            if (campaign) {
+              const insights = campaign.insights?.data?.[0];
+              const impressions = insights ? parseInt(insights.impressions) : 0;
+              const spend = insights ? parseFloat(insights.spend) : 0;
+              
+              let outboundClicks = 0;
+              if (insights?.outbound_clicks) {
+                const outboundClickAction = insights.outbound_clicks.find(
+                  action => action.action_type === "outbound_click"
+                );
+                outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+              }
+
+              const ctr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+
+              const sales = await db.getSalesByEntity({
+                metaCampaignId: campaign.id,
+                startDate,
+                endDate,
+              });
+
+              const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+              const roas = spend > 0 ? totalOrderValue / spend : 0;
+
+              campaignOverview = [{
+                id: campaign.id,
+                name: campaign.name,
+                impressions,
+                clicks: outboundClicks,
+                ctr,
+                spend,
+                roas,
+              }];
+            }
+          } else {
+            // All active campaigns
+            const campaigns = await getMetaCampaigns({
+              timeRange: input.timeRange,
+            });
+            
+            campaignOverview = await Promise.all(
+              campaigns
+                .filter(c => c.status === 'ACTIVE')
+                .map(async campaign => {
+                  const insights = campaign.insights?.data?.[0];
+                  const impressions = insights ? parseInt(insights.impressions) : 0;
+                  const spend = insights ? parseFloat(insights.spend) : 0;
+                  
+                  let outboundClicks = 0;
+                  if (insights?.outbound_clicks) {
+                    const outboundClickAction = insights.outbound_clicks.find(
+                      action => action.action_type === "outbound_click"
+                    );
+                    outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
+                  }
+
+                  const ctr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+
+                  const sales = await db.getSalesByEntity({
+                    metaCampaignId: campaign.id,
+                    startDate,
+                    endDate,
+                  });
+
+                  const totalOrderValue = sales.reduce((sum, sale) => sum + parseFloat(sale.orderValue), 0);
+                  const roas = spend > 0 ? totalOrderValue / spend : 0;
+
+                  return {
+                    id: campaign.id,
+                    name: campaign.name,
+                    impressions,
+                    clicks: outboundClicks,
+                    ctr,
+                    spend,
+                    roas,
+                  };
+                })
+            );
+          }
+
+          // Create lookup map for spend values
+          const adSpendMap = new Map(adsWithPerformance.map(ad => [ad.id, ad.spend]));
+
+          return {
+            topPerformers: topPerformers.map(p => ({
+              id: p.adId,
+              name: p.adName,
+              roas: p.metrics.roasOrderVolume,
+              cpl: p.metrics.costPerLead,
+              ctr: p.metrics.outboundCtr,
+              spend: adSpendMap.get(p.adId) || 0,
+            })),
+            topFlops: topFlops.map(p => ({
+              id: p.adId,
+              name: p.adName,
+              roas: p.metrics.roasOrderVolume,
+              cpl: p.metrics.costPerLead,
+              ctr: p.metrics.outboundCtr,
+              spend: adSpendMap.get(p.adId) || 0,
+            })),
+            campaignOverview,
+          };
+        } catch (error) {
+          console.error("Error fetching performance data:", error);
+          throw error;
+        }
+      }),
   }),
 
   // ============================================
@@ -237,7 +482,7 @@ export const appRouter = router({
             let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
-                action => action.action_type === "lead" || 
+                (action: any) => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
               leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
@@ -252,7 +497,7 @@ export const appRouter = router({
             let outboundClicks = 0;
             if (insights?.outbound_clicks) {
               const outboundClickAction = insights.outbound_clicks.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
             }
@@ -261,7 +506,7 @@ export const appRouter = router({
             let costPerOutboundClick = 0;
             if (insights?.cost_per_outbound_click) {
               const costAction = insights.cost_per_outbound_click.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
             }
@@ -353,7 +598,7 @@ export const appRouter = router({
             let leadsFromMeta = 0;
             if (insights?.actions) {
               const leadAction = insights.actions.find(
-                action => action.action_type === "lead" || 
+                (action: any) => action.action_type === "lead" || 
                          action.action_type === "offsite_conversion.fb_pixel_lead"
               );
               leadsFromMeta = leadAction ? parseInt(leadAction.value) : 0;
@@ -368,7 +613,7 @@ export const appRouter = router({
             let outboundClicks = 0;
             if (insights?.outbound_clicks) {
               const outboundClickAction = insights.outbound_clicks.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               outboundClicks = outboundClickAction ? parseInt(outboundClickAction.value) : 0;
             }
@@ -377,7 +622,7 @@ export const appRouter = router({
             let costPerOutboundClick = 0;
             if (insights?.cost_per_outbound_click) {
               const costAction = insights.cost_per_outbound_click.find(
-                action => action.action_type === "outbound_click"
+                (action: any) => action.action_type === "outbound_click"
               );
               costPerOutboundClick = costAction ? parseFloat(costAction.value) : 0;
             }
@@ -727,9 +972,41 @@ export const appRouter = router({
         if (!input.metaCampaignId && !input.metaAdSetId && !input.metaAdId) {
           throw new Error("At least one entity ID (campaign, ad set, or ad) must be provided");
         }
+
+        // Auto-populate parent entity IDs for cascading
+        let metaCampaignId = input.metaCampaignId;
+        let metaAdSetId = input.metaAdSetId;
+        let metaAdId = input.metaAdId;
+
+        // If only ad ID is provided, fetch ad set and campaign IDs
+        if (metaAdId && !metaAdSetId) {
+          try {
+            const { getAdDetails } = await import('./meta-api');
+            const adDetails = await getAdDetails(metaAdId);
+            metaAdSetId = adDetails.adset_id;
+            metaCampaignId = adDetails.campaign_id;
+          } catch (error) {
+            console.warn('Failed to fetch ad details for cascading:', error);
+          }
+        }
+
+        // If only ad set ID is provided, fetch campaign ID
+        if (metaAdSetId && !metaCampaignId) {
+          try {
+            const { getAdSetDetails } = await import('./meta-api');
+            const adSetDetails = await getAdSetDetails(metaAdSetId);
+            metaCampaignId = adSetDetails.campaign_id;
+          } catch (error) {
+            console.warn('Failed to fetch ad set details for cascading:', error);
+          }
+        }
+
         // Convert numbers to strings for decimal fields
         const saleData = {
           ...input,
+          metaCampaignId,
+          metaAdSetId,
+          metaAdId,
           orderValue: input.orderValue.toString(),
           cashCollect: input.cashCollect.toString(),
         };
@@ -1012,6 +1289,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { identifyWinningCreatives, getWinningCreativeInsights } = await import('./winning-creatives');
         const { getCampaignAdSets, getAdSetAds, getAdCreatives, extractImageUrl } = await import('./meta-api');
+        const { getSalesData } = await import('./db');
         
         // Get all ads from campaign
         const adSets = await getCampaignAdSets(input.campaignId, {
@@ -1028,6 +1306,9 @@ export const appRouter = router({
           allAds.push(...ads);
         }
         
+        // Load sales data for ROAS calculation
+        const salesData = await getSalesData();
+        
         // Transform to performance data format
         const adsWithPerformance = allAds.map(ad => {
           const insights = ad.insights?.data?.[0];
@@ -1035,6 +1316,11 @@ export const appRouter = router({
           const impressions = parseInt(insights?.impressions || '0');
           const outboundClicks = insights?.outbound_clicks?.find(a => a.action_type === 'outbound_click');
           const leads = insights?.actions?.find(a => a.action_type === 'lead');
+          
+          // Get ROAS from manually entered sales data
+          const adSales = salesData.get(`ad:${ad.id}`);
+          const roasOrderVolume = spend > 0 && adSales ? adSales.orderValue / spend : 0;
+          const roasCashCollect = spend > 0 && adSales ? adSales.cashCollect / spend : 0;
           
           const outboundClickCount = parseInt(outboundClicks?.value || '0');
           const leadCount = parseInt(leads?.value || '0');
@@ -1046,8 +1332,8 @@ export const appRouter = router({
           return {
             id: ad.id,
             name: ad.name,
-            roasOrderVolume: 0, // Would need sales data
-            roasCashCollect: 0, // Would need sales data
+            roasOrderVolume,
+            roasCashCollect,
             costPerLead,
             costPerOutboundClick,
             outboundCtr,

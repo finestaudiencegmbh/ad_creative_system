@@ -492,3 +492,55 @@ export async function deleteLeadCorrection(id: number): Promise<void> {
 
   await db.delete(leadCorrections).where(eq(leadCorrections.id, id));
 }
+
+
+// ============================================
+// Sales Data Aggregation for ROAS
+// ============================================
+
+/**
+ * Get all sales data grouped by entity (campaign, ad set, ad)
+ * Returns aggregated order value and cash collect for ROAS calculation
+ */
+export async function getSalesData(): Promise<Map<string, { orderValue: number; cashCollect: number }>> {
+  const db = await getDb();
+  if (!db) return new Map();
+
+  const allSales = await db.select().from(sales);
+  
+  const salesMap = new Map<string, { orderValue: number; cashCollect: number }>();
+  
+  for (const sale of allSales) {
+    // Add to campaign level
+    if (sale.metaCampaignId) {
+      const key = `campaign:${sale.metaCampaignId}`;
+      const existing = salesMap.get(key) || { orderValue: 0, cashCollect: 0 };
+      salesMap.set(key, {
+        orderValue: existing.orderValue + parseFloat(sale.orderValue.toString()),
+        cashCollect: existing.cashCollect + parseFloat(sale.cashCollect.toString()),
+      });
+    }
+    
+    // Add to ad set level
+    if (sale.metaAdSetId) {
+      const key = `adset:${sale.metaAdSetId}`;
+      const existing = salesMap.get(key) || { orderValue: 0, cashCollect: 0 };
+      salesMap.set(key, {
+        orderValue: existing.orderValue + parseFloat(sale.orderValue.toString()),
+        cashCollect: existing.cashCollect + parseFloat(sale.cashCollect.toString()),
+      });
+    }
+    
+    // Add to ad level
+    if (sale.metaAdId) {
+      const key = `ad:${sale.metaAdId}`;
+      const existing = salesMap.get(key) || { orderValue: 0, cashCollect: 0 };
+      salesMap.set(key, {
+        orderValue: existing.orderValue + parseFloat(sale.orderValue.toString()),
+        cashCollect: existing.cashCollect + parseFloat(sale.cashCollect.toString()),
+      });
+    }
+  }
+  
+  return salesMap;
+}

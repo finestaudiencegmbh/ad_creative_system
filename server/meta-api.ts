@@ -32,6 +32,10 @@ interface MetaInsights {
     action_type: string;
     value: string;
   }>;
+  action_values?: Array<{
+    action_type: string;
+    value: string;
+  }>;
   cost_per_outbound_click?: Array<{
     action_type: string;
     value: string;
@@ -449,4 +453,79 @@ export function extractImageUrl(creative: any): string | null {
   }
   
   return null;
+}
+
+/**
+ * Get ad details including parent ad set and campaign IDs
+ */
+export async function getAdDetails(adId: string): Promise<{ adset_id: string; campaign_id: string }> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "adset_id,campaign_id",
+  });
+
+  const url = `${META_API_BASE_URL}/${adId}?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return {
+    adset_id: data.adset_id,
+    campaign_id: data.campaign_id,
+  };
+}
+
+/**
+ * Get ad set details including parent campaign ID
+ */
+export async function getAdSetDetails(adSetId: string): Promise<{ campaign_id: string }> {
+  const accessToken = ENV.metaAccessToken;
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN not configured");
+  }
+
+  const queryParams = new URLSearchParams({
+    access_token: accessToken,
+    fields: "campaign_id",
+  });
+
+  const url = `${META_API_BASE_URL}/${adSetId}?${queryParams.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      `Meta API Error: ${response.status} - ${JSON.stringify(errorData)}`
+    );
+  }
+
+  const data = await response.json();
+  return {
+    campaign_id: data.campaign_id,
+  };
 }

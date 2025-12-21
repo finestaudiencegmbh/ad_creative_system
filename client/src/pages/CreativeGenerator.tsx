@@ -1,19 +1,20 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Sparkles, Loader2, Trophy, Download, Image as ImageIcon } from "lucide-react";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Loader2, Sparkles, Trophy, ImageIcon, Download, ChevronDown, Check } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useState, useEffect } from "react";
 import { startOfMonth, endOfMonth, format as formatDate } from "date-fns";
+import { toast } from "sonner";
 import { getRandomFunFact } from "@/lib/funFacts";
 
-type CreativeFormat = 'feed' | 'story' | 'reel' | 'all';
+type CreativeFormat = "feed" | "story" | "reel" | "all";
 
 interface GeneratedCreative {
   imageUrl: string;
@@ -23,21 +24,42 @@ interface GeneratedCreative {
   format: CreativeFormat;
 }
 
+const formatSpecs: Record<CreativeFormat, { label: string; size: string; description: string; aspectRatio: string }> = {
+  feed: {
+    label: "Feed (1:1)",
+    size: "1080 × 1080 px",
+    description: "Quadratisches Format für News Feed",
+    aspectRatio: "1:1",
+  },
+  story: {
+    label: "Story (9:16)",
+    size: "1080 × 1920 px",
+    description: "Vertikales Format für Stories (Safe Zones: Top 14%, Bottom 20%)",
+    aspectRatio: "9:16",
+  },
+  reel: {
+    label: "Reel (9:16)",
+    size: "1080 × 1920 px",
+    description: "Vertikales Format für Reels (Safe Zones: Top 25%, Bottom 30%)",
+    aspectRatio: "9:16",
+  },
+  all: {
+    label: "Alle Formate",
+    size: "Feed + Story + Reel",
+    description: "Generiert Creatives in allen drei Formaten",
+    aspectRatio: "mixed",
+  },
+};
+
 export default function CreativeGenerator() {
-  // Step 1: Campaign selection
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
-  const [manualLandingPage, setManualLandingPage] = useState<string>("");
+  // Campaign selection
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [selectedAdSetId, setSelectedAdSetId] = useState("");
+  const [manualLandingPage, setManualLandingPage] = useState("");
   
-  // Step 1b: Ad Set selection (optional)
-  const [selectedAdSetId, setSelectedAdSetId] = useState<string>("");
-  
-  // Step 2: Format selection
+  // Format & batch settings
   const [format, setFormat] = useState<CreativeFormat>("feed");
-  
-  // Step 3: Batch count
-  const [batchCount, setBatchCount] = useState<number>(3);
-  
-  // Step 4: Description (optional)
+  const [batchCount, setBatchCount] = useState(3);
   const [description, setDescription] = useState("");
   
   // State
@@ -46,6 +68,11 @@ export default function CreativeGenerator() {
   const [currentFunFact, setCurrentFunFact] = useState(getRandomFunFact());
   const [usedFacts, setUsedFacts] = useState<Set<string>>(new Set());
   
+  // Collapsible state
+  const [step2Open, setStep2Open] = useState(false);
+  const [step3Open, setStep3Open] = useState(false);
+  const [step4Open, setStep4Open] = useState(false);
+
   // Rotate fun facts every 8 seconds during generation (no repeats)
   useEffect(() => {
     if (!isGenerating) return;
@@ -59,15 +86,13 @@ export default function CreativeGenerator() {
         attempts++;
       }
       
-      setUsedFacts(prev => {
-        const updated = new Set(prev);
-        updated.add(newFact);
-        // Reset if all facts have been shown
-        if (updated.size >= 60) {
-          return new Set([newFact]);
-        }
-        return updated;
-      });
+      // If all facts shown, reset
+      if (usedFacts.size >= 65) {
+        setUsedFacts(new Set([newFact]));
+      } else {
+        setUsedFacts(prev => new Set([...Array.from(prev), newFact]));
+      }
+      
       setCurrentFunFact(newFact);
     }, 8000); // 8 seconds per fact
     
@@ -86,116 +111,91 @@ export default function CreativeGenerator() {
     },
   });
 
-  // Fetch landing page data when campaign is selected
+  const activeCampaigns = campaignsData?.filter((c: any) => c.status === 'ACTIVE') || [];
+
+  // Fetch landing page data
   const { data: landingPageData, isLoading: landingPageLoading } = trpc.ai.getLandingPageFromCampaign.useQuery(
     { campaignId: selectedCampaignId },
     { enabled: !!selectedCampaignId }
   );
 
-  // Fetch ad sets when campaign is selected
+  // Fetch winning creatives
+  const { data: winningCreativesData, isLoading: winningCreativesLoading } = trpc.ai.getWinningCreatives.useQuery(
+    { campaignId: selectedCampaignId },
+    { enabled: !!selectedCampaignId }
+  );
+
+  // Fetch ad sets
   const { data: adSetsData, isLoading: adSetsLoading } = trpc.campaigns.getAdSets.useQuery(
     { campaignId: selectedCampaignId },
     { enabled: !!selectedCampaignId }
   );
 
-  // Fetch winning creatives when campaign is selected
-  const { data: winningCreativesData, isLoading: winningCreativesLoading } = trpc.ai.getWinningCreatives.useQuery(
-    {
-      campaignId: selectedCampaignId,
-      timeRange: {
-        since: formatDate(startDate, 'yyyy-MM-dd'),
-        until: formatDate(endDate, 'yyyy-MM-dd'),
-      },
-    },
-    { enabled: !!selectedCampaignId }
+  // Fetch audience targeting
+  const { data: audienceTargeting, isLoading: targetingLoading } = trpc.ai.getAudienceTargeting.useQuery(
+    { adSetId: selectedAdSetId },
+    { enabled: !!selectedAdSetId }
   );
 
-  // Note: Ad set selection will use ad set IDs from campaign data
+  // Auto-expand steps when previous step is completed
+  useEffect(() => {
+    if (selectedCampaignId && !step2Open) {
+      setStep2Open(true);
+    }
+  }, [selectedCampaignId]);
 
-  const generateBatchMutation = trpc.ai.generateBatchCreatives.useMutation();
+  useEffect(() => {
+    if (format && !step3Open) {
+      setStep3Open(true);
+    }
+  }, [format]);
+
+  useEffect(() => {
+    if (batchCount && !step4Open) {
+      setStep4Open(true);
+    }
+  }, [batchCount]);
+
+  // Check if steps are completed
+  const step1Complete = !!selectedCampaignId;
+  const step2Complete = !!format;
+  const step3Complete = batchCount > 0;
+  const step4Complete = true; // Optional field, always complete
+
+  const generateBatchCreativesMutation = trpc.ai.generateBatchCreatives.useMutation();
 
   const handleGenerate = async () => {
-    // Validation
     if (!selectedCampaignId) {
       toast.error("Bitte wähle eine Kampagne aus");
-      return;
-    }
-    if (!format) {
-      toast.error("Bitte wähle ein Format aus");
       return;
     }
 
     setIsGenerating(true);
     setGeneratedCreatives([]);
-    
-    const estimatedTime = batchCount * 15; // ~15 seconds per creative
-    toast.info(`Generiere ${batchCount} Creative${batchCount > 1 ? 's' : ''}... Das dauert ca. ${estimatedTime}-${estimatedTime + 10} Sekunden`);
 
     try {
-      toast.info("⚡ Analysiere Winning Ads und extrahiere Design-System...");
+      const formats = format === "all" ? ["feed", "story", "reel"] : [format];
       
-      // If "all" formats selected, generate for each format
-      const formatsToGenerate: ('feed' | 'story' | 'reel')[] = 
-        format === 'all' ? ['feed', 'story', 'reel'] : [format as 'feed' | 'story' | 'reel'];
-      
-      const allCreatives: GeneratedCreative[] = [];
-      
-      for (const fmt of formatsToGenerate) {
-        const creatives = await generateBatchMutation.mutateAsync({
+      for (const currentFormat of formats) {
+        const result = await generateBatchCreativesMutation.mutateAsync({
           campaignId: selectedCampaignId,
-          format: fmt,
+          format: currentFormat as Exclude<CreativeFormat, "all">,
           count: batchCount,
           userDescription: description || undefined,
           manualLandingPage: manualLandingPage || undefined,
           adSetId: selectedAdSetId || undefined,
         });
-        allCreatives.push(...creatives);
+
+        setGeneratedCreatives(prev => [...prev, ...result]);
       }
-      
-      setGeneratedCreatives(allCreatives);
-      toast.success(`✅ ${allCreatives.length} Creative${allCreatives.length > 1 ? 's' : ''} erfolgreich generiert!`);
-    } catch (error) {
-      console.error('Generation error:', error);
-      toast.error("Fehler beim Generieren der Creatives");
+
+      toast.success(`${formats.length * batchCount} Creatives erfolgreich generiert!`);
+    } catch (error: any) {
+      console.error("Generation error:", error);
+      toast.error(error.message || "Fehler bei der Generierung");
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleDownload = async (imageUrl: string, index: number) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `creative-${format}-${index + 1}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success("Creative heruntergeladen");
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error("Fehler beim Herunterladen");
-    }
-  };
-
-  const handleDownloadAll = async () => {
-    for (let i = 0; i < generatedCreatives.length; i++) {
-      await handleDownload(generatedCreatives[i].imageUrl, i);
-      // Small delay between downloads
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  };
-
-  const activeCampaigns = campaignsData?.filter(c => c.status === 'ACTIVE') || [];
-
-  const formatSpecs: Record<CreativeFormat, { label: string; size: string; description: string }> = {
-    feed: { label: 'Feed (1:1)', size: '1080 × 1080 px', description: 'Quadratisches Format für News Feed' },
-    story: { label: 'Story (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Stories (Safe Zones: Top 14%, Bottom 20%)' },
-    reel: { label: 'Reel (9:16)', size: '1080 × 1920 px', description: 'Vertikales Format für Reels (Safe Zones: Top 25%, Bottom 30%)' },
-    all: { label: 'Alle Formate', size: 'Feed + Story + Reel', description: 'Generiert Creatives in allen drei Formaten' },
   };
 
   return (
@@ -210,10 +210,15 @@ export default function CreativeGenerator() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
-            {/* Step 1: Campaign Selection */}
+            {/* Step 1: Campaign Selection - Always Visible */}
             <Card>
               <CardHeader>
-                <CardTitle>1. Kampagne auswählen</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className={`w-5 h-5 rounded flex items-center justify-center ${step1Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    {step1Complete && <Check className="h-3 w-3 text-white" />}
+                  </div>
+                  <CardTitle>1. Kampagne auswählen</CardTitle>
+                </div>
                 <CardDescription>
                   Wähle eine Kampagne aus, um Winning Ads und Landing Page zu analysieren
                 </CardDescription>
@@ -229,7 +234,7 @@ export default function CreativeGenerator() {
                       {campaignsLoading && (
                         <div className="p-2 text-sm text-muted-foreground">Lade Kampagnen...</div>
                       )}
-                      {activeCampaigns.map((campaign) => (
+                      {activeCampaigns.map((campaign: any) => (
                         <SelectItem key={campaign.id} value={campaign.id}>
                           {campaign.name}
                         </SelectItem>
@@ -302,6 +307,86 @@ export default function CreativeGenerator() {
                   </p>
                 </div>
 
+                {/* Audience Targeting Display */}
+                {targetingLoading && selectedAdSetId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Lade Zielgruppen-Einstellungen...
+                  </div>
+                )}
+
+                {audienceTargeting && selectedAdSetId && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+                    <p className="text-xs font-semibold text-blue-900 mb-2">🎯 Erkannte Zielgruppen-Einstellungen</p>
+                    
+                    {/* Age */}
+                    {audienceTargeting.age_min && audienceTargeting.age_max && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-blue-800">Alter</p>
+                        <p className="text-xs text-blue-700">{audienceTargeting.age_min} - {audienceTargeting.age_max} Jahre</p>
+                      </div>
+                    )}
+
+                    {/* Gender */}
+                    {audienceTargeting.genders && audienceTargeting.genders.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-blue-800">Geschlecht</p>
+                        <p className="text-xs text-blue-700">
+                          {audienceTargeting.genders.map((g: number) => g === 1 ? 'Männer' : g === 2 ? 'Frauen' : 'Alle').join(', ')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Locations */}
+                    {audienceTargeting.geo_locations && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-blue-800">Land/Region</p>
+                        <div className="text-xs text-blue-700 space-y-1">
+                          {audienceTargeting.geo_locations.countries && audienceTargeting.geo_locations.countries.length > 0 && (
+                            <p>Länder: {audienceTargeting.geo_locations.countries.join(', ')}</p>
+                          )}
+                          {audienceTargeting.geo_locations.regions && audienceTargeting.geo_locations.regions.length > 0 && (
+                            <p>Regionen: {audienceTargeting.geo_locations.regions.map((r: any) => r.name).join(', ')}</p>
+                          )}
+                          {audienceTargeting.geo_locations.cities && audienceTargeting.geo_locations.cities.length > 0 && (
+                            <p>Städte: {audienceTargeting.geo_locations.cities.map((c: any) => c.name).join(', ')}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Interests */}
+                    {audienceTargeting.flexible_spec && audienceTargeting.flexible_spec.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-blue-800">Detaillierte Targeting-Angaben</p>
+                        <div className="text-xs text-blue-700 space-y-1">
+                          {audienceTargeting.flexible_spec.map((spec: any, idx: number) => (
+                            <div key={idx}>
+                              {spec.interests && spec.interests.length > 0 && (
+                                <p>• Interessen: {spec.interests.map((i: any) => i.name).join(', ')}</p>
+                              )}
+                              {spec.behaviors && spec.behaviors.length > 0 && (
+                                <p>• Verhaltensweisen: {spec.behaviors.map((b: any) => b.name).join(', ')}</p>
+                              )}
+                              {spec.demographics && spec.demographics.length > 0 && (
+                                <p>• Demografische Merkmale: {spec.demographics.map((d: any) => d.name).join(', ')}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Narrow Targeting */}
+                    {audienceTargeting.targeting_optimization && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-blue-800">Targeting-Optimierung</p>
+                        <p className="text-xs text-blue-700">{audienceTargeting.targeting_optimization}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {winningCreativesLoading && selectedCampaignId && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -316,7 +401,7 @@ export default function CreativeGenerator() {
                       Top Performer (wird für Style-Analyse verwendet)
                     </p>
                     <div className="space-y-2">
-                      {winningCreativesData.winners.slice(0, 3).map((winner, idx) => (
+                      {winningCreativesData.winners.slice(0, 3).map((winner: any, idx: number) => (
                         <div key={winner.adId} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                           {winner.imageUrl ? (
                             <img 
@@ -332,6 +417,9 @@ export default function CreativeGenerator() {
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium truncate">{winner.adName}</p>
                             <div className="flex gap-2 text-xs text-muted-foreground">
+                              {winner.metrics.roasOrderVolume > 0 && (
+                                <span className="font-semibold text-green-600">ROAS: {winner.metrics.roasOrderVolume.toFixed(2)}x</span>
+                              )}
                               <span>CPL: {winner.metrics.costPerLead.toFixed(2)}€</span>
                               <span>CTR: {winner.metrics.outboundCtr.toFixed(2)}%</span>
                             </div>
@@ -347,76 +435,118 @@ export default function CreativeGenerator() {
               </CardContent>
             </Card>
 
-            {/* Step 2: Format Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>2. Format auswählen</CardTitle>
-                <CardDescription>
-                  Wähle das Zielformat für deine Creatives
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
-                  {Object.entries(formatSpecs).map(([key, spec]) => (
-                    <div key={key} className="flex items-start space-x-3 space-y-0">
-                      <RadioGroupItem value={key} id={key} />
-                      <Label htmlFor={key} className="font-normal cursor-pointer flex-1">
-                        <div>
-                          <div className="font-medium">{spec.label}</div>
-                          <div className="text-xs text-muted-foreground">{spec.size}</div>
-                          <div className="text-xs text-muted-foreground mt-1">{spec.description}</div>
+            {/* Step 2: Format Selection - Collapsible */}
+            <Collapsible open={step2Open} onOpenChange={setStep2Open}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step2Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          {step2Complete && <Check className="h-3 w-3 text-white" />}
                         </div>
-                      </Label>
+                        <CardTitle>2. Format auswählen</CardTitle>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 transition-transform ${step2Open ? 'rotate-180' : ''}`} />
                     </div>
-                  ))}
-                </RadioGroup>
-              </CardContent>
-            </Card>
-
-            {/* Step 3: Batch Count */}
-            <Card>
-              <CardHeader>
-                <CardTitle>3. Anzahl Creatives</CardTitle>
-                <CardDescription>
-                  Wie viele Variationen sollen generiert werden?
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="count">Anzahl (1-10)</Label>
-                  <Select value={batchCount.toString()} onValueChange={(v) => setBatchCount(parseInt(v))}>
-                    <SelectTrigger id="count">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num} Creative{num > 1 ? 's' : ''}
-                        </SelectItem>
+                    <CardDescription>
+                      Wähle das Zielformat für deine Creatives
+                    </CardDescription>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <RadioGroup value={format} onValueChange={(v) => setFormat(v as CreativeFormat)}>
+                      {Object.entries(formatSpecs).map(([key, spec]) => (
+                        <div key={key} className="flex items-start space-x-3 space-y-0">
+                          <RadioGroupItem value={key} id={key} />
+                          <Label htmlFor={key} className="font-normal cursor-pointer flex-1">
+                            <div>
+                              <div className="font-medium">{spec.label}</div>
+                              <div className="text-xs text-muted-foreground">{spec.size}</div>
+                              <div className="text-xs text-muted-foreground mt-1">{spec.description}</div>
+                            </div>
+                          </Label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+                    </RadioGroup>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
-            {/* Step 4: Description (Optional) */}
-            <Card>
-              <CardHeader>
-                <CardTitle>4. Zusätzliche Beschreibung (Optional)</CardTitle>
-                <CardDescription>
-                  Ergänze spezifische Anforderungen oder lasse das Feld leer für automatische Generierung
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="z.B. Mehr qualifizierte Leads für Marketing-Agenturen, moderne Farbpalette, professionelle Atmosphäre"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
-              </CardContent>
-            </Card>
+            {/* Step 3: Batch Count - Collapsible */}
+            <Collapsible open={step3Open} onOpenChange={setStep3Open}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step3Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          {step3Complete && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <CardTitle>3. Anzahl Creatives</CardTitle>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 transition-transform ${step3Open ? 'rotate-180' : ''}`} />
+                    </div>
+                    <CardDescription>
+                      Wie viele Variationen sollen generiert werden?
+                    </CardDescription>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="count">Anzahl (1-10)</Label>
+                      <Select value={batchCount.toString()} onValueChange={(v) => setBatchCount(parseInt(v))}>
+                        <SelectTrigger id="count">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} Creative{num > 1 ? 's' : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* Step 4: Description - Collapsible */}
+            <Collapsible open={step4Open} onOpenChange={setStep4Open}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step4Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          {step4Complete && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <CardTitle>4. Zusätzliche Beschreibung (Optional)</CardTitle>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 transition-transform ${step4Open ? 'rotate-180' : ''}`} />
+                    </div>
+                    <CardDescription>
+                      Ergänze spezifische Anforderungen oder lasse das Feld leer für automatische Generierung
+                    </CardDescription>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <Textarea
+                      placeholder="z.B. Mehr qualifizierte Leads für Marketing-Agenturen, moderne Farbpalette, professionelle Atmosphäre"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                    />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
             {/* Generate Button */}
             <Button
@@ -446,38 +576,41 @@ export default function CreativeGenerator() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Generierte Creatives</CardTitle>
-                    <CardDescription>
-                      {generatedCreatives.length > 0 
-                        ? `${generatedCreatives.length} Creative${generatedCreatives.length > 1 ? 's' : ''} bereit zum Download`
-                        : 'Wähle eine Kampagne und starte die Generierung'
-                      }
-                    </CardDescription>
+                    <CardDescription>Wähle eine Kampagne und starte die Generierung</CardDescription>
                   </div>
-                  {generatedCreatives.length > 1 && (
-                    <Button onClick={handleDownloadAll} variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      Alle herunterladen
-                    </Button>
+                  {generatedCreatives.length > 0 && (
+                    <Badge variant="secondary">
+                      {generatedCreatives.length} Creative{generatedCreatives.length > 1 ? 's' : ''}
+                    </Badge>
                   )}
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Loading Modal - Centered Popup */}
                 {isGenerating && (
-                  <div className="flex flex-col items-center justify-center py-16 space-y-6">
-                    <div className="relative">
-                      <Loader2 className="h-16 w-16 animate-spin text-primary" />
-                      <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-primary/20" />
-                    </div>
-                    <div className="text-center space-y-3 max-w-md">
-                      <p className="text-lg font-semibold">Generierung läuft...</p>
-                      <div className="min-h-[60px] flex items-center justify-center">
-                        <p className="text-sm text-muted-foreground animate-fade-in">
-                          {currentFunFact}
-                        </p>
+                  <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+                    
+                    {/* Modal Content */}
+                    <div className="relative bg-card border rounded-lg shadow-2xl p-12 max-w-md w-full mx-4">
+                      <div className="flex flex-col items-center justify-center space-y-6">
+                        <div className="relative">
+                          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                          <div className="absolute inset-0 h-16 w-16 animate-ping rounded-full bg-primary/20" />
+                        </div>
+                        <div className="text-center space-y-3">
+                          <p className="text-lg font-semibold">Generierung läuft...</p>
+                          <div className="min-h-[60px] flex items-center justify-center">
+                            <p className="text-sm text-muted-foreground animate-fade-in px-4">
+                              🎯 {currentFunFact}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground/60">
+                            Dies kann 30-60 Sekunden dauern
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground/60">
-                        Dies kann 30-60 Sekunden dauern
-                      </p>
                     </div>
                   </div>
                 )}
@@ -502,33 +635,25 @@ export default function CreativeGenerator() {
                             className="w-full h-full object-contain"
                           />
                         </div>
-                        <div className="p-4 space-y-3">
-                          <div>
-                            {creative.eyebrowText && (
-                              <p className="text-xs font-medium text-primary mb-1">
-                                {creative.eyebrowText}
-                              </p>
-                            )}
-                            <p className="font-semibold">{creative.headline}</p>
-                            {creative.ctaText && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {creative.ctaText}
-                              </p>
-                            )}
-                          </div>
+                        <div className="p-4 space-y-2">
                           <div className="flex items-center justify-between">
-                            <Badge variant="secondary">
-                              {formatSpecs[creative.format].label}
-                            </Badge>
-                            <Button
-                              onClick={() => handleDownload(creative.imageUrl, index)}
-                              variant="outline"
-                              size="sm"
+                            <Badge variant="outline">{formatSpecs[creative.format].label}</Badge>
+                            <a
+                              href={creative.imageUrl}
+                              download={`creative-${index + 1}.png`}
+                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                             >
-                              <Download className="mr-2 h-4 w-4" />
-                              Herunterladen
-                            </Button>
+                              <Download className="h-4 w-4" />
+                              Download
+                            </a>
                           </div>
+                          {creative.eyebrowText && (
+                            <p className="text-xs text-muted-foreground">{creative.eyebrowText}</p>
+                          )}
+                          <p className="font-medium">{creative.headline}</p>
+                          {creative.ctaText && (
+                            <p className="text-sm text-primary">{creative.ctaText}</p>
+                          )}
                         </div>
                       </div>
                     ))}
