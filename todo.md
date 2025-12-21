@@ -172,3 +172,15 @@
 - [x] Logic anpassen: Alle Ads der Kampagne abrufen und URLs extrahieren
 - [x] Falls mehrere URLs: Häufigste URL automatisch verwenden
 - [x] Falls nur eine URL: Automatisch verwenden
+
+### Bug Fix - Website-URL Feld in Meta API Creative
+- [ ] Debug: Tatsächliche Meta API Creative Response loggen
+- [ ] Korrektes Feld für Website-URL identifizieren (nicht link_url oder object_story_spec.link_data.link)
+- [ ] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
+- [ ] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)
+
+### Bug Fix - Website-URL Feld in Meta API Creative
+- [ ] Debug: Tatsächliche Meta API Creative Response loggen
+- [ ] Korrektes Feld für Website-URL identifizieren
+- [ ] extractLandingPageUrl Funktion mit korrektem Feld-Pfad aktualisieren
+- [ ] Test mit "Funnel Vorlagen" Kampagne (finest-audience.com/l)

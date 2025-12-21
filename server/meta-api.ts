@@ -349,6 +349,14 @@ export async function getAdCreatives(adId: string): Promise<any> {
   }
 
   const data = await response.json();
+  
+  // Debug: Log full response to understand structure
+  console.log('=== META API CREATIVE RESPONSE DEBUG ===');
+  console.log('Ad ID:', adId);
+  console.log('Full response:', JSON.stringify(data, null, 2));
+  console.log('Creative object:', JSON.stringify(data.creative, null, 2));
+  console.log('========================================');
+  
   // Return creative object, or empty object if not found
   return data.creative || {};
 }
