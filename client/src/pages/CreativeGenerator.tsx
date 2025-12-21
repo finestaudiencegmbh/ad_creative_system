@@ -239,13 +239,13 @@ export default function CreativeGenerator() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Creative Generator</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Creative Generator</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             KI-gestützte Creative-Generierung mit Style-Aware Prompts und Text-Overlays
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
           <div className="space-y-6">
             {/* Step 1: Campaign Selection - Always Visible */}
             <Card>

@@ -131,7 +131,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                   {/* 1. Ausgaben */}
                   <div>
                     <p className="text-sm text-muted-foreground">Ausgaben</p>
@@ -237,7 +237,7 @@ export default function Dashboard() {
                 </div>
                 
                 {/* Sales Summary and Add Button */}
-                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                <div className="mt-4 pt-4 border-t flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
                     onClick={(e) => {
@@ -258,6 +258,7 @@ export default function Dashboard() {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="w-full sm:w-auto"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
@@ -279,17 +280,17 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-2">
               Übersicht über alle aktiven Kampagnen und deren Performance
             </p>
           </div>
           
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col gap-2 md:items-end">
             <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full md:w-[220px]">
                 <Calendar className="mr-2 h-4 w-4" />
                 <SelectValue />
               </SelectTrigger>

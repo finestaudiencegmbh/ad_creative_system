@@ -54,8 +54,8 @@ export default function Werbetexte() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Werbetexte</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Werbetexte</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Professionelle Ad Copy wie von einem Elite Copywriter – analysiert Landing Page für perfekte Brücke zur Zielseite
           </p>
         </div>
@@ -89,6 +89,7 @@ export default function Werbetexte() {
               onClick={handleGenerate}
               disabled={generateCopyMutation.isPending || !landingPageUrl}
               size="lg"
+              className="w-full sm:w-auto"
             >
               {generateCopyMutation.isPending ? (
                 <>
@@ -111,7 +112,7 @@ export default function Werbetexte() {
             {/* Short Copy */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle>Kurzer Werbetext</CardTitle>
                     <CardDescription>
@@ -121,6 +122,7 @@ export default function Werbetexte() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                     onClick={() => copyToClipboard(generatedCopy.short, "short")}
                   >
                     {copiedField === "short" ? (
@@ -149,7 +151,7 @@ export default function Werbetexte() {
             {/* Long Copy */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle>Langer Werbetext</CardTitle>
                     <CardDescription>
@@ -159,6 +161,7 @@ export default function Werbetexte() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                     onClick={() => copyToClipboard(generatedCopy.long, "long")}
                   >
                     {copiedField === "long" ? (

@@ -60,14 +60,14 @@ export default function Performance() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Performance</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl md:text-3xl font-bold">Performance</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-2">
               Sieh auf einen Blick, welche Creatives am besten performen und welche optimiert werden sollten.
             </p>
           </div>
-          <Button onClick={handleRefresh} disabled={performanceLoading}>
+          <Button onClick={handleRefresh} disabled={performanceLoading} className="w-full sm:w-auto">
             <RefreshCw className={`mr-2 h-4 w-4 ${performanceLoading ? 'animate-spin' : ''}`} />
             Aktualisieren
           </Button>
@@ -80,7 +80,7 @@ export default function Performance() {
             <CardDescription>Filtere Performance-Daten nach Kampagne und Anzeigengruppe</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
               {/* Campaign Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Kampagne</label>
@@ -127,7 +127,7 @@ export default function Performance() {
         </Card>
 
         {/* Top Performers & Flops */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
