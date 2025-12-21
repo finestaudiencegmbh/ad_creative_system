@@ -319,19 +319,20 @@ export async function testMetaConnection(): Promise<{
 /**
  * Fetch creative data for a specific ad (images, videos, text, website URL)
  */
-export async function getAdCreatives(adId: string): Promise<any[]> {
+export async function getAdCreatives(adId: string): Promise<any> {
   const accessToken = ENV.metaAccessToken;
 
   if (!accessToken) {
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
+  // Get ad with creative field (not /creatives endpoint)
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,object_story_spec,image_url,video_id,body,link_url,title,call_to_action_type",
+    fields: "id,name,creative{id,name,object_story_spec,image_url,video_id,body,link_url,title,call_to_action_type}",
   });
 
-  const url = `${META_API_BASE_URL}/${adId}/creatives?${queryParams.toString()}`;
+  const url = `${META_API_BASE_URL}/${adId}?${queryParams.toString()}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -348,7 +349,7 @@ export async function getAdCreatives(adId: string): Promise<any[]> {
   }
 
   const data = await response.json();
-  return data.data || [];
+  return data.creative || null;
 }
 
 /**

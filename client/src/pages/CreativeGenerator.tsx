@@ -136,7 +136,37 @@ export default function CreativeGenerator() {
       if (format === "feed") aspectRatio = "3:4";
       if (format === "story" || format === "reel") aspectRatio = "9:16";
 
-      const prompt = context.join('. ');
+      // Build proper advertising creative prompt
+      let prompt = "Professional advertising creative, high quality product photography, modern minimalist design, ";
+      
+      if (landingPageData?.data?.title) {
+        prompt += `for ${landingPageData.data.title}, `;
+      }
+      
+      if (landingPageData?.data?.description) {
+        prompt += `${landingPageData.data.description}, `;
+      }
+      
+      if (audienceData) {
+        if (audienceData.age_min && audienceData.age_max) {
+          const avgAge = (audienceData.age_min + audienceData.age_max) / 2;
+          if (avgAge < 30) {
+            prompt += "youthful and energetic style, vibrant colors, ";
+          } else if (avgAge < 50) {
+            prompt += "professional and trustworthy style, clean design, ";
+          } else {
+            prompt += "elegant and sophisticated style, premium quality, ";
+          }
+        }
+      }
+      
+      if (description) {
+        prompt += `${description}, `;
+      }
+      
+      prompt += "no text overlay, no watermarks, commercial photography, studio lighting, 4k quality";
+      
+      console.log('FLUX Prompt:', prompt);
 
       const result = await generateImageMutation.mutateAsync({
         prompt,

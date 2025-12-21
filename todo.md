@@ -153,3 +153,7 @@
 - [x] FLUX Integration: Bildgenerierung basierend auf Landingpage + Zielgruppe + Winning Creatives
 - [x] GPT-4 Integration: Textgenerierung (Headlines, Primary Text) basierend auf Kontext
 - [x] Format-spezifische Generierung: Feed (1080x1080), Story (1080x1920), Reel (1080x1920)
+
+### Bug Fixes - Creative Generator
+- [x] Meta API Error #100: "creatives" Feld nicht direkt auf Ad-Node zugreifbar - richtigen Endpoint verwenden
+- [x] FLUX Prompt verbessern: Generiert Text-Infografiken statt echte Werbemotive - besseren Prompt-Builder implementieren
