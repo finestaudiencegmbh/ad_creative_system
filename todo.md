@@ -650,3 +650,21 @@
 - [x] Verify tone matches landing page (Du vs. Sie) - PERFEKT!
 - [x] Verify visual matches headline and forms bridge to landing page - PERFEKT!
 - [x] Compare generated creative with user's 13 examples for quality match - 100% MATCH!
+
+
+### Text Readability Fix
+- [ ] Update Gemini Imagen prompts to reserve dark/solid gradient areas for text (Top 30% + Bottom 30%)
+- [ ] Center 40% should contain main visual (3D elements, control panels)
+- [ ] Test text readability with DCA campaign
+- [ ] Verify text is always on solid backgrounds, not over complex visuals
+
+
+### V2 Generator Frontend Integration
+- [x] Update CreativeGenerator.tsx to call generateBatchCreativesV2 instead of generateBatchCreatives
+- [ ] Test complete flow in browser (Campaign → Format → Generate)
+- [ ] Verify text readability and visual quality in generated creatives
+
+- [ ] Add custom date range picker to Dashboard date filter
+
+- [ ] Add creative thumbnail images to Ad list view (Werbeanzeigen page)
+- [ ] Add creative thumbnail images to Performance tab (Top 3 Performer + Top 3 Flops)

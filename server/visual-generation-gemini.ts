@@ -18,7 +18,12 @@ ${colorHints}
 Professional advertising photography, studio lighting, depth of field, 8K resolution, photorealistic materials.
 Clean composition, modern design, premium quality.
 NO TEXT, NO WORDS, NO LETTERS - pure visual only.
-Dark background with neon accents, cinematic lighting, dramatic shadows.`;
+
+Composition: Dark gradient background fading from solid black at top and bottom edges to vibrant colored center.
+Main 3D elements concentrated in the middle third of the frame.
+Smooth, simple gradients in upper and lower areas.
+Cinematic lighting with neon accents, dramatic shadows.
+Minimalist top and bottom sections for clean overlay space.`;
 
   return prompt.trim();
 }

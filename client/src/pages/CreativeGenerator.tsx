@@ -18,10 +18,16 @@ type CreativeFormat = "feed" | "story" | "reel" | "all";
 
 interface GeneratedCreative {
   imageUrl: string;
-  headline: string;
+  headline?: string;
   eyebrowText?: string;
   ctaText?: string;
   format: CreativeFormat;
+  texts?: {
+    preHeadline: string;
+    headline: string;
+    subHeadline?: string;
+    cta: string;
+  };
 }
 
 const formatSpecs: Record<CreativeFormat, { label: string; size: string; description: string; aspectRatio: string }> = {
@@ -189,7 +195,7 @@ export default function CreativeGenerator() {
   const step3Complete = batchCount !== null && batchCount > 0;
   const step4Complete = step3Complete; // Optional field, complete when step 3 is complete
 
-  const generateBatchCreativesMutation = trpc.ai.generateBatchCreatives.useMutation();
+  const generateBatchCreativesMutation = trpc.ai.generateBatchCreativesV2.useMutation();
 
   const handleGenerate = async () => {
     if (!selectedCampaignId) {
@@ -213,18 +219,22 @@ export default function CreativeGenerator() {
     try {
       const formats = format === "all" ? ["feed", "story", "reel"] : [format];
       
-      for (const currentFormat of formats) {
-        const result = await generateBatchCreativesMutation.mutateAsync({
-          campaignId: selectedCampaignId,
-          format: currentFormat as Exclude<CreativeFormat, "all">,
-          count: batchCount,
-          userDescription: description || undefined,
-          manualLandingPage: manualLandingPage || undefined,
-          adSetId: selectedAdSetId || undefined,
-        });
-
-        setGeneratedCreatives(prev => [...prev, ...result]);
+      const landingPageUrl = manualLandingPage || landingPageData?.url || '';
+      
+      if (!landingPageUrl) {
+        toast.error("Keine Landing Page gefunden. Bitte gib eine manuelle URL ein.");
+        setIsGenerating(false);
+        return;
       }
+
+      const result = await generateBatchCreativesMutation.mutateAsync({
+        campaignId: selectedCampaignId,
+        landingPageUrl,
+        formats: format === "all" ? ["feed", "story", "reel"] : [format],
+        count: batchCount,
+      });
+
+      setGeneratedCreatives(result);
 
       toast.success(`${formats.length * (batchCount || 1)} Creatives erfolgreich generiert!`);
     } catch (error: any) {
@@ -725,12 +735,15 @@ export default function CreativeGenerator() {
                               Download
                             </a>
                           </div>
-                          {creative.eyebrowText && (
-                            <p className="text-xs text-muted-foreground">{creative.eyebrowText}</p>
+                          {(creative.texts?.preHeadline || creative.eyebrowText) && (
+                            <p className="text-xs text-muted-foreground">{creative.texts?.preHeadline || creative.eyebrowText}</p>
                           )}
-                          <p className="font-medium">{creative.headline}</p>
-                          {creative.ctaText && (
-                            <p className="text-sm text-primary">{creative.ctaText}</p>
+                          <p className="font-medium">{creative.texts?.headline || creative.headline || 'N/A'}</p>
+                          {creative.texts?.subHeadline && (
+                            <p className="text-sm text-muted-foreground">{creative.texts.subHeadline}</p>
+                          )}
+                          {(creative.texts?.cta || creative.ctaText) && (
+                            <p className="text-sm text-primary">{creative.texts?.cta || creative.ctaText}</p>
                           )}
                         </div>
                       </div>
