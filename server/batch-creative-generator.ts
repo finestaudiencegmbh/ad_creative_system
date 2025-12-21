@@ -35,10 +35,9 @@ export async function generateBatchCreatives(
   const { getAdCreatives, extractImageUrl, extractLandingPageUrl, getCampaignAdSets, getAdSetAds } = await import('./meta-api');
   const { scrapeLandingPage } = await import('./landingpage-scraper');
   const { identifyWinningCreatives } = await import('./winning-creatives');
-  const { generateImage } = await import('./_core/imageGeneration');
   const { enhancePromptWithGemini } = await import('./_core/geminiImageGeneration');
+  const { generateSDXLTextImage } = await import('./_core/sdxlTextImage');
   const { FORMAT_SPECS } = await import('./text-overlay');
-  const { addTextOverlaySharp } = await import('./text-overlay-sharp');
   const { storagePut } = await import('./storage');
   
   // Get winning creative
@@ -129,16 +128,23 @@ export async function generateBatchCreatives(
           aspectRatio,
         });
         
-        console.log(`🎨 Creative ${index}: Using Gemini-enhanced prompt`);
+        console.log(`🎨 Creative ${index}: Using Gemini-enhanced prompt with SDXL`);
         
-        // Generate image with FLUX using enhanced prompt
-        const { url: generatedImageUrl } = await generateImage({
+        // Generate image with SDXL (includes text rendering)
+        const formatSpec = FORMAT_SPECS[config.format];
+        const generatedImageUrl = await generateSDXLTextImage({
           prompt: enhancedPrompt,
-          aspectRatio,
+          textElements: {
+            eyebrow: headline.eyebrow,
+            headline: headline.headline,
+            cta: headline.cta,
+          },
+          width: formatSpec.width,
+          height: formatSpec.height,
         });
         
         if (!generatedImageUrl) {
-          throw new Error('Image generation failed');
+          throw new Error('SDXL image generation failed');
         }
         
         // Download generated image
@@ -146,21 +152,12 @@ export async function generateBatchCreatives(
         const imageArrayBuffer = await imageResponse.arrayBuffer();
         const imageBuffer = Buffer.from(imageArrayBuffer);
         
-        // Add text overlay using Sharp + SVG
-        const finalImageBuffer = await addTextOverlaySharp({
-          imageBuffer,
-          eyebrowText: headline.eyebrow,
-          headlineText: headline.headline,
-          ctaText: headline.cta,
-          format: config.format,
-        });
-        
-        // Upload final creative with text overlay to S3
+        // Upload final creative to S3
         const randomSuffix = Math.random().toString(36).substring(7);
         const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
-        const result = await storagePut(fileKey, finalImageBuffer, 'image/png');
+        const result = await storagePut(fileKey, imageBuffer, 'image/png');
         const finalUrl = result.url;
-        console.log(`✅ Creative ${index} complete: Gemini-enhanced prompt → FLUX generation → Sharp text overlay`);
+        console.log(`✅ Creative ${index} complete: Gemini prompt optimization → SDXL text-aware generation`);
         
         return {
           imageUrl: finalUrl,

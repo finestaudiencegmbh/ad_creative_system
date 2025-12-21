@@ -9,4 +9,5 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   metaAccessToken: process.env.META_ACCESS_TOKEN ?? "",
   metaAdAccountId: process.env.META_AD_ACCOUNT_ID ?? "",
+  replicateApiToken: process.env.REPLICATE_API_TOKEN ?? "",
 };

@@ -44,17 +44,35 @@ export default function CreativeGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCreatives, setGeneratedCreatives] = useState<GeneratedCreative[]>([]);
   const [currentFunFact, setCurrentFunFact] = useState(getRandomFunFact());
+  const [usedFacts, setUsedFacts] = useState<Set<string>>(new Set());
   
-  // Rotate fun facts every 4 seconds during generation
+  // Rotate fun facts every 8 seconds during generation (no repeats)
   useEffect(() => {
     if (!isGenerating) return;
     
     const interval = setInterval(() => {
-      setCurrentFunFact(getRandomFunFact());
-    }, 4000);
+      let newFact = getRandomFunFact();
+      // Avoid repeating facts until all have been shown
+      let attempts = 0;
+      while (usedFacts.has(newFact) && attempts < 10) {
+        newFact = getRandomFunFact();
+        attempts++;
+      }
+      
+      setUsedFacts(prev => {
+        const updated = new Set(prev);
+        updated.add(newFact);
+        // Reset if all facts have been shown
+        if (updated.size >= 60) {
+          return new Set([newFact]);
+        }
+        return updated;
+      });
+      setCurrentFunFact(newFact);
+    }, 8000); // 8 seconds per fact
     
     return () => clearInterval(interval);
-  }, [isGenerating]);
+  }, [isGenerating, usedFacts]);
 
   // Fetch campaigns
   const now = new Date();

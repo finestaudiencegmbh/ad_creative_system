@@ -195,14 +195,24 @@ function generateTextSVG(config: TextOverlayConfig): string {
  */
 export async function addTextOverlaySharp(config: TextOverlayConfig): Promise<Buffer> {
   try {
+    const fmt = formatConfigs[config.format as Exclude<CreativeFormat, 'all'>];
+    const { width, height } = fmt;
+
     const svg = generateTextSVG(config);
     const svgBuffer = Buffer.from(svg);
 
+    // Convert SVG to PNG with explicit dimensions
+    const svgImage = await sharp(svgBuffer)
+      .resize(width, height)
+      .png()
+      .toBuffer();
+
     // Composite SVG overlay on top of image
     const result = await sharp(config.imageBuffer)
+      .resize(width, height) // Ensure base image has correct size
       .composite([
         {
-          input: svgBuffer,
+          input: svgImage,
           top: 0,
           left: 0,
         },

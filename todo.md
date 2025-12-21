@@ -245,3 +245,15 @@
 - [x] Sharp + SVG für Text-Overlays implementiert (addTextOverlaySharp)
 - [ ] **PROBLEM**: Text-Overlays müssen noch getestet werden
 - [ ] Testen mit allen 3 Formaten (Feed, Story, Reel)
+
+
+### CRITICAL - Text Overlays funktionieren nicht (Sharp fehlgeschlagen)
+- [x] Sharp SVG Dimensions-Fehler - zu komplex, nicht zuverlässig
+- [x] **FINALE LÖSUNG**: Replicate SDXL mit nativem Text-Rendering implementiert
+- [x] SDXL ersetzt FLUX + Sharp - generiert Text direkt ins Bild
+- [ ] Testen mit Feed/Story/Reel Formaten
+
+### Fun Facts Verbesserungen
+- [x] Mehr Fun Facts hinzugefügt (25 → 65 Facts)
+- [x] Anzeigedauer erhöht (4s → 8s)
+- [x] Shuffle-Algorithmus ohne Wiederholungen implementiert
