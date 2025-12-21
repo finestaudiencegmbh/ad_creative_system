@@ -186,3 +186,8 @@
 - [x] Backend: Image URLs in getWinningCreatives Response hinzugefügt
 - [x] Frontend: 64x64px Thumbnails in Top Performer Liste angezeigt
 - [x] Error Handling: Bild wird ausgeblendet wenn URL nicht lädt
+
+### Bug Fix - Beschreibungsfeld im Creative Generator
+- [x] Seitentitel ("Startseite") aus Beschreibungsfeld entfernen
+- [x] Feld standardmäßig leer lassen für manuelle Eingabe
+- [x] Hilfreichen Placeholder-Text hinzugefügt

@@ -78,12 +78,8 @@ export default function CreativeGenerator() {
     { enabled: !!selectedCampaignId }
   );
 
-  // Auto-fill description when landing page data is loaded
-  useEffect(() => {
-    if (landingPageData?.data?.description && !description) {
-      setDescription(landingPageData.data.description);
-    }
-  }, [landingPageData]);
+  // Note: Description field is intentionally left empty for manual input
+  // Auto-filling with page title ("Startseite") is not useful
 
   const generateImageMutation = trpc.ai.generateImage.useMutation();
 
@@ -407,7 +403,7 @@ export default function CreativeGenerator() {
               <CardHeader>
                 <CardTitle>4. Beschreibung (Optional)</CardTitle>
                 <CardDescription>
-                  Automatisch aus Landingpage befüllt - kann angepasst werden
+                  Beschreibe dein Angebot für bessere Creative-Generierung
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -415,7 +411,7 @@ export default function CreativeGenerator() {
                   <Label htmlFor="description">Zusätzliche Beschreibung</Label>
                   <Textarea
                     id="description"
-                    placeholder="Automatisch aus Landingpage befüllt..."
+                    placeholder="Beschreibe dein Angebot, z.B. 'Mehr qualifizierte Leads für Marketing-Agenturen' oder 'Skalierbare Kundengewinnung für Coaches'"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
