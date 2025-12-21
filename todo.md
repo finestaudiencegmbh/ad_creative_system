@@ -322,3 +322,8 @@
 - [x] Meta API Funktionen hinzugefügt: getAdDetails, getAdSetDetails
 - [x] Sales creation Procedure aktualisiert: Auto-populate parent IDs
 - [x] Tests für Verkaufs-Aggregation schreiben (8/8 passed)
+
+### Winning Creatives ROAS Display
+- [x] ROAS in Winning Creatives Liste anzeigen (Creative Generator) - bereits implementiert
+- [x] ROAS grün hervorheben wenn verfügbar - bereits implementiert
+- [x] Hinweis wenn ROAS überall 0 ist - gelbe Info-Box hinzugefügt

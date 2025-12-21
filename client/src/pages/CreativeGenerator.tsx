@@ -396,10 +396,19 @@ export default function CreativeGenerator() {
 
                 {winningCreativesData && winningCreativesData.winners.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      <Trophy className="inline h-3 w-3 mr-1 text-yellow-500" />
-                      Top Performer (wird für Style-Analyse verwendet)
+                    <p className="text-xs text-muted-foreground mb-2">
+                      🏆 Top Performer (wird für Style-Analyse verwendet)
                     </p>
+                    
+                    {/* Info message if no ROAS data available */}
+                    {winningCreativesData.winners.every((w: any) => w.metrics.roasOrderVolume === 0 && w.metrics.roasCashCollect === 0) && (
+                      <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-lg mb-2">
+                        <p className="text-xs text-yellow-800">
+                          ℹ️ <strong>ROAS-Daten nicht verfügbar:</strong> Trage Verkäufe im Dashboard ein, um ROAS-basiertes Ranking zu aktivieren.
+                        </p>
+                      </div>
+                    )}
+                    
                     <div className="space-y-2">
                       {winningCreativesData.winners.slice(0, 3).map((winner: any, idx: number) => (
                         <div key={winner.adId} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
