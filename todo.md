@@ -208,3 +208,19 @@
 - [x] Backend-Procedures: extractDesignSystem, generateStyleAwarePrompt, generateHeadlineVariations, addTextOverlay
 - [ ] Frontend-Integration: Kompletter Pipeline-Flow im Creative Generator
 - [ ] Batch-Generierung: 3-5 Variationen pro Winning Creative
+
+### Feature - Multi-Format Support (Feed/Story/Reel) mit Safe Zones
+- [x] Format-Definitionen: Feed (1080×1080, 1:1), Story (1080×1920, 9:16), Reel (1080×1920, 9:16)
+- [x] Safe Zones implementiert:
+  - [x] Story: Oben 14%, Unten 20%, Text in mittlerer 66%
+  - [x] Reel: Oben 25%, Unten 30%, Text in mittlerer 45%
+  - [x] Feed: Minimale Safe Zones (5%)
+- [x] Text-Overlay Engine: Format-spezifische Layouts (text-overlay.ts)
+- [x] FLUX: Aspect Ratio Parameter (1:1, 9:16)
+- [x] Frontend: Format-Auswahl Dropdown + Safe Zone Hinweise
+- [x] Frontend: Batch-Count Dropdown (1-10)
+- [x] Backend: Batch-Generation Logic (batch-creative-generator.ts)
+- [ ] Backend: tRPC Procedure für generateBatchCreatives
+- [ ] Frontend: Komplette Integration des Batch-Flows
+- [ ] Frontend: Grid-View für multiple Creatives
+- [ ] Download: Alle Creatives als ZIP

@@ -7,11 +7,62 @@
 import { createCanvas, loadImage, registerFont } from 'canvas';
 import type { DesignSystem } from './creative-analyzer';
 
+export type CreativeFormat = 'feed' | 'story' | 'reel';
+
+export interface FormatDimensions {
+  width: number;
+  height: number;
+  aspectRatio: string;
+  safeZones: {
+    top: number; // Percentage from top
+    bottom: number; // Percentage from bottom
+    textAreaStart: number; // Percentage where text can start
+    textAreaEnd: number; // Percentage where text must end
+  };
+}
+
+export const FORMAT_SPECS: Record<CreativeFormat, FormatDimensions> = {
+  feed: {
+    width: 1080,
+    height: 1080,
+    aspectRatio: '1:1',
+    safeZones: {
+      top: 5,
+      bottom: 5,
+      textAreaStart: 8,
+      textAreaEnd: 92,
+    },
+  },
+  story: {
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9:16',
+    safeZones: {
+      top: 14, // Profile/Username area
+      bottom: 20, // CTA area
+      textAreaStart: 18,
+      textAreaEnd: 66, // Middle 66% is safe
+    },
+  },
+  reel: {
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9:16',
+    safeZones: {
+      top: 25, // UI elements
+      bottom: 30, // Description/Audio
+      textAreaStart: 28,
+      textAreaEnd: 45, // Middle 45% is safe
+    },
+  },
+};
+
 export interface TextOverlayConfig {
   eyebrowText?: string;
   headlineText: string;
   ctaText?: string;
   designSystem: DesignSystem;
+  format?: CreativeFormat; // Default: 'feed'
 }
 
 /**
@@ -24,6 +75,10 @@ export async function addTextOverlay(
   try {
     // Load the generated image
     const image = await loadImage(imageUrl);
+    
+    // Get format specifications
+    const format = config.format || 'feed';
+    const formatSpec = FORMAT_SPECS[format];
     
     // Create canvas with same dimensions
     const canvas = createCanvas(image.width, image.height);
@@ -43,34 +98,41 @@ export async function addTextOverlay(
     const headlineSize = Math.floor(baseSize * 0.08); // 8% of base
     const ctaSize = Math.floor(baseSize * 0.05); // 5% of base
     
-    // Add eyebrow text (top)
+    // Calculate safe zone positions
+    const textStartY = image.height * (formatSpec.safeZones.textAreaStart / 100);
+    const textEndY = image.height * (formatSpec.safeZones.textAreaEnd / 100);
+    const textAreaHeight = textEndY - textStartY;
+    
+    // Add eyebrow text (top of safe zone)
     if (config.eyebrowText) {
       ctx.font = `bold ${eyebrowSize}px Arial, sans-serif`;
       ctx.fillStyle = accentColor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       
-      const eyebrowY = image.height * 0.08; // 8% from top
+      const eyebrowY = textStartY;
       ctx.fillText(config.eyebrowText.toUpperCase(), image.width / 2, eyebrowY);
     }
     
-    // Add headline text (center-top)
+    // Add headline text (center of safe zone)
     ctx.font = `bold ${headlineSize}px Arial, sans-serif`;
     ctx.fillStyle = primaryColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     
     // Word wrap for headline
-    const headlineY = config.eyebrowText ? image.height * 0.15 : image.height * 0.12;
+    const headlineY = config.eyebrowText 
+      ? textStartY + eyebrowSize * 1.5 
+      : textStartY + textAreaHeight * 0.1;
     const maxWidth = image.width * 0.9; // 90% of width
     wrapText(ctx, config.headlineText.toUpperCase(), image.width / 2, headlineY, maxWidth, headlineSize * 1.2);
     
     // Highlight numbers in headline (make them green/accent)
     highlightNumbers(ctx, config.headlineText, image.width / 2, headlineY, maxWidth, headlineSize, accentColor);
     
-    // Add CTA button (bottom)
+    // Add CTA button (bottom of safe zone)
     if (config.ctaText) {
-      const ctaY = image.height * 0.85; // 85% from top
+      const ctaY = textEndY - ctaSize * 2; // Position above safe zone end
       const ctaWidth = config.ctaText.length * ctaSize * 0.7;
       const ctaHeight = ctaSize * 2;
       const ctaX = (image.width - ctaWidth) / 2;

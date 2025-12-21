@@ -25,6 +25,7 @@ export type GenerateImageOptions = {
     b64Json?: string;
     mimeType?: string;
   }>;
+  aspectRatio?: '1:1' | '9:16' | '16:9'; // Default: '1:1'
 };
 
 export type GenerateImageResponse = {
@@ -61,6 +62,7 @@ export async function generateImage(
     body: JSON.stringify({
       prompt: options.prompt,
       original_images: options.originalImages || [],
+      aspect_ratio: options.aspectRatio || '1:1',
     }),
   });
 

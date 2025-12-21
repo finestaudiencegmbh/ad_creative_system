@@ -21,7 +21,10 @@ export default function CreativeGenerator() {
   const [selectedAdSetId, setSelectedAdSetId] = useState<string>("");
   
   // Step 3: Format selection
-  const [format, setFormat] = useState<string>("all");
+  const [format, setFormat] = useState<string>("feed");
+  
+  // Step 3b: Batch count
+  const [batchCount, setBatchCount] = useState<number>(1);
   
   // Step 4: Description (optional, auto-filled)
   const [description, setDescription] = useState("");
@@ -340,10 +343,9 @@ export default function CreativeGenerator() {
                       <SelectValue placeholder="Format auswählen" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle Formate</SelectItem>
-                      <SelectItem value="feed">Nur Feed (1080×1420)</SelectItem>
-                      <SelectItem value="story">Nur Story (1080×1920)</SelectItem>
-                      <SelectItem value="reel">Nur Reel (1080×1920)</SelectItem>
+                      <SelectItem value="feed">Feed (1080×1080, 1:1)</SelectItem>
+                      <SelectItem value="story">Story (1080×1920, 9:16)</SelectItem>
+                      <SelectItem value="reel">Reel (1080×1920, 9:16)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -355,11 +357,30 @@ export default function CreativeGenerator() {
                     </p>
                     <p className="text-xs text-blue-700">
                       {format === "story" 
-                        ? "Text und wichtige Elemente müssen innerhalb der markierten Zone platziert werden (Header oben ~250px, Footer unten ~350px)."
-                        : "Text und wichtige Elemente müssen innerhalb der markierten Zone platziert werden (Header oben ~200px, Footer + UI unten ~450px)."}
+                        ? "Story: Text wird automatisch in der mittleren 66% Zone platziert (Oben 14% und unten 20% sind für UI-Elemente reserviert)."
+                        : "Reel: Text wird automatisch in der mittleren 45% Zone platziert (Oben 25% und unten 30% sind für UI-Elemente reserviert)."}
                     </p>
                   </div>
                 )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="batchCount">Anzahl Creatives</Label>
+                  <Select value={batchCount.toString()} onValueChange={(v) => setBatchCount(parseInt(v))}>
+                    <SelectTrigger id="batchCount">
+                      <SelectValue placeholder="Anzahl auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                        <SelectItem key={count} value={count.toString()}>
+                          {count} Creative{count > 1 ? 's' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Generiere mehrere Variationen gleichzeitig mit verschiedenen Headlines
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
