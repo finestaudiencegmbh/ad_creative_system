@@ -690,3 +690,12 @@
 - [x] Background prompts produce generic dashboard/3D objects instead of relevant content
 - [x] Improved landing page analysis to extract REAL products/services (books, courses, coaching)
 - [x] Added strict "NO dashboards/3D objects" rule to Gemini prompts
+
+### Bannerbear Integration for Text Overlay (22.12.2025)
+- [x] Install Bannerbear SDK
+- [x] Create Bannerbear helper module
+- [x] Replace Sharp text overlay with Bannerbear API calls
+- [x] Create Bannerbear templates (Feed 1:1, Story 9:16, Reel 9:16)
+- [x] Request and configure Bannerbear API key
+- [x] Test Bannerbear connection (API key valid, templates configured)
+- [ ] Test creative generation end-to-end with real campaign

@@ -124,6 +124,9 @@ importers:
       axios:
         specifier: ^1.12.0
         version: 1.12.2
+      bannerbear:
+        specifier: ^1.4.0
+        version: 1.4.0
       canvas:
         specifier: ^3.2.0
         version: 3.2.0
@@ -2666,6 +2669,10 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+  bannerbear@1.4.0:
+    resolution: {integrity: sha512-ZxgT1KfZy6FZVumQEj6Q6ivKBeTlcDN1PFqXsu9zw9v8/dw3L4i4Mex57XtPVsNsWUC4bP5wsyAkfaf6eMBtUQ==}
+    engines: {node: '>=12.*'}
+
   bare-events@2.8.2:
     resolution: {integrity: sha512-riJjyv1/mHLIPX4RwiK+oW9/4c3TEUeORHKefKAKnZ5kyslbN+HXowtbaVEqt4IMUB7OXlfixcs6gsFeo/jhiQ==}
     peerDependencies:
@@ -2706,6 +2713,10 @@ packages:
 
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+
+  base64url@3.0.1:
+    resolution: {integrity: sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==}
+    engines: {node: '>=6.0.0'}
 
   baseline-browser-mapping@2.8.12:
     resolution: {integrity: sha512-vAPMQdnyKCBtkmQA6FMCBvU9qFIppS3nzyXnEM+Lo2IAhG4Mpjv9cCxMudhgV3YdNNJv6TNqXy97dfRVL2LmaQ==}
@@ -7986,6 +7997,14 @@ snapshots:
   balanced-match@1.0.2:
     optional: true
 
+  bannerbear@1.4.0:
+    dependencies:
+      '@types/node': 24.7.0
+      base64url: 3.0.1
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
   bare-events@2.8.2: {}
 
   bare-fs@4.5.2:
@@ -8024,6 +8043,8 @@ snapshots:
     optional: true
 
   base64-js@1.5.1: {}
+
+  base64url@3.0.1: {}
 
   baseline-browser-mapping@2.8.12: {}
 
@@ -9992,7 +10013,6 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
-    optional: true
 
   node-releases@2.0.23: {}
 
@@ -10870,8 +10890,7 @@ snapshots:
       url-parse: 1.5.10
     optional: true
 
-  tr46@0.0.3:
-    optional: true
+  tr46@0.0.3: {}
 
   tr46@3.0.0:
     dependencies:
@@ -11159,8 +11178,7 @@ snapshots:
 
   webdriver-bidi-protocol@0.3.10: {}
 
-  webidl-conversions@3.0.1:
-    optional: true
+  webidl-conversions@3.0.1: {}
 
   webidl-conversions@7.0.0:
     optional: true
@@ -11189,7 +11207,6 @@ snapshots:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
-    optional: true
 
   why-is-node-running@2.3.0:
     dependencies:

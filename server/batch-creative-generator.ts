@@ -40,7 +40,7 @@ export async function generateBatchCreatives(
   const { scrapeLandingPage } = await import('./landingpage-scraper');
   const { identifyWinningCreatives } = await import('./winning-creatives');
   const { generateImageWithImagen, buildLandingPageAwarePrompt } = await import('./_core/geminiImagen');
-  const { addTextOverlaySharp } = await import('./text-overlay-sharp');
+  const { renderCreativeWithBannerbear } = await import('./bannerbear');
   const { captureLandingPageScreenshot, analyzeLandingPageVisuals } = await import('./landingpage-screenshot');
   const { analyzeLandingPageForAdCopy } = await import('./landingpage-deep-analyzer');
   
@@ -185,31 +185,21 @@ export async function generateBatchCreatives(
         if (!generatedImageUrl) {
           throw new Error('SDXL image generation failed');
         }
-        console.log(`✅ Background generated, adding text overlays...`);
+        console.log(`✅ Background generated, rendering with Bannerbear...`);
         
-        // Step 2: Download generated background image
-        const imageResponse = await fetch(generatedImageUrl);
-        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-        
-        // Step 3: Add text overlays using Sharp + SVG
-        const finalBuffer = await addTextOverlaySharp({
-          imageBuffer,
+        // Step 2: Render creative with text overlays using Bannerbear
+        const bannerbearResult = await renderCreativeWithBannerbear({
+          backgroundImageUrl: generatedImageUrl,
           eyebrowText: headline.eyebrow,
           headlineText: headline.headline,
           ctaText: headline.cta,
-          format: config.format,
+          format: config.format as 'feed' | 'story' | 'reel',
           designSystem,
         });
         
-        console.log(`✅ Text overlays added, uploading to S3...`);
-        
-        // Step 4: Upload final image to S3
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `generated-creatives/${config.campaignId}-${config.format}-${index}-${randomSuffix}.png`;
-        const result = await storagePut(fileKey, finalBuffer, 'image/png');
-        const finalUrl = result.url;
-        console.log(`✅ Creative ${index} complete: Gemini Imagen with integrated text overlays`);
+        const finalUrl = bannerbearResult.imageUrl;
+        console.log(`✅ Bannerbear render complete: ${bannerbearResult.uid}`);
+        console.log(`✅ Creative ${index} complete: Gemini background + Bannerbear text overlays`);
         
         // TODO: Save to database when user context is available
         // const { getDb } = await import('./db');
