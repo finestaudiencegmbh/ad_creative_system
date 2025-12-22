@@ -185,18 +185,21 @@ CINEMATIC QUALITY (Gemini Best Practices):
 - Composition: Rule of thirds, leading lines, ${format === "feed" ? "centered subject" : "vertical flow"}
 
 REQUIREMENTS:
-- MUST be directly relevant to landing page content
+- MUST be directly relevant to landing page content and show REAL product/service
 - MUST support the headline message
-- NO generic/abstract visuals (no random smartphones, networks, geometric shapes)
+- ABSOLUTELY NO: dashboards, analytics screens, 3D geometric objects, abstract shapes, floating UI elements, timeline graphics
+- YES: Real people, real products, real environments, tangible results
 - Use landing page color scheme
 - Professional, high-quality, marketing-focused
+- Photorealistic or high-quality illustration (NOT 3D renders)
 - ${format === "feed" ? "Square composition" : "Vertical composition"}
-- INCLUDE TEXT OVERLAYS directly in the image:
-  * Eyebrow (small text at top): "${eyebrowText || ''}" - red color (#FF0000), uppercase, 24px, top 10% of image
-  * Main Headline (center): "${headline}" - white/green color, bold, 48px, center of image, multiple lines if needed
-  * CTA Button (bottom): "${ctaText || ''}" - purple button (#7C3AED) with white text, 32px, bottom 15% of image
-- Text must be clearly readable with high contrast
-- Use drop shadows or background overlays to ensure text visibility
+- Leave space for text overlays (top 20%, center 40%, bottom 20%)
+  * Top area: reserved for eyebrow text
+  * Center area: reserved for main headline
+  * Bottom area: reserved for CTA button
+- DO NOT include any text, letters, or words in the generated image
+- Text will be added separately as professional overlays
+- Ensure background has good contrast areas for text readability
 
 STYLE:
 - Modern, clean, professional
@@ -270,59 +273,41 @@ function determineVibe(landingPageContent: string, headline: string): string {
 
 /**
  * Extract visual elements from landing page content
+ * AVOID generic dashboards/3D objects - focus on REAL product/service
  */
 function extractVisualElements(landingPageContent: string): string {
-  // Simple keyword extraction
-  const keywords = [
-    "dashboard",
-    "analytics",
-    "leads",
-    "marketing",
-    "automation",
-    "funnel",
-    "conversion",
-    "campaign",
-    "ads",
-    "meta",
-    "facebook",
-    "instagram",
-    "social media",
-    "dca",
-    "dynamic creative",
-    "performance",
-    "metrics",
-    "roi",
-    "roas",
+  const content = landingPageContent.toLowerCase();
+  
+  // Priority 1: Look for REAL products/services mentioned
+  const productKeywords = [
+    { keyword: "book", visual: "Professional book cover or guide on desk, premium lighting" },
+    { keyword: "course", visual: "Online learning environment, student success, laptop with course content" },
+    { keyword: "software", visual: "Clean software interface on laptop, professional workspace" },
+    { keyword: "coaching", visual: "Professional coach in modern office, confident expert" },
+    { keyword: "consulting", visual: "Business consultant presenting strategy, professional setting" },
+    { keyword: "agency", visual: "Marketing agency team working, creative workspace" },
+    { keyword: "service", visual: "Professional service delivery, satisfied client" },
+    { keyword: "product", visual: "Product showcase, premium presentation" },
+    { keyword: "tool", visual: "Professional tool in use, productivity improvement" },
   ];
-
-  const found = keywords.filter((keyword) =>
-    landingPageContent.toLowerCase().includes(keyword)
-  );
-
-  if (found.length === 0) {
-    return "Professional business/marketing visuals";
+  
+  for (const { keyword, visual } of productKeywords) {
+    if (content.includes(keyword)) {
+      return visual;
+    }
   }
-
-  // Build visual description
-  const visualDescriptions: string[] = [];
-
-  if (found.includes("dashboard") || found.includes("analytics")) {
-    visualDescriptions.push(
-      "Marketing dashboard with charts and metrics"
-    );
+  
+  // Priority 2: Look for outcome/benefit visuals
+  if (content.includes("lead") || content.includes("customer")) {
+    return "Happy business owner reviewing successful results on laptop, professional office";
   }
-
-  if (found.includes("leads") || found.includes("conversion")) {
-    visualDescriptions.push("Lead generation funnel visualization");
+  if (content.includes("growth") || content.includes("scale")) {
+    return "Growing business, upward trend, professional success";
   }
-
-  if (found.includes("meta") || found.includes("facebook") || found.includes("ads")) {
-    visualDescriptions.push("Meta Ads interface or campaign visuals");
+  if (content.includes("time") || content.includes("save")) {
+    return "Relaxed professional with free time, work-life balance, modern workspace";
   }
-
-  if (found.includes("dca") || found.includes("dynamic creative")) {
-    visualDescriptions.push("Dynamic creative optimization visuals");
-  }
-
-  return visualDescriptions.join(", ") || "Professional marketing visuals";
+  
+  // Fallback: Generic professional scene (NO dashboards/3D objects)
+  return "Professional business person working confidently in modern office, clean minimal aesthetic, natural lighting";
 }

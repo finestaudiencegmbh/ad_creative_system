@@ -185,13 +185,25 @@ export async function generateBatchCreatives(
         if (!generatedImageUrl) {
           throw new Error('SDXL image generation failed');
         }
-        console.log(`✅ Creative generated with text overlays, uploading to S3...`);
+        console.log(`✅ Background generated, adding text overlays...`);
         
-        // Step 2: Download generated image (already includes text from Gemini)
+        // Step 2: Download generated background image
         const imageResponse = await fetch(generatedImageUrl);
-        const finalBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
         
-        // Step 3: Upload final image to S3
+        // Step 3: Add text overlays using Sharp + SVG
+        const finalBuffer = await addTextOverlaySharp({
+          imageBuffer,
+          eyebrowText: headline.eyebrow,
+          headlineText: headline.headline,
+          ctaText: headline.cta,
+          format: config.format,
+          designSystem,
+        });
+        
+        console.log(`✅ Text overlays added, uploading to S3...`);
+        
+        // Step 4: Upload final image to S3
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(7);
         const fileKey = `generated-creatives/${config.campaignId}-${config.format}-${index}-${randomSuffix}.png`;
