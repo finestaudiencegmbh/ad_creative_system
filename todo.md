@@ -679,3 +679,7 @@
 - [x] Implement collapsible campaign cards with key KPIs visible when collapsed
 - [x] Add creative thumbnail images to ad views and performance tab
 - [x] Add custom date range picker to dashboard date filter
+
+### Branding Update (22.12.2025)
+- [x] Update favicon to FA logo (WhatsAppGruppenbilder.png)
+- [x] Change browser title to "Finest Ad Performance System"
