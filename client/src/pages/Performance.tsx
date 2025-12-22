@@ -143,8 +143,18 @@ export default function Performance() {
                 <div className="text-center py-8 text-muted-foreground">Keine Daten verfügbar</div>
               ) : (
                 topPerformers.map((creative, index) => (
-                  <div key={creative.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                    <div className="space-y-1">
+                  <div key={creative.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    {creative.imageUrl && (
+                      <img 
+                        src={creative.imageUrl} 
+                        alt={creative.name}
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="space-y-1 flex-1">
                       <p className="font-medium">{creative.name}</p>
                       <div className="flex gap-4 text-sm text-muted-foreground">
                         {creative.roas > 0 && (
@@ -155,7 +165,7 @@ export default function Performance() {
                         <span>Spend: {creative.spend.toFixed(2)}€</span>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-green-500">#{index + 1}</div>
+                    <div className="text-2xl font-bold text-green-500 flex-shrink-0">#{index + 1}</div>
                   </div>
                 ))
               )}
@@ -177,8 +187,18 @@ export default function Performance() {
                 <div className="text-center py-8 text-muted-foreground">Keine Daten verfügbar</div>
               ) : (
                 topFlops.map((creative, index) => (
-                  <div key={creative.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                    <div className="space-y-1">
+                  <div key={creative.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    {creative.imageUrl && (
+                      <img 
+                        src={creative.imageUrl} 
+                        alt={creative.name}
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="space-y-1 flex-1">
                       <p className="font-medium">{creative.name}</p>
                       <div className="flex gap-4 text-sm text-muted-foreground">
                         {creative.roas > 0 && (
@@ -189,7 +209,7 @@ export default function Performance() {
                         <span>Spend: {creative.spend.toFixed(2)}€</span>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-red-500">#{index + 1}</div>
+                    <div className="text-2xl font-bold text-red-500 flex-shrink-0">#{index + 1}</div>
                   </div>
                 ))
               )}

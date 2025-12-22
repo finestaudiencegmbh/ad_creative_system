@@ -308,9 +308,13 @@ export const appRouter = router({
             const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
             const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
 
+            // Extract image URL from creative
+            const imageUrl = ad.creative?.thumbnail_url || ad.creative?.image_url || null;
+
             return {
               id: ad.id,
               name: ad.name,
+              imageUrl,
               roasOrderVolume,
               roasCashCollect,
               costPerLead,
@@ -424,6 +428,7 @@ export const appRouter = router({
             topPerformers: topPerformers.map(p => ({
               id: p.adId,
               name: p.adName,
+              imageUrl: p.imageUrl,
               roas: p.metrics.roasOrderVolume,
               cpl: p.metrics.costPerLead,
               ctr: p.metrics.outboundCtr,
@@ -432,6 +437,7 @@ export const appRouter = router({
             topFlops: topFlops.map(p => ({
               id: p.adId,
               name: p.adName,
+              imageUrl: p.imageUrl,
               roas: p.metrics.roasOrderVolume,
               cpl: p.metrics.costPerLead,
               ctr: p.metrics.outboundCtr,
@@ -649,10 +655,14 @@ export const appRouter = router({
             const roasOrderVolume = spend > 0 ? totalOrderValue / spend : 0;
             const roasCashCollect = spend > 0 ? totalCashCollect / spend : 0;
 
+            // Extract image URL from creative
+            const imageUrl = ad.creative?.thumbnail_url || ad.creative?.image_url || null;
+
             return {
               id: ad.id,
               name: ad.name,
               status: ad.status,
+              imageUrl,
               impressions,
               spend,
               leads,

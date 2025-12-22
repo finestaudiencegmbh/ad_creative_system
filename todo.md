@@ -668,3 +668,14 @@
 
 - [ ] Add creative thumbnail images to Ad list view (Werbeanzeigen page)
 - [ ] Add creative thumbnail images to Performance tab (Top 3 Performer + Top 3 Flops)
+
+- [ ] Implement collapsible campaign cards in Dashboard:
+  - Cards collapsed by default showing only key KPIs
+  - Key KPIs visible when collapsed: Ausgaben, ROAS, Leads, Kosten/Lead
+  - Click to expand for full metrics (CPM, Outbound CTR, Kosten/Klick, CR Landingpage, ROAS Cash)
+  - Arrow icon to indicate expand/collapse state
+
+### Dashboard UX Improvements (22.12.2025)
+- [x] Implement collapsible campaign cards with key KPIs visible when collapsed
+- [x] Add creative thumbnail images to ad views and performance tab
+- [x] Add custom date range picker to dashboard date filter

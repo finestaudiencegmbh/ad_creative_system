@@ -8,6 +8,7 @@
 interface AdPerformance {
   id: string;
   name: string;
+  imageUrl?: string | null;
   // Metrics
   roasOrderVolume: number;
   roasCashCollect: number;
@@ -105,6 +106,7 @@ export function identifyWinningCreatives(
   const scoredAds = ads.map(ad => ({
     adId: ad.id,
     adName: ad.name,
+    imageUrl: ad.imageUrl,
     score: calculatePerformanceScore(ad, ads),
     metrics: {
       roasOrderVolume: ad.roasOrderVolume,

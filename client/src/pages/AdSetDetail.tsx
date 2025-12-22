@@ -116,7 +116,17 @@ export default function AdSetDetail() {
               className="hover:shadow-lg transition-shadow"
             >
               <CardHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
+                  {ad.imageUrl && (
+                    <img 
+                      src={ad.imageUrl} 
+                      alt={ad.name}
+                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-3">
                       <CardTitle className="text-xl">{ad.name}</CardTitle>

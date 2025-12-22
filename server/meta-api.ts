@@ -46,6 +46,10 @@ interface CampaignWithInsights extends MetaCampaign {
   insights?: {
     data: MetaInsights[];
   };
+  creative?: {
+    thumbnail_url?: string;
+    image_url?: string;
+  };
 }
 
 /**
@@ -229,10 +233,10 @@ export async function getAdSetAds(
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
-  // Build query parameters with all required metrics
+  // Build query parameters with all required metrics + creative thumbnail
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,status,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    fields: "id,name,status,creative{thumbnail_url,image_url},insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
     limit: "100",
   });
 
