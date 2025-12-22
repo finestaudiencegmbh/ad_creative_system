@@ -198,6 +198,8 @@ export default function CreativeGenerator() {
   const generateBatchCreativesMutation = trpc.ai.generateBatchCreativesV2.useMutation();
 
   const handleGenerate = async () => {
+
+    
     if (!selectedCampaignId) {
       toast.error("Bitte wähle eine Kampagne aus");
       return;
@@ -220,6 +222,7 @@ export default function CreativeGenerator() {
       const formats = format === "all" ? ["feed", "story", "reel"] : [format];
       
       const landingPageUrl = manualLandingPage || landingPageData?.url || '';
+
       
       if (!landingPageUrl) {
         toast.error("Keine Landing Page gefunden. Bitte gib eine manuelle URL ein.");
@@ -607,7 +610,17 @@ export default function CreativeGenerator() {
 
             {/* Generate Button */}
             <Button
-              onClick={handleGenerate}
+              onClick={() => {
+                console.log('📦 Button clicked!');
+                console.log('disabled check:', {
+                  selectedCampaignId,
+                  format,
+                  batchCount,
+                  isGenerating,
+                  disabled: !selectedCampaignId || !format || !batchCount || isGenerating
+                });
+                handleGenerate();
+              }}
               disabled={!selectedCampaignId || !format || !batchCount || isGenerating}
               className="w-full"
               size="lg"

@@ -11,7 +11,7 @@ import type { CreativeFormat } from './text-overlay';
 import { performDeepAnalysis, extractLandingPageFullText, extractWinningAdsFullText } from './deep-analysis-claude';
 import { generateTextIterations } from './text-iterations-claude';
 import { generateVisual } from './visual-generation-gemini';
-import { addTextOverlaySharp } from './text-overlay-sharp';
+import { renderCreativeWithBannerbear } from './bannerbear';
 import { storagePut } from './storage';
 import sharp from 'sharp';
 
@@ -95,17 +95,18 @@ export async function generateBatchCreativesV2(
       // Adapt visual to format (resize + crop)
       const adaptedVisual = await adaptVisualToFormat(visualBuffer, format);
       
-      // Add text overlays with safe zones
-      const finalBuffer = await addTextOverlaySharp({
-        imageBuffer: adaptedVisual,
-        format,
+      // Add text overlays with Bannerbear (professional font rendering)
+      const bannerbearResult = await renderCreativeWithBannerbear({
+        backgroundImageUrl: baseVisualUrl, // Use original Gemini image, Bannerbear will resize
+        format: format as 'feed' | 'story' | 'reel',
         eyebrowText: textIteration.preHeadline,
         headlineText: textIteration.headline,
         ctaText: textIteration.cta,
-        designSystem: {
-          colorPalette: analysis.colorPalette.length > 0 ? analysis.colorPalette : ['#FFFFFF', '#00FF00', '#000000'],
-        },
       });
+      
+      // Download final creative from Bannerbear
+      const finalResponse = await fetch(bannerbearResult.imageUrl);
+      const finalBuffer = Buffer.from(await finalResponse.arrayBuffer());
       
       // Upload to S3
       const timestamp = Date.now();

@@ -699,3 +699,111 @@
 - [x] Request and configure Bannerbear API key
 - [x] Test Bannerbear connection (API key valid, templates configured)
 - [ ] Test creative generation end-to-end with real campaign
+
+### Comprehensive Testing & Fixes (22.12.2025 - Night Shift)
+**Goal:** Ensure creative generation works reliably end-to-end
+
+**Testing Plan:**
+- [ ] Test creative generation with Funnel Vorlagen campaign (Feed format)
+- [ ] Test creative generation with DCA Methode campaign (Feed format)
+- [ ] Test Story format (9:16) generation
+- [ ] Test Reel format (9:16) generation
+- [ ] Verify text rendering quality (no boxes, proper fonts, readable)
+- [ ] Verify text positioning (safe zones, no overlap)
+- [ ] Fix background prompts to avoid dashboard/analytics visuals
+- [ ] Test with different landing pages (books, courses, services)
+- [ ] Verify all generated creatives are saved correctly
+- [ ] Test error handling (invalid campaign ID, missing landing page)
+
+**Known Issues to Fix:**
+- [ ] Background still shows dashboard/analytics graphics (should show real products/people)
+- [ ] Eyebrow text color (red) might not be visible on all backgrounds
+- [ ] Need to verify CTA button styling matches brand
+- [ ] Test headline text wrapping for long headlines
+
+
+### Bannerbear Integration & Testing (22.12.2025 01:30 CET) - V2 COMPLETE
+- [x] Install Bannerbear SDK
+- [x] Create Bannerbear helper module (server/bannerbear.ts)
+- [x] Replace Sharp text overlay with Bannerbear API calls in V1 generator
+- [x] **CRITICAL FIX: Integrated Bannerbear into V2 generator (batch-creative-generator-v2.ts)**
+  - V2 generator was still using Sharp (causing font issues)
+  - Replaced addTextOverlaySharp() with renderCreativeWithBannerbear()
+  - All TypeScript errors resolved
+- [x] Create Bannerbear templates (Feed, Story, Reel)
+- [x] Request and configure Bannerbear API key
+- [x] Test Bannerbear connection (API key valid, templates configured)
+- [x] **TEST FEED FORMAT END-TO-END: SUCCESS ✅**
+  - Generated creative with perfect text rendering (no tofu/boxes)
+  - Eyebrow: "520 MIO. € BEWIESEN" (readable, red)
+  - Headline: "Ihre Gelddruckmaschine: Copy-Paste Funnel-Vorlagen GRATIS." (readable, white)
+  - CTA: "Jetzt Funnel-Vorlagen sichern" (readable, green button)
+  - Background: Professional tech/digital theme (blue/purple gradient)
+  - Generation time: ~15 seconds
+  - Download link working
+  - Image quality: 1080x1080px, crisp
+- [x] **TEST STORY FORMAT (9:16) END-TO-END: SUCCESS ✅**
+  - Generated creative with perfect text rendering and safe zone compliance
+  - Eyebrow: "520 MIO. EURO BEWÄHRT" (red, top safe zone)
+  - Headline: "Copy-Paste-Vorlagen: 70-380 Leads für Hochpreis-Produkte" (white, center)
+  - CTA: "Gratis Vorlagen Sichern" (green button, bottom safe zone)
+  - Background: Champagne bottle with bubbles + dashboard (celebration theme)
+  - Safe zones: Top 14% ✅ Bottom 20% ✅ All text in middle 66%
+  - Resolution: 1080×1920px (9:16) ✅
+  - Generation time: ~20 seconds
+  - Text quality: PERFECT (no tofu, no boxes, clean typography)
+- [ ] Test Reel format (9:16) with safe zones (Top 25%, Bottom 30%)
+- [ ] Test batch generation (3-5 creatives)
+- [ ] Improve background prompt generation (still somewhat generic)
+
+### Known Issues to Fix:
+- [ ] Background images still somewhat generic (tech/dashboard visuals)
+- [ ] Need to improve Gemini prompt to generate more specific backgrounds
+- [ ] Button click issue in Creative Generator (requires programmatic click)
+
+
+### Bannerbear Integration & Testing (22.12.2025 01:40 CET) - COMPLETE WITH ISSUES
+- [x] Install Bannerbear SDK
+- [x] Create Bannerbear helper module (server/bannerbear.ts)
+- [x] Replace Sharp text overlay with Bannerbear API calls in V1 generator
+- [x] **CRITICAL FIX: Integrated Bannerbear into V2 generator (batch-creative-generator-v2.ts)**
+  - V2 generator was still using Sharp (causing font issues)
+  - Replaced addTextOverlaySharp() with renderCreativeWithBannerbear()
+  - All TypeScript errors resolved
+- [x] Request and configure Bannerbear API key
+- [x] Test Bannerbear connection (API key valid, templates configured)
+- [x] **TEST FEED FORMAT (1:1) END-TO-END: SUCCESS ✅**
+  - Generated creative with perfect text rendering
+  - Eyebrow: "520 MIO. € SYSTEM GRATIS" (red, top)
+  - Headline: "70-380 QUALIFIZIERTE LEADS/MONAT AUTOMATISIERT" (white, center)
+  - CTA: "Funnel-Vorlagen gratis sichern" (green button, bottom)
+  - Background: Dashboard/analytics graphic
+  - Resolution: 1080×1080px (1:1) ✅
+  - Text quality: PERFECT (no tofu, no boxes, clean typography)
+- [x] **TEST STORY FORMAT (9:16) END-TO-END: SUCCESS ✅**
+  - Generated creative with perfect text rendering and safe zone compliance
+  - Eyebrow: "520 MIO. EURO BEWÄHRT" (red, top safe zone)
+  - Headline: "Copy-Paste-Vorlagen: 70-380 Leads für Hochpreis-Produkte" (white, center)
+  - CTA: "Gratis Vorlagen Sichern" (green button, bottom safe zone)
+  - Background: Champagne bottle with bubbles + dashboard (celebration theme)
+  - Safe zones: Top 14% ✅ Bottom 20% ✅ All text in middle 66%
+  - Resolution: 1080×1920px (9:16) ✅
+  - Generation time: ~20 seconds
+  - Text quality: PERFECT (no tofu, no boxes, clean typography)
+- [x] **TEST REEL FORMAT (9:16) END-TO-END: PARTIAL SUCCESS ⚠️**
+  - Bannerbear API call successful ✅
+  - Image ID returned: bknAjN4e763j9pGVzXPRKxlD8 ✅
+  - Frontend preview shows text correctly ✅
+  - **ISSUE: Downloaded image is blank/white ❌**
+  - **ROOT CAUSE: Bannerbear Reel template needs configuration**
+  - User must configure template in Bannerbear dashboard
+  - Template ID: A37YJe5q03XBZmpvWK
+- [ ] **CRITICAL: Fix Bannerbear Reel template configuration**
+  - Template currently returns blank/white images
+  - Need to add background image layer
+  - Need to configure text layers with safe zones
+  - Check template at: https://www.bannerbear.com/dashboard
+- [ ] Test batch generation (3-5 creatives) - BLOCKED until Reel template fixed
+- [ ] Improve background prompt generation (still somewhat generic)
+- [ ] Write comprehensive vitest tests for Bannerbear integration
+- [ ] Document all findings and create tested checkpoint
