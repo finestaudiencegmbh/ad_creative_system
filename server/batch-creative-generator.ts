@@ -165,6 +165,8 @@ export async function generateBatchCreatives(
           headline: headline.headline,
           designSystem,
           format: config.format as Exclude<CreativeFormat, 'all'>,
+          eyebrowText: headline.eyebrow,
+          ctaText: headline.cta,
         });
         
         // Generate background image with Gemini Imagen
@@ -183,29 +185,19 @@ export async function generateBatchCreatives(
         if (!generatedImageUrl) {
           throw new Error('SDXL image generation failed');
         }
+        console.log(`✅ Creative generated with text overlays, uploading to S3...`);
         
-        console.log(`✅ Background generated, adding text overlays...`);
-        
-        // Step 2: Download generated image
+        // Step 2: Download generated image (already includes text from Gemini)
         const imageResponse = await fetch(generatedImageUrl);
-        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        const finalBuffer = Buffer.from(await imageResponse.arrayBuffer());
         
-        // Step 3: Add text overlays using Sharp + SVG
-         const finalBuffer = await addTextOverlaySharp({
-          imageBuffer,
-          eyebrowText: headline.eyebrow,
-          headlineText: headline.headline,
-          ctaText: headline.cta,
-          format: config.format,
-          designSystem,
-        });;
-        
-        // Step 3: Upload final creative to S3
+        // Step 3: Upload final image to S3
+        const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `creatives/batch-${config.format}-${index}-${randomSuffix}.png`;
+        const fileKey = `generated-creatives/${config.campaignId}-${config.format}-${index}-${randomSuffix}.png`;
         const result = await storagePut(fileKey, finalBuffer, 'image/png');
         const finalUrl = result.url;
-        console.log(`✅ Creative ${index} complete: SDXL background + Canvas text overlays`);
+        console.log(`✅ Creative ${index} complete: Gemini Imagen with integrated text overlays`);
         
         // TODO: Save to database when user context is available
         // const { getDb } = await import('./db');

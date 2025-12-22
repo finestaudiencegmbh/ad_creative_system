@@ -683,3 +683,11 @@
 ### Branding Update (22.12.2025)
 - [x] Update favicon to FA logo (WhatsAppGruppenbilder.png)
 - [x] Change browser title to "Finest Ad Performance System"
+
+### CRITICAL BUG - Creative Generation produces wrong output (22.12.2025)
+- [x] Generated creatives show generic dashboard/analytics images instead of relevant ad content
+- [x] Timeline/icons appear at top of image (unwanted)
+- [x] Text overlays (headlines) are completely missing
+- [x] FLUX prompts are too generic - need to be more specific to landing page content
+- [x] Text overlay system needs to be fixed or reimplemented
+- [x] Solution: Gemini Imagen now generates text overlays directly in image (no Sharp post-processing)

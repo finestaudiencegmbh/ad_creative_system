@@ -149,8 +149,10 @@ export function buildLandingPageAwarePrompt(params: {
   headline: string;
   designSystem: DesignSystem;
   format: "feed" | "story" | "reel";
+  eyebrowText?: string;
+  ctaText?: string;
 }): string {
-  const { landingPageContent, headline, designSystem, format } = params;
+  const { landingPageContent, headline, designSystem, format, eyebrowText, ctaText } = params;
 
   // Extract key visual elements from landing page
   const visualElements = extractVisualElements(landingPageContent);
@@ -189,8 +191,12 @@ REQUIREMENTS:
 - Use landing page color scheme
 - Professional, high-quality, marketing-focused
 - ${format === "feed" ? "Square composition" : "Vertical composition"}
-- Leave space for text overlays (top and bottom)
-- NO TEXT IN IMAGE - text will be added separately as overlay
+- INCLUDE TEXT OVERLAYS directly in the image:
+  * Eyebrow (small text at top): "${eyebrowText || ''}" - red color (#FF0000), uppercase, 24px, top 10% of image
+  * Main Headline (center): "${headline}" - white/green color, bold, 48px, center of image, multiple lines if needed
+  * CTA Button (bottom): "${ctaText || ''}" - purple button (#7C3AED) with white text, 32px, bottom 15% of image
+- Text must be clearly readable with high contrast
+- Use drop shadows or background overlays to ensure text visibility
 
 STYLE:
 - Modern, clean, professional
