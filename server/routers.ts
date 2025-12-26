@@ -1170,6 +1170,7 @@ export const appRouter = router({
     triggerCreativeGeneration: protectedProcedure
       .input(z.object({
         campaignId: z.string(),
+        adSetId: z.string().optional(),
         landingPageUrl: z.string(),
         format: z.enum(['feed', 'story', 'reel']),
         count: z.number().min(1).max(10),
@@ -1178,6 +1179,86 @@ export const appRouter = router({
         console.log('[triggerCreativeGeneration] Input:', input);
         const { randomUUID } = await import('crypto');
         const jobId = randomUUID();
+        
+        // Import necessary functions
+        const { identifyWinningCreatives } = await import('./winning-creatives');
+        const { getAdSetTargeting, getCampaignAdSets, getAdSetAds, extractImageUrl } = await import('./meta-api');
+        const { getSalesData } = await import('./db');
+        
+        // Get winning ad data (top performer) - reuse logic from getWinningCreatives procedure
+        let allAds = [];
+        if (input.adSetId) {
+          const ads = await getAdSetAds(input.adSetId, {});
+          allAds = ads;
+        } else {
+          const adSets = await getCampaignAdSets(input.campaignId, {});
+          for (const adSet of adSets) {
+            const ads = await getAdSetAds(adSet.id, {});
+            allAds.push(...ads);
+          }
+        }
+        
+        // Load sales data for ROAS calculation
+        const salesData = await getSalesData();
+        
+        // Transform to performance data format
+        const adsWithPerformance = allAds.map(ad => {
+          const insights = ad.insights?.data?.[0];
+          const spend = parseFloat(insights?.spend || '0');
+          const impressions = parseInt(insights?.impressions || '0');
+          const outboundClicks = insights?.outbound_clicks?.find((a: any) => a.action_type === 'outbound_click');
+          const leads = insights?.actions?.find((a: any) => a.action_type === 'lead');
+          
+          const adSales = salesData.get(`ad:${ad.id}`);
+          const roasOrderVolume = spend > 0 && adSales ? adSales.orderValue / spend : 0;
+          const roasCashCollect = spend > 0 && adSales ? adSales.cashCollect / spend : 0;
+          
+          const outboundClickCount = parseInt(outboundClicks?.value || '0');
+          const leadCount = parseInt(leads?.value || '0');
+          const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
+          const outboundCtr = impressions > 0 ? (outboundClickCount / impressions) * 100 : 0;
+          const costPerOutboundClick = outboundClickCount > 0 ? spend / outboundClickCount : 0;
+          const costPerLead = leadCount > 0 ? spend / leadCount : 0;
+          
+          return {
+            id: ad.id,
+            name: ad.name,
+            roasOrderVolume,
+            roasCashCollect,
+            costPerLead,
+            costPerOutboundClick,
+            outboundCtr,
+            cpm,
+            spend,
+            leads: leadCount,
+            impressions,
+            imageUrl: null, // Will be populated below
+          };
+        });
+        
+        // Identify top performer
+        const winningAds = identifyWinningCreatives(adsWithPerformance, 1);
+        const topAd = winningAds[0];
+        
+        // Get image URL for top ad
+        if (topAd) {
+          try {
+            const creative = await import('./meta-api').then(m => m.getAdCreatives(topAd.adId));
+            topAd.imageUrl = extractImageUrl(creative);
+          } catch (error) {
+            console.error('[triggerCreativeGeneration] Failed to fetch image:', error);
+          }
+        }
+        
+        // Get targeting data if adSetId provided
+        let targeting = null;
+        if (input.adSetId) {
+          try {
+            targeting = await getAdSetTargeting(input.adSetId);
+          } catch (error) {
+            console.error('[triggerCreativeGeneration] Failed to fetch targeting:', error);
+          }
+        }
         
         // Create job record in database
         console.log('[triggerCreativeGeneration] Creating job:', jobId);
@@ -1199,19 +1280,54 @@ export const appRouter = router({
         
         const appUrl = process.env.APP_URL || `https://${ctx.req.headers.host}`;
         
+        // Prepare comprehensive webhook payload
+        const webhookPayload = {
+          jobId,
+          userId: ctx.user.id,
+          campaignId: input.campaignId,
+          adSetId: input.adSetId,
+          
+          // Landing Page Data
+          landingPageUrl: input.landingPageUrl,
+          
+          // Winning Ad Data (Top Performer)
+          winningAd: topAd ? {
+            id: topAd.adId,
+            name: topAd.adName,
+            imageUrl: topAd.imageUrl,
+            metrics: {
+              roasOrderVolume: topAd.metrics.roasOrderVolume,
+              roasCashCollect: topAd.metrics.roasCashCollect,
+              costPerLead: topAd.metrics.costPerLead,
+              costPerOutboundClick: topAd.metrics.costPerOutboundClick,
+              outboundCtr: topAd.metrics.outboundCtr,
+              cpm: topAd.metrics.cpm,
+            },
+          } : null,
+          
+          // Targeting Data (Audience)
+          targeting: targeting ? {
+            ageMin: targeting.age_min,
+            ageMax: targeting.age_max,
+            genders: targeting.genders, // [1] = male, [2] = female
+            geoLocations: targeting.geo_locations,
+            interests: targeting.flexible_spec?.map((spec: any) => spec.interests || []).flat(),
+            locales: targeting.locales,
+          } : null,
+          
+          // Generation Parameters
+          format: input.format,
+          count: input.count,
+          
+          // Callback URL
+          callbackUrl: `${appUrl}/api/trpc/ai.receiveCreatives`,
+        };
+        
         try {
           await fetch(makeWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jobId,
-              userId: ctx.user.id,
-              campaignId: input.campaignId,
-              landingPageUrl: input.landingPageUrl,
-              format: input.format,
-              count: input.count,
-              callbackUrl: `${appUrl}/api/trpc/ai.receiveCreatives`,
-            }),
+            body: JSON.stringify(webhookPayload),
           });
           
           // Update status to processing
