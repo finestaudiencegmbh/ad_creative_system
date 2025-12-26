@@ -1175,10 +1175,12 @@ export const appRouter = router({
         count: z.number().min(1).max(10),
       }))
       .mutation(async ({ input, ctx }) => {
+        console.log('[triggerCreativeGeneration] Input:', input);
         const { randomUUID } = await import('crypto');
         const jobId = randomUUID();
         
         // Create job record in database
+        console.log('[triggerCreativeGeneration] Creating job:', jobId);
         await db.createCreativeJob({
           jobId,
           userId: ctx.user.id,
@@ -1217,6 +1219,7 @@ export const appRouter = router({
           
           return { jobId, status: 'processing' };
         } catch (error) {
+          console.error('[triggerCreativeGeneration] Error:', error);
           await db.updateCreativeJobStatus(jobId, 'failed', (error as Error).message);
           throw error;
         }
