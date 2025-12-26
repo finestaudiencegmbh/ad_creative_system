@@ -807,3 +807,17 @@
 - [ ] Improve background prompt generation (still somewhat generic)
 - [ ] Write comprehensive vitest tests for Bannerbear integration
 - [ ] Document all findings and create tested checkpoint
+
+
+### Make.com Integration for Creative Generation (22.12.2025 02:00 CET)
+- [x] Database schema: creativeJobs table (jobId, userId, campaignId, status, input, output)
+- [x] Backend: Webhook trigger endpoint (sends data to Make.com)
+- [x] Backend: Callback endpoint (receives finished creatives from Make.com)
+- [x] Backend: Job status polling endpoint (frontend checks if job is done)
+- [x] Frontend: Replace direct generation with webhook flow
+- [x] Frontend: Polling mechanism to check job status every 3 seconds
+- [x] Frontend: Display finished creatives when job completes
+- [ ] Environment: MAKE_WEBHOOK_URL secret for Make.com webhook (user must provide)
+- [ ] Environment: APP_URL for callback URL (auto-detected from request)
+- [ ] Test complete flow end-to-end (requires Make.com scenario setup)
+- [x] Document Make.com scenario setup for user (see MAKE_SETUP.md)

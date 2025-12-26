@@ -1162,6 +1162,116 @@ export const appRouter = router({
         });
       }),
 
+    // ============================================
+    // Make.com Webhook Integration
+    // ============================================
+    
+    // Trigger creative generation via Make.com webhook
+    triggerCreativeGeneration: protectedProcedure
+      .input(z.object({
+        campaignId: z.string(),
+        landingPageUrl: z.string(),
+        format: z.enum(['feed', 'story', 'reel']),
+        count: z.number().min(1).max(10),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { randomUUID } = await import('crypto');
+        const jobId = randomUUID();
+        
+        // Create job record in database
+        await db.createCreativeJob({
+          jobId,
+          userId: ctx.user.id,
+          campaignId: input.campaignId,
+          landingPageUrl: input.landingPageUrl,
+          format: input.format,
+          count: input.count,
+          status: 'pending',
+        });
+        
+        // Send webhook to Make.com
+        const makeWebhookUrl = process.env.MAKE_WEBHOOK_URL;
+        if (!makeWebhookUrl) {
+          throw new Error('MAKE_WEBHOOK_URL not configured');
+        }
+        
+        const appUrl = process.env.APP_URL || `https://${ctx.req.headers.host}`;
+        
+        try {
+          await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobId,
+              userId: ctx.user.id,
+              campaignId: input.campaignId,
+              landingPageUrl: input.landingPageUrl,
+              format: input.format,
+              count: input.count,
+              callbackUrl: `${appUrl}/api/trpc/ai.receiveCreatives`,
+            }),
+          });
+          
+          // Update status to processing
+          await db.updateCreativeJobStatus(jobId, 'processing');
+          
+          return { jobId, status: 'processing' };
+        } catch (error) {
+          await db.updateCreativeJobStatus(jobId, 'failed', (error as Error).message);
+          throw error;
+        }
+      }),
+    
+    // Callback endpoint for Make.com to send finished creatives
+    receiveCreatives: publicProcedure
+      .input(z.object({
+        jobId: z.string(),
+        creatives: z.array(z.object({
+          url: z.string(),
+          format: z.string(),
+          headline: z.string().optional(),
+          eyebrow: z.string().optional(),
+          cta: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        // Update job with results
+        await db.completeCreativeJob(input.jobId, {
+          creatives: input.creatives,
+        });
+        
+        return { success: true };
+      }),
+    
+    // Poll job status (frontend checks if job is done)
+    getJobStatus: protectedProcedure
+      .input(z.object({ jobId: z.string() }))
+      .query(async ({ input, ctx }) => {
+        const job = await db.getCreativeJob(input.jobId);
+        
+        if (!job) {
+          throw new Error('Job not found');
+        }
+        
+        // Verify job belongs to user
+        if (job.userId !== ctx.user.id) {
+          throw new Error('Unauthorized');
+        }
+        
+        return {
+          jobId: job.jobId,
+          status: job.status,
+          result: job.result,
+          errorMessage: job.errorMessage,
+          createdAt: job.createdAt,
+          completedAt: job.completedAt,
+        };
+      }),
+
+    // ============================================
+    // Legacy Creative Generation (Direct)
+    // ============================================
+    
     // Creative Generator V2 - 4-Step Workflow (Deep Analysis + Claude + Gemini)
     generateBatchCreativesV2: protectedProcedure
       .input(z.object({

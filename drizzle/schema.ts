@@ -181,3 +181,36 @@ export const leadCorrections = mysqlTable("lead_corrections", {
 
 export type LeadCorrection = typeof leadCorrections.$inferSelect;
 export type InsertLeadCorrection = typeof leadCorrections.$inferInsert;
+
+/**
+ * Creative Jobs table - Tracks async creative generation jobs via Make.com
+ * Stores job status and results for webhook-based creative generation
+ */
+export const creativeJobs = mysqlTable("creative_jobs", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: varchar("jobId", { length: 255 }).notNull().unique(), // UUID for tracking
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // Input parameters
+  campaignId: varchar("campaignId", { length: 255 }).notNull(),
+  landingPageUrl: text("landingPageUrl").notNull(),
+  format: mysqlEnum("format", ["feed", "story", "reel"]).notNull(),
+  count: int("count").notNull(),
+  // Job status
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  // Output (populated by Make.com callback)
+  result: json("result").$type<{
+    creatives: Array<{
+      url: string;
+      format: string;
+      headline?: string;
+      eyebrow?: string;
+      cta?: string;
+    }>;
+  }>(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type CreativeJob = typeof creativeJobs.$inferSelect;
+export type InsertCreativeJob = typeof creativeJobs.$inferInsert;

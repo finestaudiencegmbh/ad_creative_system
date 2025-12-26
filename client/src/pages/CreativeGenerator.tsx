@@ -195,11 +195,42 @@ export default function CreativeGenerator() {
   const step3Complete = batchCount !== null && batchCount > 0;
   const step4Complete = step3Complete; // Optional field, complete when step 3 is complete
 
-  const generateBatchCreativesMutation = trpc.ai.generateBatchCreativesV2.useMutation();
+  // Make.com webhook integration
+  const triggerCreativeGeneration = trpc.ai.triggerCreativeGeneration.useMutation();
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  
+  // Poll job status every 3 seconds
+  const { data: jobStatus } = trpc.ai.getJobStatus.useQuery(
+    { jobId: currentJobId! },
+    { 
+      enabled: !!currentJobId && isGenerating,
+      refetchInterval: 3000, // Poll every 3 seconds
+    }
+  );
+  
+  // Check if job completed
+  useEffect(() => {
+    if (!jobStatus) return;
+    
+    if (jobStatus.status === 'completed' && jobStatus.result) {
+      setIsGenerating(false);
+      setGeneratedCreatives(jobStatus.result.creatives.map(c => ({
+        imageUrl: c.url,
+        format: c.format as 'feed' | 'story' | 'reel',
+        headline: c.headline,
+        eyebrowText: c.eyebrow,
+        ctaText: c.cta,
+      })));
+      setCurrentJobId(null);
+      toast.success(`${jobStatus.result.creatives.length} Creatives erfolgreich generiert!`);
+    } else if (jobStatus.status === 'failed') {
+      setIsGenerating(false);
+      setCurrentJobId(null);
+      toast.error(jobStatus.errorMessage || "Fehler bei der Generierung");
+    }
+  }, [jobStatus]);
 
   const handleGenerate = async () => {
-
-    
     if (!selectedCampaignId) {
       toast.error("Bitte wähle eine Kampagne aus");
       return;
@@ -215,35 +246,29 @@ export default function CreativeGenerator() {
       return;
     }
 
+    const landingPageUrl = manualLandingPage || landingPageData?.url || '';
+    if (!landingPageUrl) {
+      toast.error("Keine Landing Page gefunden. Bitte gib eine manuelle URL ein.");
+      return;
+    }
+
     setIsGenerating(true);
     setGeneratedCreatives([]);
 
     try {
-      const formats = format === "all" ? ["feed", "story", "reel"] : [format];
-      
-      const landingPageUrl = manualLandingPage || landingPageData?.url || '';
-
-      
-      if (!landingPageUrl) {
-        toast.error("Keine Landing Page gefunden. Bitte gib eine manuelle URL ein.");
-        setIsGenerating(false);
-        return;
-      }
-
-      const result = await generateBatchCreativesMutation.mutateAsync({
+      // Trigger Make.com webhook
+      const result = await triggerCreativeGeneration.mutateAsync({
         campaignId: selectedCampaignId,
         landingPageUrl,
-        formats: format === "all" ? ["feed", "story", "reel"] : [format],
+        format: format === "all" ? "feed" : format, // Make.com handles one format at a time
         count: batchCount,
       });
-
-      setGeneratedCreatives(result);
-
-      toast.success(`${formats.length * (batchCount || 1)} Creatives erfolgreich generiert!`);
+      
+      setCurrentJobId(result.jobId);
+      toast.info("Creative-Generierung gestartet... Bitte warten.");
     } catch (error: any) {
       console.error("Generation error:", error);
-      toast.error(error.message || "Fehler bei der Generierung");
-    } finally {
+      toast.error(error.message || "Fehler beim Starten der Generierung");
       setIsGenerating(false);
     }
   };

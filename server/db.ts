@@ -27,6 +27,9 @@ import {
   leadCorrections,
   InsertLeadCorrection,
   LeadCorrection,
+  creativeJobs,
+  InsertCreativeJob,
+  CreativeJob,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -543,4 +546,57 @@ export async function getSalesData(): Promise<Map<string, { orderValue: number; 
   }
   
   return salesMap;
+}
+
+
+// ============================================
+// Creative Jobs (Make.com Integration)
+// ============================================
+
+export async function createCreativeJob(data: Omit<InsertCreativeJob, 'id' | 'createdAt' | 'completedAt' | 'result' | 'errorMessage'>): Promise<CreativeJob> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  const inserted = await db.insert(creativeJobs).values(data);
+  const insertedId = Number(inserted[0].insertId);
+  
+  const result = await db.select().from(creativeJobs).where(eq(creativeJobs.id, insertedId)).limit(1);
+  if (!result[0]) throw new Error("Failed to retrieve inserted creative job");
+  
+  return result[0];
+}
+
+export async function getCreativeJob(jobId: string): Promise<CreativeJob | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(creativeJobs).where(eq(creativeJobs.jobId, jobId)).limit(1);
+  return result[0];
+}
+
+export async function updateCreativeJobStatus(jobId: string, status: 'pending' | 'processing' | 'completed' | 'failed', errorMessage?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  const updateData: any = { status };
+  if (errorMessage) {
+    updateData.errorMessage = errorMessage;
+  }
+
+  await db.update(creativeJobs)
+    .set(updateData)
+    .where(eq(creativeJobs.jobId, jobId));
+}
+
+export async function completeCreativeJob(jobId: string, result: { creatives: Array<{ url: string; format: string; headline?: string; eyebrow?: string; cta?: string; }> }): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  await db.update(creativeJobs)
+    .set({
+      status: 'completed',
+      result: result,
+      completedAt: new Date(),
+    })
+    .where(eq(creativeJobs.jobId, jobId));
 }
