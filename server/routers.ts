@@ -9,11 +9,13 @@ import * as aiServices from "./aiServices";
 import { getMetaCampaigns, getCampaignInsights, getCampaignAdSets, getAdSetAds } from "./meta-api";
 import { authRouter } from "./routers/auth";
 import { accountsRouter } from "./routers/accounts";
+import { passwordResetRouter } from "./routers/password-reset";
 
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
   accounts: accountsRouter,
+  passwordReset: passwordResetRouter,
 
   // ============================================
   // Campaigns (Real Meta Data)

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "wouter";
 
 
 export default function Login() {
@@ -84,12 +85,20 @@ export default function Login() {
             </div>
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED]"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Wird angemeldet..." : "Anmelden"}
             </Button>
           </form>
+          
+          <div className="mt-4 text-center">
+            <Link href="/forgot-password">
+              <button type="button" className="text-sm text-[#8B5CF6] hover:text-[#7C3AED] hover:underline">
+                Passwort vergessen?
+              </button>
+            </Link>
+          </div>
           
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>Powered by Finest Audience GmbH</p>

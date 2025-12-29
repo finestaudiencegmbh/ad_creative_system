@@ -13,11 +13,15 @@ import Werbetexte from "./pages/Werbetexte";
 import Performance from "./pages/Performance";
 import Login from "./pages/Login";
 import Accounts from "./pages/Accounts";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/login"} component={Login} />
+      <Route path={"/forgot-password"} component={ForgotPassword} />
+      <Route path={"/reset-password"} component={ResetPassword} />
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/accounts"} component={Accounts} />

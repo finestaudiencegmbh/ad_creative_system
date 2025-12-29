@@ -849,3 +849,13 @@
 - [x] README.md erstellen (fehlte komplett)
 - [ ] Security-Tab Fehler (GitHub-seitig, kann nicht behoben werden)
 - [ ] About-Sektion Fehler (GitHub-seitig, kann nicht behoben werden)
+
+
+### Passwort-Reset-Funktion (Neue Anforderung)
+- [x] Datenbank-Schema: password_reset_tokens Tabelle
+- [x] Backend: Reset-Token-Generierung (sicher, zeitlich begrenzt)
+- [x] Backend: E-Mail-Versand mit Reset-Link (Development: Console-Log)
+- [x] Backend: Token-Validierung und Passwort-Update
+- [x] Frontend: "Passwort vergessen?" Seite
+- [x] Frontend: "Neues Passwort setzen" Seite
+- [x] Testing: 9/9 Tests bestanden

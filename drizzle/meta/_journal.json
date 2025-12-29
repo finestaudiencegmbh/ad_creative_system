@@ -64,6 +64,13 @@
       "when": 1767036953208,
       "tag": "0008_tough_stingray",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1767037842183,
+      "tag": "0009_smart_captain_america",
+      "breakpoints": true
     }
   ]
 }
