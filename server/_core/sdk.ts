@@ -268,6 +268,11 @@ class SDKServer {
 
     const sessionUserId = session.openId;
     const signedInAt = new Date();
+    // OAuth disabled - using custom email/password authentication
+    // See server/auth.ts for new authentication system
+    throw ForbiddenError("OAuth authentication disabled. Please use email/password login.");
+
+    /* OLD OAUTH CODE - DISABLED
     let user = await db.getUserByOpenId(sessionUserId);
 
     // If user not in DB, sync from OAuth server automatically
@@ -296,6 +301,9 @@ class SDKServer {
       openId: user.openId,
       lastSignedIn: signedInAt,
     });
+    */
+
+    const user: any = null; // Placeholder
 
     return user;
   }

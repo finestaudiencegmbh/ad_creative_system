@@ -11,12 +11,16 @@ import AdSetDetail from "./pages/AdSetDetail";
 import CreativeGenerator from "./pages/CreativeGenerator";
 import Werbetexte from "./pages/Werbetexte";
 import Performance from "./pages/Performance";
+import Login from "./pages/Login";
+import Accounts from "./pages/Accounts";
 
 function Router() {
   return (
     <Switch>
+      <Route path={"/login"} component={Login} />
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/accounts"} component={Accounts} />
       <Route path={"/campaign/:id"} component={CampaignDetail} />
       <Route path={"/adset/:id"} component={AdSetDetail} />
       <Route path={"/generator"} component={CreativeGenerator} />

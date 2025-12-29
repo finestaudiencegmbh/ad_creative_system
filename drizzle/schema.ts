@@ -4,15 +4,37 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, decimal, fl
 export * from "./schema_creative_feedback";
 
 /**
- * Core user table backing auth flow.
+ * Accounts table - Multi-Tenant customer accounts
+ * Each account represents a customer company with their own Meta API credentials
+ */
+export const accounts = mysqlTable("accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  // Meta API Credentials (per account)
+  metaAccessToken: text("metaAccessToken"),
+  metaAdAccountId: varchar("metaAdAccountId", { length: 255 }),
+  // Account status
+  isActive: int("isActive").default(1).notNull(), // 1 = active, 0 = inactive
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = typeof accounts.$inferInsert;
+
+/**
+ * Users table - Authentication and access control
+ * Users belong to accounts and have roles (super_admin, admin, team, customer)
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  accountId: int("accountId").references(() => accounts.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  passwordHash: text("passwordHash").notNull(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  // Roles: super_admin (Finest Audience), admin (Finest Audience Team), team (Finest Audience Team Read-only), customer (Customer Account)
+  role: mysqlEnum("role", ["super_admin", "admin", "team", "customer"]).default("customer").notNull(),
+  isActive: int("isActive").default(1).notNull(), // 1 = active, 0 = inactive
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -22,8 +44,8 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Clients table - Multi-Tenant structure
- * Each client represents a customer using the ad creative system
+ * Clients table - DEPRECATED, replaced by accounts table
+ * Kept for backward compatibility during migration
  */
 export const clients = mysqlTable("clients", {
   id: int("id").autoincrement().primaryKey(),

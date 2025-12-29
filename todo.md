@@ -8,10 +8,10 @@
 - [x] Firmenname im gesamten System ersetzen
 
 ### Phase 2: Eigenes Login-System
-- [ ] Manus OAuth entfernen
-- [ ] Email + Passwort Login implementieren
-- [ ] Session-Management mit JWT
-- [ ] Passwort-Reset-Funktion
+- [x] Manus OAuth entfernen
+- [x] Email + Passwort Login implementieren
+- [x] Session-Management mit JWT
+- [ ] Passwort-Reset-Funktion (später)
 
 ### Phase 3: Navigation umbauen
 - [x] "Kunden"-Verwaltung entfernen
@@ -21,10 +21,12 @@
 - [x] Performance: Top 3 Performer vs. Top 3 Flops
 
 ### Phase 4: Admin-Backend
-- [ ] Admin-Login und Authentifizierung
-- [ ] Kunden-Account-Verwaltung (Erstellen, Bearbeiten, Löschen)
-- [ ] Meta-Credentials-Verwaltung pro Kunde
-- [ ] Onboarding-Daten-Verwaltung
+- [x] Admin-Login und Authentifizierung
+- [x] Kunden-Account-Verwaltung (Erstellen, Bearbeiten, Löschen)
+- [x] Meta-Credentials-Verwaltung pro Kunde
+- [x] Rollen-System (Super Admin, Admin, Team, Customer)
+- [x] Accounts-Reiter (nur für Admins sichtbar)
+- [ ] Onboarding-Daten-Verwaltung (später)
 
 ### Phase 5: Testing & Optimierung
 - [ ] Login-Flow testen
@@ -821,3 +823,29 @@
 - [ ] Environment: APP_URL for callback URL (auto-detected from request)
 - [ ] Test complete flow end-to-end (requires Make.com scenario setup)
 - [x] Document Make.com scenario setup for user (see MAKE_SETUP.md)
+
+
+### Multi-Tenant Account System (Neues Feature)
+- [ ] Datenbank-Schema: accounts Tabelle (email, password_hash, role, meta_access_token, meta_ad_account_id)
+- [ ] Datenbank-Schema: Rollen-System (super_admin, admin, team, customer)
+- [ ] Datenbank-Schema: users Tabelle erweitern (accountId foreign key)
+- [ ] Backend: Passwort-Hashing mit bcrypt
+- [ ] Backend: Email/Passwort Login (JWT Token)
+- [ ] Backend: Account CRUD Procedures (create, list, update, delete)
+- [ ] Backend: Role-based Access Control Middleware
+- [ ] Backend: Data Isolation Logic (nur eigene Daten sehen)
+- [ ] Frontend: Login-Seite (Email + Passwort)
+- [ ] Frontend: "Accounts"-Reiter (nur für Super Admin/Admin sichtbar)
+- [ ] Frontend: Account-Liste mit CRUD-Funktionen
+- [ ] Frontend: Account-Formular (Email, Passwort, Meta Credentials, Rolle)
+- [ ] Frontend: Dashboard zeigt nur Daten des eingeloggten Accounts
+- [ ] Frontend: Navigation basierend auf Rolle (Accounts-Reiter nur für Admins)
+- [ ] Testing: Login-Flow testen
+- [ ] Testing: Account-Verwaltung testen
+- [ ] Testing: Daten-Isolation testen
+
+
+### GitHub Repository Issues (Bolt Audit)
+- [x] README.md erstellen (fehlte komplett)
+- [ ] Security-Tab Fehler (GitHub-seitig, kann nicht behoben werden)
+- [ ] About-Sektion Fehler (GitHub-seitig, kann nicht behoben werden)

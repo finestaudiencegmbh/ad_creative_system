@@ -7,20 +7,13 @@ import * as db from "./db";
 import * as metaApi from "./metaApi";
 import * as aiServices from "./aiServices";
 import { getMetaCampaigns, getCampaignInsights, getCampaignAdSets, getAdSetAds } from "./meta-api";
+import { authRouter } from "./routers/auth";
+import { accountsRouter } from "./routers/accounts";
 
 export const appRouter = router({
   system: systemRouter,
-  
-  auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
-    }),
-  }),
+  auth: authRouter,
+  accounts: accountsRouter,
 
   // ============================================
   // Campaigns (Real Meta Data)
