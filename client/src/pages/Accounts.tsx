@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Users, Plus, Edit, Trash2, Building2 } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
 
 export default function Accounts() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -103,7 +104,8 @@ export default function Accounts() {
   }
 
   return (
-    <div className="container py-8">
+    <DashboardLayout>
+      <div className="container py-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Users className="h-6 w-6" />
@@ -273,6 +275,7 @@ export default function Accounts() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

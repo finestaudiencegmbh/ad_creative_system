@@ -863,3 +863,7 @@
 
 ### Super Admin E-Mail Änderung
 - [x] E-Mail von admin@finestaudience.de auf jo@finest-audience.de ändern
+
+
+### Accounts Page Layout Bug
+- [x] DashboardLayout Wrapper fehlt (Navigation/Sidebar nicht sichtbar)
