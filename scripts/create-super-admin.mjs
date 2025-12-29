@@ -33,7 +33,7 @@ async function createSuperAdmin() {
 
   const db = drizzle(process.env.DATABASE_URL);
 
-  const email = "admin@finestaudience.de";
+  const email = "jo@finest-audience.de";
   const password = "FinestAudience2025!";
   const name = "Finest Audience Admin";
 

@@ -859,3 +859,7 @@
 - [x] Frontend: "Passwort vergessen?" Seite
 - [x] Frontend: "Neues Passwort setzen" Seite
 - [x] Testing: 9/9 Tests bestanden
+
+
+### Super Admin E-Mail Änderung
+- [x] E-Mail von admin@finestaudience.de auf jo@finest-audience.de ändern

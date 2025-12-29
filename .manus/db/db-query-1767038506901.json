@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET email = 'jo@finest-audience.de' WHERE email = 'admin@finestaudience.de' AND role = 'super_admin';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2nEzwSVhUKPRbcA.81bfdd0c269c --database QJ4q9UVZHi3Ud4PLWZkQAH --execute UPDATE users SET email = 'jo@finest-audience.de' WHERE email = 'admin@finestaudience.de' AND role = 'super_admin';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 886
+}
