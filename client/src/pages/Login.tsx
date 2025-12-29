@@ -3,9 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
-
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,8 +20,6 @@ export default function Login() {
       // Update auth state
       utils.auth.me.setData(undefined, data.user as any);
       
-      // Login successful
-
       // Redirect to dashboard
       window.location.href = "/";
     },
@@ -37,74 +34,89 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <img 
-              src="/logo.png" 
-              alt="Finest Audience" 
-              className="h-12"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      <AnimatedBackground />
+      
+      <div className="relative z-10 w-full max-w-md animate-in fade-in duration-500">
+        {/* Logo */}
+        <div className="flex justify-center mb-12">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+              <div className="text-background font-bold text-xl">F</div>
+            </div>
+            <span className="text-2xl font-semibold tracking-tight">Finest Ads</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
-            Ad Performance System
-          </CardTitle>
-          <CardDescription className="text-center">
-            Melden Sie sich mit Ihren Zugangsdaten an
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-card border border-border rounded-2xl shadow-sm p-8 md:p-10">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight mb-2 text-balance">Anmelden</h1>
+            <p className="text-muted-foreground text-sm">Melden Sie sich bei Ihrem Account an</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+              <Label htmlFor="email" className="text-sm font-medium">
+                E-Mail-Adresse
+              </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="ihre@email.de"
+                placeholder="name@beispiel.de"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                className="h-12 px-4 bg-input border-border focus:border-ring transition-colors"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Passwort
+                </Label>
+                <Link href="/forgot-password">
+                  <button type="button" className="text-sm text-accent-foreground hover:text-accent-foreground/80 transition-colors">
+                    Vergessen?
+                  </button>
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Ihr Passwort"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
+                className="h-12 px-4 bg-input border-border focus:border-ring transition-colors"
               />
             </div>
+
             <Button
               type="submit"
-              className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED]"
               disabled={loginMutation.isPending}
+              className="w-full h-12 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 active:scale-[0.98]"
             >
-              {loginMutation.isPending ? "Wird angemeldet..." : "Anmelden"}
+              {loginMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <span>Wird angemeldet...</span>
+                </div>
+              ) : (
+                "Anmelden"
+              )}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center">
-            <Link href="/forgot-password">
-              <button type="button" className="text-sm text-[#8B5CF6] hover:text-[#7C3AED] hover:underline">
-                Passwort vergessen?
-              </button>
-            </Link>
-          </div>
-          
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Powered by Finest Audience GmbH</p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <p>Powered by Finest Audience GmbH</p>
+        </div>
+      </div>
     </div>
   );
 }
