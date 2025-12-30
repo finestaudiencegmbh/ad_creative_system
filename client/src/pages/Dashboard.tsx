@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, Calendar, Loader2, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, Calendar, Loader2, Plus, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, subMonths, startOfQuarter, endOfQuarter, format } from "date-fns";
@@ -15,6 +14,7 @@ import { SalesListDialog } from "@/components/SalesListDialog";
 import { EditLeadCountDialog } from "@/components/EditLeadCountDialog";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange as DateRangeValue } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 type DateRangePreset = "today" | "last7days" | "lastMonth" | "currentMonth" | "lastQuarter" | "custom";
 
@@ -123,7 +123,7 @@ export default function Dashboard() {
   const renderCampaignCards = (campaigns: typeof allCampaigns) => {
     if (!campaigns || campaigns.length === 0) {
       return (
-        <Card>
+        <Card className="bg-card/60 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Keine Kampagnen gefunden</CardTitle>
             <CardDescription>
@@ -135,200 +135,279 @@ export default function Dashboard() {
     }
 
     return (
-      <div className="grid gap-4">
+      <div className="space-y-4">
         {campaigns.map((campaign) => {
           const isExpanded = expandedCampaigns.has(campaign.id);
+          const hasPositiveROAS = campaign.roasOrderVolume > 0;
+          const trend = campaign.spend > 1000 ? "up" : "down"; // Simple trend logic
+          const progress = Math.min((campaign.spend / 10000) * 100, 100); // Progress based on spend
           
           return (
-            <Card 
+            <div
               key={campaign.id}
-              className="hover:shadow-lg transition-shadow"
+              className={cn(
+                "group relative bg-card/60 backdrop-blur-xl rounded-2xl border overflow-hidden transition-all duration-500",
+                "hover:shadow-[0_8px_30px_rgba(95,47,175,0.25)] hover:scale-[1.01]",
+                isExpanded
+                  ? "border-accent/60 shadow-[0_0_40px_rgba(95,47,175,0.3)]"
+                  : "border-border shadow-sm hover:border-accent/40",
+              )}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-3">
-                      <CardTitle className="text-xl">{campaign.name}</CardTitle>
-                      <Badge variant={campaign.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                        {campaign.status === 'ACTIVE' ? 'Aktiv' : campaign.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
-                      </Badge>
-                    </div>
-                    <CardDescription>
-                      Kampagnen-ID: {campaign.id}
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={(e) => toggleCampaignExpanded(campaign.id, e)}
-                  >
-                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Key KPIs - Always Visible */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
-                  {/* 1. Ausgaben */}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Ausgaben</p>
-                    <p className="text-2xl font-bold mt-1">
-                      €{campaign.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  
-                  {/* 2. ROAS */}
-                  <div>
-                    <p className="text-sm text-muted-foreground">ROAS</p>
-                    <p className="text-2xl font-bold mt-1 text-green-600">
-                      {campaign.roasOrderVolume > 0
-                        ? campaign.roasOrderVolume.toFixed(2) + 'x'
-                        : '-'
-                      }
-                    </p>
-                  </div>
-                  
-                  {/* 3. Leads */}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">Leads</p>
-                      {campaign.hasLeadCorrection && (
-                        <Badge variant="secondary" className="text-xs">Korrigiert</Badge>
+              <div
+                className={cn(
+                  "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+                  "bg-gradient-to-br from-accent/[0.08] via-transparent to-transparent",
+                )}
+              />
+
+              {/* Campaign Header */}
+              <button
+                onClick={(e) => toggleCampaignExpanded(campaign.id, e)}
+                className="relative w-full p-6 flex items-center justify-between text-left"
+              >
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="text-lg font-semibold group-hover:text-accent transition-colors">{campaign.name}</h3>
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "bg-accent/10 text-accent border-accent/30 font-medium px-3 py-1",
+                        "shadow-[0_0_20px_rgba(95,47,175,0.15)]",
                       )}
-                    </div>
-                    <p className="text-2xl font-bold mt-1">
-                      {campaign.leads}
-                    </p>
+                    >
+                      {campaign.status === 'ACTIVE' ? 'Aktiv' : campaign.status === 'PAUSED' ? 'Pausiert' : 'Archiviert'}
+                    </Badge>
+                    {trend === "up" ? (
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-red-600" />
+                    )}
                   </div>
-                  
-                  {/* 4. Kosten pro Lead */}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Kosten/Lead</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {campaign.costPerLead > 0 
-                        ? `€${campaign.costPerLead.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                        : '-'
-                      }
-                    </p>
+                  <p className="text-sm text-muted-foreground">Kampagnen-ID: {campaign.id}</p>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all duration-300",
+                    isExpanded && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {/* Campaign Metrics */}
+              <div className="relative px-6 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Ausgaben */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ausgaben</p>
+                  <p className="text-2xl font-semibold">
+                    €{campaign.spend.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-accent/60 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
 
-                {/* Expanded Details */}
-                {isExpanded && (
-                  <>
-                    <div className="mt-6 pt-6 border-t grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                      {/* CPM */}
-                      <div>
-                        <p className="text-sm text-muted-foreground">CPM</p>
-                        <p className="text-xl font-bold mt-1">
-                          €{campaign.cpm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                      </div>
-                      
-                      {/* Individuell ausgehende CTR */}
-                      <div>
-                        <p className="text-sm text-muted-foreground">Outbound CTR</p>
-                        <p className="text-xl font-bold mt-1">
-                          {campaign.outboundCtr.toFixed(2)}%
-                        </p>
-                      </div>
-                      
-                      {/* Kosten pro individuell ausgehendem Klick */}
-                      <div>
-                        <p className="text-sm text-muted-foreground">Kosten/Klick</p>
-                        <p className="text-xl font-bold mt-1">
-                          {campaign.costPerOutboundClick > 0
-                            ? `€${campaign.costPerOutboundClick.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : '-'
-                          }
-                        </p>
-                      </div>
-                      
-                      {/* Conversion Rate Landingpage */}
-                      <div>
-                        <p className="text-sm text-muted-foreground">CR Landingpage</p>
-                        <p className="text-xl font-bold mt-1">
-                          {campaign.conversionRate.toFixed(2)}%
-                        </p>
-                      </div>
-                      
-                      {/* ROAS Cash Collect */}
-                      <div>
-                        <p className="text-sm text-muted-foreground">ROAS Cash</p>
-                        <p className="text-xl font-bold mt-1 text-green-600">
-                          {campaign.roasCashCollect > 0
-                            ? campaign.roasCashCollect.toFixed(2) + 'x'
-                            : '-'
-                          }
-                        </p>
-                      </div>
-                      
-                      {/* Lead Edit Button */}
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Lead-Anzahl bearbeiten</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
-                            setLeadDialogOpen(true);
-                          }}
-                        >
-                          Bearbeiten
-                        </Button>
-                      </div>
+                {/* ROAS */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">ROAS</p>
+                  <p
+                    className={cn(
+                      "text-2xl font-semibold",
+                      hasPositiveROAS ? "text-green-600" : "text-muted-foreground",
+                    )}
+                  >
+                    {hasPositiveROAS ? campaign.roasOrderVolume.toFixed(2) + 'x' : '-'}
+                  </p>
+                  {hasPositiveROAS && (
+                    <div className="flex items-center gap-1 text-xs text-green-600">
+                      <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                      Profitable
+                    </div>
+                  )}
+                </div>
+
+                {/* Leads */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Leads</p>
+                    {campaign.hasLeadCorrection && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                        Korrigiert
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-2xl font-semibold">{campaign.leads}</p>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500/60 rounded-full transition-all duration-500" style={{ width: `${Math.min(campaign.leads / 100 * 100, 100)}%` }} />
+                  </div>
+                </div>
+
+                {/* Kosten pro Lead */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Kosten/Lead</p>
+                  <p className="text-2xl font-semibold">
+                    {campaign.costPerLead > 0 
+                      ? `€${campaign.costPerLead.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : '-'
+                    }
+                  </p>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500/60 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(100 - (campaign.costPerLead / 50 * 100), 20)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Expanded Details */}
+              <div
+                className={cn(
+                  "overflow-hidden transition-all duration-500",
+                  isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0",
+                )}
+              >
+                <div className="px-6 pb-6 pt-4 border-t border-border/50 space-y-6">
+                  {/* Additional Metrics Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    {/* CPM */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">CPM</p>
+                      <p className="text-xl font-bold mt-1">
+                        €{campaign.cpm.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
                     </div>
                     
-                    {/* Sales Summary and Add Button */}
-                    <div className="mt-6 pt-6 border-t flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <button
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
-                          setSalesListDialogOpen(true);
-                        }}
-                      >
-                        {campaign.salesCount > 0 ? (
-                          <span>
-                            {campaign.salesCount} Verkauf{campaign.salesCount !== 1 ? 'e' : ''} erfasst 
-                            (Auftragswert: €{campaign.totalOrderValue.toLocaleString('de-DE', { minimumFractionDigits: 2 })})
-                          </span>
-                        ) : (
-                          <span>Noch keine Verkäufe erfasst</span>
-                        )}
-                      </button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
-                          setSaleDialogOpen(true);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Verkauf hinzufügen
-                      </Button>
+                    {/* Outbound CTR */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Outbound CTR</p>
+                      <p className="text-xl font-bold mt-1">
+                        {campaign.outboundCtr.toFixed(2)}%
+                      </p>
                     </div>
+                    
+                    {/* Cost per Click */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Kosten/Klick</p>
+                      <p className="text-xl font-bold mt-1">
+                        {campaign.costPerOutboundClick > 0
+                          ? `€${campaign.costPerOutboundClick.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : '-'
+                        }
+                      </p>
+                    </div>
+                    
+                    {/* Conversion Rate */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">CR Landingpage</p>
+                      <p className="text-xl font-bold mt-1">
+                        {campaign.conversionRate.toFixed(2)}%
+                      </p>
+                    </div>
+                    
+                    {/* ROAS Cash Collect */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">ROAS Cash Collect</p>
+                      <p className="text-xl font-bold mt-1 text-green-600">
+                        {campaign.roasCashCollect > 0
+                          ? campaign.roasCashCollect.toFixed(2) + 'x'
+                          : '-'
+                        }
+                      </p>
+                    </div>
+                    
+                    {/* Impressions */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Impressionen</p>
+                      <p className="text-xl font-bold mt-1">
+                        {campaign.impressions.toLocaleString('de-DE')}
+                      </p>
+                    </div>
+                    
+                    {/* Outbound Clicks */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Outbound Clicks</p>
+                      <p className="text-xl font-bold mt-1">
+                        {campaign.outboundClicks.toLocaleString('de-DE')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Lead Correction Button */}
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Leads von Meta:</span> {campaign.leadsFromMeta}
+                      {campaign.hasLeadCorrection && (
+                        <span className="ml-2 text-amber-600">
+                          (Korrigiert auf {campaign.leads})
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCampaign({ 
+                          id: campaign.id, 
+                          name: campaign.name, 
+                          leads: campaign.leads, 
+                          leadsFromMeta: campaign.leadsFromMeta 
+                        });
+                        setLeadDialogOpen(true);
+                      }}
+                    >
+                      Lead-Anzahl korrigieren
+                    </Button>
+                  </div>
+                  
+                  {/* Sales Summary and Add Button */}
+                  <div className="pt-4 border-t border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
+                        setSalesListDialogOpen(true);
+                      }}
+                    >
+                      {campaign.salesCount > 0 ? (
+                        <span>
+                          {campaign.salesCount} Verkauf{campaign.salesCount !== 1 ? 'e' : ''} erfasst 
+                          (Auftragswert: €{campaign.totalOrderValue.toLocaleString('de-DE', { minimumFractionDigits: 2 })})
+                        </span>
+                      ) : (
+                        <span>Noch keine Verkäufe erfasst</span>
+                      )}
+                    </button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCampaign({ id: campaign.id, name: campaign.name, leads: campaign.leads, leadsFromMeta: campaign.leadsFromMeta });
+                        setSaleDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Verkauf hinzufügen
+                    </Button>
+                  </div>
 
-                    {/* View Details Button */}
-                    <div className="mt-4">
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => setLocation(`/campaign/${campaign.id}`)}
-                      >
-                        Details anzeigen
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  {/* View Details Button */}
+                  <div>
+                    <Button
+                      variant="default"
+                      className="w-full"
+                      onClick={() => setLocation(`/campaign/${campaign.id}`)}
+                    >
+                      Details anzeigen
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -337,62 +416,92 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Übersicht über alle Kampagnen und Performance-Metriken
-            </p>
-          </div>
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div className="space-y-2">
+          <h1 className="text-4xl font-semibold tracking-tight text-balance">Dashboard</h1>
+          <p className="text-muted-foreground text-balance">Übersicht über alle Kampagnen und Performance-Metriken</p>
         </div>
 
         {/* Date Range Filter */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>Zeitraum</CardTitle>
-              </div>
-              <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRangePreset)}>
-                <SelectTrigger className="w-full sm:w-[280px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Heute</SelectItem>
-                  <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
-                  <SelectItem value="lastMonth">Letzter Monat</SelectItem>
-                  <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
-                  <SelectItem value="lastQuarter">Letztes Quartal</SelectItem>
-                  <SelectItem value="custom">Benutzerdefiniert</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="flex items-center justify-between p-6 bg-card/60 backdrop-blur-sm rounded-2xl border border-border shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-accent/20 hover:border-accent/50 hover:bg-card/80 hover:scale-[1.01] group cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-all duration-300 group-hover:scale-110">
+              <Calendar className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors duration-300" />
             </div>
-            <CardDescription className="mt-2">
-              {dateRangeLabel}
-            </CardDescription>
-          </CardHeader>
-          {dateRange === "custom" && (
-            <CardContent>
+            <div>
+              <p className="text-sm font-medium group-hover:text-accent transition-colors duration-300">Zeitraum</p>
+              <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+                {dateRangeLabel}
+              </p>
+            </div>
+          </div>
+          <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRangePreset)}>
+            <SelectTrigger className="w-48 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/20 transition-all duration-300">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Heute</SelectItem>
+              <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
+              <SelectItem value="lastMonth">Letzter Monat</SelectItem>
+              <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
+              <SelectItem value="lastQuarter">Letztes Quartal</SelectItem>
+              <SelectItem value="custom">Benutzerdefiniert</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Custom Date Range Picker */}
+        {dateRange === "custom" && (
+          <Card className="bg-card/60 backdrop-blur-sm">
+            <CardContent className="pt-6">
               <DateRangePicker
                 value={customDateRange}
-                onChange={(range) => {
-                  setCustomDateRange(range);
-                }}
+                onChange={setCustomDateRange}
               />
             </CardContent>
-          )}
-        </Card>
+          </Card>
+        )}
 
-        {/* Campaigns Section */}
+        {/* Campaign Tabs */}
+        <div className="inline-flex p-1 bg-card/50 rounded-xl backdrop-blur-sm border border-border">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden",
+              activeTab === "active"
+                ? "bg-accent text-white shadow-lg shadow-accent/30 scale-105"
+                : "text-muted-foreground hover:text-foreground hover:bg-card/80 hover:shadow-md hover:scale-105",
+            )}
+          >
+            {activeTab === "active" && (
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-accent/10 rounded-lg" />
+            )}
+            <span className="relative">Aktive Kampagnen ({activeCampaigns.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("inactive")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden",
+              activeTab === "inactive"
+                ? "bg-accent text-white shadow-lg shadow-accent/30 scale-105"
+                : "text-muted-foreground hover:text-foreground hover:bg-card/80 hover:shadow-md hover:scale-105",
+            )}
+          >
+            {activeTab === "inactive" && (
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-accent/10 rounded-lg" />
+            )}
+            <span className="relative">Inaktive Kampagnen ({inactiveCampaigns.length})</span>
+          </button>
+        </div>
+
+        {/* Campaign List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : error ? (
-          <Card>
+          <Card className="bg-card/60 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Fehler beim Laden der Kampagnen</CardTitle>
               <CardDescription>
@@ -401,24 +510,10 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
         ) : (
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "active" | "inactive")}>
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="active">
-                Aktive Kampagnen ({activeCampaigns.length})
-              </TabsTrigger>
-              <TabsTrigger value="inactive">
-                Inaktive Kampagnen ({inactiveCampaigns.length})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="active" className="mt-6">
-              {renderCampaignCards(activeCampaigns)}
-            </TabsContent>
-            
-            <TabsContent value="inactive" className="mt-6">
-              {renderCampaignCards(inactiveCampaigns)}
-            </TabsContent>
-          </Tabs>
+          <>
+            {activeTab === "active" && renderCampaignCards(activeCampaigns)}
+            {activeTab === "inactive" && renderCampaignCards(inactiveCampaigns)}
+          </>
         )}
       </div>
 
