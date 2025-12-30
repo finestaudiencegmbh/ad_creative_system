@@ -86,9 +86,10 @@ export const accountsRouter = router({
     .input(
       z.object({
         companyName: z.string().min(1),
+        firstName: z.string().min(1),
+        lastName: z.string().min(1),
         email: z.string().email(),
         password: z.string().min(8),
-        name: z.string().optional(),
         metaAccessToken: z.string().optional(),
         metaAdAccountId: z.string().optional(),
       })
@@ -120,6 +121,9 @@ export const accountsRouter = router({
         .insert(accounts)
         .values({
           companyName: input.companyName,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
           metaAccessToken: input.metaAccessToken || null,
           metaAdAccountId: input.metaAdAccountId || null,
           isActive: 1,
@@ -133,10 +137,26 @@ export const accountsRouter = router({
         accountId: newAccount.id,
         email: input.email,
         passwordHash,
-        name: input.name || null,
+        name: `${input.firstName} ${input.lastName}`,
         role: "customer",
         isActive: 1,
       });
+
+      // Send welcome email
+      // TODO: In production, replace console.log with actual email service
+      const loginUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/login`;
+      console.log(`\n=== WELCOME EMAIL ===`);
+      console.log(`To: ${input.email}`);
+      console.log(`Subject: Willkommen bei Finest Ads`);
+      console.log(`\nHallo ${input.firstName} ${input.lastName},\n`);
+      console.log(`Ihr Account wurde erfolgreich erstellt!\n`);
+      console.log(`Login-Daten:`);
+      console.log(`E-Mail: ${input.email}`);
+      console.log(`Passwort: ${input.password}`);
+      console.log(`\nLogin-Link: ${loginUrl}`);
+      console.log(`\nViele Grüße,`);
+      console.log(`Finest Audience Team`);
+      console.log(`====================\n`);
 
       return {
         success: true,

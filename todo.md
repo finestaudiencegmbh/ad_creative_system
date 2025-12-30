@@ -876,3 +876,12 @@
 - [x] AnimatedBackground Komponente erstellt
 - [x] Floating Animations hinzugefügt
 - [x] Neues Login-Design deployed
+
+
+### Account Creation Improvements
+- [x] Vorname + Nachname Felder statt "Ansprechpartner"
+- [x] Datenbank-Schema: firstName, lastName, email in accounts Tabelle
+- [x] Passwort Auto-Generator Button (RefreshCw Icon)
+- [x] Welcome-Email an neuen Account mit Login-Link + Passwort (Console-Log)
+- [x] Kunden-Accounts: "Accounts"-Reiter bereits ausgeblendet (nur Admins sehen ihn)
+- [x] Password Generator Router & Utility erstellt

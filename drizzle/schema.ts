@@ -10,6 +10,10 @@ export * from "./schema_creative_feedback";
 export const accounts = mysqlTable("accounts", {
   id: int("id").autoincrement().primaryKey(),
   companyName: varchar("companyName", { length: 255 }).notNull(),
+  // Contact person
+  firstName: varchar("firstName", { length: 100 }),
+  lastName: varchar("lastName", { length: 100 }),
+  email: varchar("email", { length: 320 }).notNull(),
   // Meta API Credentials (per account)
   metaAccessToken: text("metaAccessToken"),
   metaAdAccountId: varchar("metaAdAccountId", { length: 255 }),
