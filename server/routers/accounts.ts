@@ -5,6 +5,7 @@ import { accounts, users } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticateUser, hashPassword, hasPermission } from "../auth";
 import { TRPCError } from "@trpc/server";
+import { sendWelcomeEmail } from "../email-service";
 
 /**
  * Account Management Router
@@ -161,21 +162,22 @@ export const accountsRouter = router({
         isActive: 1,
       });
 
-      // Send welcome email
-      // TODO: In production, replace console.log with actual email service
+      // Send welcome email with login credentials
       const loginUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/login`;
-      console.log(`\n=== WELCOME EMAIL ===`);
-      console.log(`To: ${input.email}`);
-      console.log(`Subject: Willkommen bei Finest Ads`);
-      console.log(`\nHallo ${input.firstName} ${input.lastName},\n`);
-      console.log(`Ihr Account wurde erfolgreich erstellt!\n`);
-      console.log(`Login-Daten:`);
-      console.log(`E-Mail: ${input.email}`);
-      console.log(`Passwort: ${input.password}`);
-      console.log(`\nLogin-Link: ${loginUrl}`);
-      console.log(`\nViele Grüße,`);
-      console.log(`Finest Audience Team`);
-      console.log(`====================\n`);
+      const emailResult = await sendWelcomeEmail({
+        to: input.email,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        password: input.password,
+        loginUrl,
+      });
+
+      if (!emailResult.success) {
+        console.error(`[Accounts] Failed to send welcome email to ${input.email}:`, emailResult.error);
+        // Don't throw error - account was created successfully, just email failed
+      } else {
+        console.log(`[Accounts] Welcome email sent to ${input.email}`);
+      }
 
       return {
         success: true,

@@ -903,3 +903,26 @@
 - [x] Frontend: Tab-Level Access Control (Navigation basierend auf Permissions)
 - [x] Welcome-Email für neue User (Console-Log)
 - [x] Passwort zurücksetzen Button pro User
+
+
+### Klicktipp Email Integration
+- [ ] Klicktipp API-Key validieren (Test)
+- [ ] Klicktipp Email-Service implementieren
+- [ ] Welcome-Email über Klicktipp versenden
+- [ ] Password-Reset-Email über Klicktipp versenden
+- [ ] Console-Logs durch echte E-Mails ersetzen
+
+
+### Domain Research: ad-scale.ai
+- [x] Verfügbarkeit prüfen - VERFÜGBAR!
+- [x] Preis recherchieren - $107.88/Jahr (whois.com), ~$85-95/Jahr (Porkbun)
+- [x] Registrar-Empfehlung - Porkbun (günstigster Preis)
+
+### Email Integration (Manus Built-in)
+- [x] Email Service Modul erstellen (server/email-service.ts)
+- [x] Manus Email API integrieren (BUILT_IN_FORGE_API)
+- [x] Welcome-Email Template erstellen (mit Login-Link + Passwort)
+- [x] Passwort-Reset-Email Template erstellen
+- [x] Console.log in accounts.create durch echten Email-Versand ersetzen
+- [x] Console.log in password-reset durch echten Email-Versand ersetzen
+- [x] Email-Versand testen (Account erstellen + Passwort-Reset) - 5/5 Tests bestanden

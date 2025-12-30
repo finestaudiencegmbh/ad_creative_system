@@ -3,6 +3,7 @@ import { users, passwordResetTokens } from "../drizzle/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { hashPassword } from "./auth";
+import { sendPasswordResetEmail as sendResetEmail } from "./email-service";
 
 /**
  * Generate secure random token for password reset
@@ -101,44 +102,23 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
 
 /**
  * Send password reset email
- * In production, this should use a real email service (SendGrid, AWS SES, etc.)
  */
 export async function sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
   // Get frontend URL from environment or use default
-  const frontendUrl = process.env.FRONTEND_URL || "https://3000-iifcp8pl6g0xvqpxalng1-27415a74.manusvm.computer";
-  const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+  const frontendUrl = process.env.VITE_OAUTH_PORTAL_URL || process.env.FRONTEND_URL || "http://localhost:3000";
+  const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
-  // In development: Log to console
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("📧 PASSWORD RESET EMAIL");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("To:", email);
-  console.log("Reset Link:", resetLink);
-  console.log("Token expires in: 1 hour");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  // Send email via Manus service
+  const emailResult = await sendResetEmail({
+    to: email,
+    resetUrl,
+  });
 
-  // TODO: In production, integrate with email service:
-  // - SendGrid: https://sendgrid.com/
-  // - AWS SES: https://aws.amazon.com/ses/
-  // - Mailgun: https://www.mailgun.com/
-  // - Postmark: https://postmarkapp.com/
-  
-  // Example with SendGrid:
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  // await sgMail.send({
-  //   to: email,
-  //   from: 'noreply@finestaudience.de',
-  //   subject: 'Passwort zurücksetzen - Ad Performance System',
-  //   html: `
-  //     <h2>Passwort zurücksetzen</h2>
-  //     <p>Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt.</p>
-  //     <p>Klicken Sie auf den folgenden Link, um ein neues Passwort zu setzen:</p>
-  //     <a href="${resetLink}">${resetLink}</a>
-  //     <p>Dieser Link ist 1 Stunde gültig.</p>
-  //     <p>Falls Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail.</p>
-  //   `,
-  // });
+  if (!emailResult.success) {
+    console.error(`[PasswordReset] Failed to send reset email to ${email}:`, emailResult.error);
+    return false;
+  }
 
+  console.log(`[PasswordReset] Reset email sent to ${email}`);
   return true;
 }
