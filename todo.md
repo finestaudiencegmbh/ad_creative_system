@@ -885,3 +885,8 @@
 - [x] Welcome-Email an neuen Account mit Login-Link + Passwort (Console-Log)
 - [x] Kunden-Accounts: "Accounts"-Reiter bereits ausgeblendet (nur Admins sehen ihn)
 - [x] Password Generator Router & Utility erstellt
+
+
+### Placeholder Daten entfernen
+- [x] Persönliche Daten aus Platzhaltern entfernen (Firmenname, Vorname, Nachname, Email)
+- [x] Nur Meta Token/Account ID Platzhalter behalten

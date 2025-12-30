@@ -154,24 +154,24 @@ export default function Accounts() {
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Firmenname *</Label>
-                  <Input id="companyName" name="companyName" placeholder="Finest Audience GmbH" required />
+                  <Input id="companyName" name="companyName" required />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Vorname *</Label>
-                    <Input id="firstName" name="firstName" placeholder="Jan" required />
+                    <Input id="firstName" name="firstName" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Nachname *</Label>
-                    <Input id="lastName" name="lastName" placeholder="Ortmüller" required />
+                    <Input id="lastName" name="lastName" required />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">E-Mail *</Label>
-                    <Input id="email" name="email" type="email" placeholder="jan@marketing-estate.de" required />
+                    <Input id="email" name="email" type="email" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Passwort *</Label>
