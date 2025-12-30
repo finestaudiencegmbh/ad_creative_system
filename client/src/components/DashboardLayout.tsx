@@ -1,31 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
-import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Sparkles, FileText, TrendingUp, Users } from "lucide-react";
-import { CSSProperties, useEffect, useRef, useState } from "react";
+import { LayoutDashboard, Sparkles, FileText, TrendingUp, Users, ChevronRight, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
-import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "campaigns" },
@@ -35,25 +12,13 @@ const menuItems = [
   { icon: Users, label: "Accounts", path: "/accounts", adminOnly: true },
 ];
 
-const SIDEBAR_WIDTH_KEY = "sidebar-width";
-const DEFAULT_WIDTH = 280;
-const MIN_WIDTH = 200;
-const MAX_WIDTH = 480;
-
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-    return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
-  });
-  const { loading, user } = useAuth();
-
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
-  }, [sidebarWidth]);
+  const { loading, user, logout } = useAuth();
+  const [location, setLocation] = useLocation();
 
   if (loading) {
     return <DashboardLayoutSkeleton />
@@ -67,211 +32,132 @@ export default function DashboardLayout({
     return null;
   }
 
-  return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": `${sidebarWidth}px`,
-        } as CSSProperties
-      }
-    >
-      <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
-        {children}
-      </DashboardLayoutContent>
-    </SidebarProvider>
-  );
-}
-
-type DashboardLayoutContentProps = {
-  children: React.ReactNode;
-  setSidebarWidth: (width: number) => void;
-};
-
-function DashboardLayoutContent({
-  children,
-  setSidebarWidth,
-}: DashboardLayoutContentProps) {
-  const { user, logout } = useAuth();
-  const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
-  const isCollapsed = state === "collapsed";
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (isCollapsed) {
-      setIsResizing(false);
+  const filteredMenuItems = menuItems.filter(item => {
+    // Show Accounts only to super_admin and admin
+    if (item.adminOnly) {
+      return user?.role === "super_admin" || user?.role === "admin";
     }
-  }, [isCollapsed]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const sidebarLeft = sidebarRef.current?.getBoundingClientRect().left ?? 0;
-      const newWidth = e.clientX - sidebarLeft;
-      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
-        setSidebarWidth(newWidth);
+    
+    // Check tab permissions for customer users
+    if (user?.role === "customer" && item.tabId) {
+      // Parse tab permissions
+      let tabPermissions: string[] | null = null;
+      try {
+        tabPermissions = user.tabPermissions ? JSON.parse(user.tabPermissions) : null;
+      } catch (e) {
+        console.error("Failed to parse tab permissions", e);
       }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+      
+      // null = all tabs allowed
+      if (tabPermissions === null) return true;
+      
+      // Check if tab is in permissions list
+      return tabPermissions.includes(item.tabId);
     }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-  }, [isResizing, setSidebarWidth]);
+    
+    return true;
+  });
 
   return (
-    <>
-      <div className="relative" ref={sidebarRef}>
-        <Sidebar
-          collapsible="icon"
-          className="border-r-0"
-          disableTransition={isResizing}
-        >
-          <SidebarHeader className="h-16 justify-center">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
-              <button
-                onClick={toggleSidebar}
-                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-                aria-label="Toggle navigation"
-              >
-                <PanelLeft className="h-4 w-4 text-muted-foreground" />
-              </button>
-              {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <img 
-                    src="/emblem-black.png" 
-                    alt="Finest Audience" 
-                    className="h-8 w-auto"
-                  />
-                </div>
-              ) : null}
-            </div>
-          </SidebarHeader>
-
-          <SidebarContent className="gap-0">
-            <SidebarMenu className="px-2 py-1">
-              {menuItems
-                .filter(item => {
-                  // Show Accounts only to super_admin and admin
-                  if (item.adminOnly) {
-                    return user?.role === "super_admin" || user?.role === "admin";
-                  }
-                  
-                  // Check tab permissions for customer users
-                  if (user?.role === "customer" && item.tabId) {
-                    // Parse tab permissions
-                    let tabPermissions: string[] | null = null;
-                    try {
-                      tabPermissions = user.tabPermissions ? JSON.parse(user.tabPermissions) : null;
-                    } catch (e) {
-                      console.error("Failed to parse tab permissions", e);
-                    }
-                    
-                    // null = all tabs allowed
-                    if (tabPermissions === null) return true;
-                    
-                    // Check if tab is in permissions list
-                    return tabPermissions.includes(item.tabId);
-                  }
-                  
-                  return true;
-                })
-                .map(item => {
-                  const isActive = location === item.path;
-                  return (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        onClick={() => setLocation(item.path)}
-                        tooltip={item.label}
-                        className={`h-10 transition-all font-normal`}
-                      >
-                        <item.icon
-                          className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                        />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-            </SidebarMenu>
-          </SidebarContent>
-
-          <SidebarFooter className="p-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <Avatar className="h-9 w-9 border shrink-0">
-                    <AvatarFallback className="text-xs font-medium">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-medium truncate leading-none">
-                      {user?.name || "-"}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate mt-1.5">
-                      {user?.email || "-"}
-                    </p>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarFooter>
-        </Sidebar>
-        <div
-          className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
-          onMouseDown={() => {
-            if (isCollapsed) return;
-            setIsResizing(true);
-          }}
-          style={{ zIndex: 50 }}
-        />
+    <div className="relative min-h-screen bg-background">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-accent/8 rounded-full blur-2xl animate-float-slower" />
       </div>
 
-      <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
-                  </span>
-                </div>
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-72 h-screen bg-sidebar/95 backdrop-blur-2xl border-r border-sidebar-border relative z-20 flex flex-col">
+          <div className="p-8 space-y-10 flex-1">
+            {/* Logo */}
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-accent/50 group-hover:scale-105">
+                <Zap className="w-6 h-6 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg tracking-tight leading-tight text-sidebar-foreground">
+                  Finest Ads
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">Performance Dashboard</span>
               </div>
             </div>
+
+            {/* Navigation */}
+            <nav className="space-y-2">
+              {filteredMenuItems.map((item) => {
+                const isActive = location === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => setLocation(item.path)}
+                    className={cn(
+                      "group flex items-center gap-3.5 px-4 h-14 rounded-xl text-[15px] font-medium transition-all duration-200 relative overflow-hidden w-full",
+                      isActive
+                        ? "bg-gradient-to-r from-accent via-accent/90 to-accent/80 text-white shadow-lg shadow-accent/40"
+                        : "bg-sidebar-accent/70 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-md hover:shadow-accent/20 hover:scale-[1.01] active:scale-[0.99]",
+                    )}
+                  >
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+                    )}
+
+                    <div
+                      className={cn(
+                        "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0",
+                        isActive ? "bg-white/20" : "bg-background/40 group-hover:bg-background/60",
+                      )}
+                    >
+                      <item.icon className="w-5 h-5 transition-all duration-200" />
+                    </div>
+                    <span className="tracking-tight font-semibold flex-1 text-left">{item.label}</span>
+
+                    <ChevronRight
+                      className={cn(
+                        "w-4 h-4 transition-all duration-200",
+                        isActive
+                          ? "opacity-100 translate-x-0"
+                          : "opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0",
+                      )}
+                    />
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-        )}
-        <main className="flex-1 p-4">{children}</main>
-      </SidebarInset>
-    </>
+
+          {/* User Profile */}
+          <div className="p-6 border-t border-sidebar-border bg-sidebar-accent/30 backdrop-blur-sm">
+            <button 
+              onClick={logout}
+              className="flex items-center gap-3.5 p-3.5 rounded-xl hover:bg-sidebar-accent/60 transition-all duration-200 cursor-pointer group w-full text-left"
+            >
+              <div className="relative shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center text-white text-[15px] font-semibold shadow-lg shadow-accent/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-accent/50 group-hover:scale-105">
+                  {user?.name?.charAt(0).toUpperCase() || "F"}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-sidebar rounded-full shadow-sm" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold truncate text-sidebar-foreground leading-tight">
+                  {user?.name || "Finest Audience Admin"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
+                  {user?.email || "admin@finest-ads.com"}
+                </p>
+              </div>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12 relative z-10">
+          <div className="max-w-[1400px] mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }

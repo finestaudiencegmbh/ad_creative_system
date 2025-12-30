@@ -206,10 +206,16 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* ROAS */}
+                {/* Leads */}
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">ROAS</p>
-                  <p
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Leads</p>
+                    {campaign.hasLeadCorrection && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        Korrigiert
+                      </span>
+                    )}
+                  </div>                 <p
                     className={cn(
                       "text-2xl font-semibold",
                       hasPositiveROAS ? "text-green-600" : "text-muted-foreground",
@@ -417,6 +423,13 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="hover:text-foreground transition-colors cursor-pointer">Home</span>
+          <span>/</span>
+          <span className="text-foreground font-medium">Dashboard</span>
+        </div>
+
         {/* Header Section */}
         <div className="space-y-2">
           <h1 className="text-4xl font-semibold tracking-tight text-balance">Dashboard</h1>

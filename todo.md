@@ -969,3 +969,29 @@
 - [x] TypeScript-Fehler behoben (Dialog props korrigiert)
 - [ ] Funktionalität testen (Kampagnen laden, Filter, Navigation) - Benutzer muss selbst testen
 - [ ] Visuelle Regression prüfen (alle Elemente sichtbar?) - Benutzer muss selbst prüfen
+
+### Dark Mode Design Implementation (V0 - Korrektur)
+- [ ] V0 Design-Dateien erneut analysieren (Dark Mode Theme)
+- [ ] Komplette Farbpalette auf Dark Mode umstellen (schwarzer Hintergrund)
+- [ ] Sidebar mit lila Gradient-Button für aktiven Tab
+- [ ] Campaign Cards mit dunklem Hintergrund redesignen
+- [ ] Progress Bars unter Metriken hinzufügen (blau, grün)
+- [ ] Breadcrumbs oben rechts (Home / Dashboard)
+- [ ] Status Badges (Aktiv, Korrigiert) stylen
+- [ ] User Profile unten links in Sidebar
+- [ ] Alle Backend-Funktionen beibehalten (tRPC, Dialogs, etc.)
+
+
+### Dark Mode Design Implementation (V0 Complete Redesign)
+- [x] Dark mode CSS variables implementiert (schwarzer Hintergrund oklch(0.15 0 0))
+- [x] Lila Akzent-Farbe (oklch(0.42 0.18 290)) eingerichtet
+- [x] Sidebar komplett neu geschrieben (ohne shadcn/ui Sidebar)
+- [x] Lila Gradient-Button für aktiven Tab
+- [x] User-Profile mit grünem Online-Status unten in Sidebar
+- [x] Logo mit Blitz-Icon (Zap)
+- [x] ChevronRight-Icon bei aktiven Tabs
+- [x] Breadcrumbs oben (Home / Dashboard)
+- [x] Campaign Cards mit dunklem Hintergrund
+- [x] Progress Bars unter Metriken bereits vorhanden
+- [x] "Korrigiert" Badge für Leads hinzugefügt
+- [x] Hover-Animationen und Gradient-Overlays bereits vorhanden
