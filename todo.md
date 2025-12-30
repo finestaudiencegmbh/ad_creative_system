@@ -1012,3 +1012,9 @@
   - [x] Kurzer + Langer Werbetext Cards mit Kopieren-Button
   - [x] Animierter Hintergrund-Gradient (wie Login-Seite)
   - [x] Alle bestehenden tRPC-Calls und Funktionen beibehalten
+
+### Bug Fix - tRPC API Error
+- [x] Fix "Failed to fetch" tRPC API error on Dashboard page
+- [x] Check server logs for connection issues
+- [x] Verify tRPC endpoint configuration
+- [x] Test API calls after fix
