@@ -244,3 +244,17 @@
 .animate-float-slower {
   animation: float-slower 30s ease-in-out infinite;
 }
+
+/* Scan line animation for animated background */
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 8s linear infinite;
+}

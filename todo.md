@@ -995,3 +995,20 @@
 - [x] Progress Bars unter Metriken bereits vorhanden
 - [x] "Korrigiert" Badge für Leads hinzugefügt
 - [x] Hover-Animationen und Gradient-Overlays bereits vorhanden
+
+### V0 Dark Mode Design - Creative Generator & Werbetexte
+- [x] Creative Generator: V0 Design implementieren
+  - [x] 3-Schritt-Wizard mit lila Progress-Indicator (Schritte 1, 2, 3)
+  - [x] Schritt 1: Kampagnen-Auswahl + Top Performer Cards mit Thumbnails
+  - [x] Schritt 2: Format-Auswahl (Feed/Story/Reel) mit Checkmarks und Aspect Ratios
+  - [x] Schritt 3: Anzahl-Variationen (1/2/3/5/10) als große Buttons
+  - [x] Generierte Creatives Sidebar rechts (leerer Zustand: "Noch keine Creatives generiert")
+  - [x] Animierter Hintergrund-Gradient (wie Login-Seite)
+  - [x] Zurück/Weiter Buttons mit lila Gradient
+  - [x] Alle bestehenden tRPC-Calls und Funktionen beibehalten
+- [x] Werbetexte: V0 Design implementieren
+  - [x] Landing Page URL Input mit animiertem Placeholder
+  - [x] "Werbetexte generieren" Button mit Glassmorphism-Effekt
+  - [x] Kurzer + Langer Werbetext Cards mit Kopieren-Button
+  - [x] Animierter Hintergrund-Gradient (wie Login-Seite)
+  - [x] Alle bestehenden tRPC-Calls und Funktionen beibehalten
