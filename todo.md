@@ -926,3 +926,30 @@
 - [x] Console.log in accounts.create durch echten Email-Versand ersetzen
 - [x] Console.log in password-reset durch echten Email-Versand ersetzen
 - [x] Email-Versand testen (Account erstellen + Passwort-Reset) - 5/5 Tests bestanden
+
+### Account Editing Enhancement
+- [x] Backend: Account update procedure erweitern (firstName, lastName, email editierbar)
+- [x] Backend: Passwort-Reset-Funktion für Account-Bearbeitung (mit Email-Versand)
+- [x] Frontend: Account-Edit-Dialog erweitern (alle Felder editierbar)
+- [x] Frontend: Passwort-Generator-Button im Account-Edit-Dialog
+- [x] Frontend: Email-Bestätigung nach Passwort-Reset
+- [x] Passwort-Format geändert: 8-stelliger alphanumerischer Code (z.B. a7K9mP2x)
+
+### Tab-Berechtigungen korrigieren
+- [x] Tab-Namen im System anpassen: Dashboard, Creative Generator, Werbetexte, Performance
+- [x] Frontend: Benutzer-Dialog mit korrekten Tab-Namen
+- [x] Backend: Tab-Permission-Validierung anpassen
+- [x] Navigation: Tab-Filtering basierend auf korrekten Namen
+
+### Email Delivery Debugging
+- [x] Server-Logs geprüft für jan-ortmueller@web.de - Account existiert
+- [x] Manus Email API getestet - 404 Error, API existiert nicht!
+- [x] Problem identifiziert: Manus hat keine Email-Sending-API
+
+### Resend Email Integration (Ersatz für Manus Email)
+- [x] Resend npm package installieren
+- [x] Email-Service auf Resend API umstellen
+- [x] RESEND_API_KEY über Secrets UI anfordern
+- [x] Domain finest-ads.com bei Resend hinzugefügt
+- [ ] DNS Records bei Manus Support anfordern (wartet auf Antwort)
+- [ ] Email-Zustellung verifizieren (nach DNS-Setup)

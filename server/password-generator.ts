@@ -2,36 +2,37 @@ import crypto from "crypto";
 
 /**
  * Generate a secure random password
- * Format: 4 words separated by hyphens + 2 digits
- * Example: "blue-mountain-river-sky-42"
+ * Format: 8-character alphanumeric code (letters + numbers)
+ * Example: "a7K9mP2x"
  * 
  * This format is:
- * - Easy to remember
  * - Easy to type
  * - Secure (high entropy)
- * - User-friendly
+ * - No special characters (better for email compatibility)
  */
 export function generateSecurePassword(): string {
-  const wordList = [
-    "blue", "red", "green", "yellow", "purple", "orange", "pink", "brown",
-    "mountain", "river", "ocean", "forest", "desert", "valley", "lake", "hill",
-    "sun", "moon", "star", "cloud", "rain", "snow", "wind", "storm",
-    "lion", "tiger", "bear", "wolf", "eagle", "hawk", "fox", "deer",
-    "apple", "banana", "cherry", "grape", "lemon", "mango", "peach", "plum",
-    "spring", "summer", "autumn", "winter", "morning", "evening", "night", "dawn",
-  ];
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const allChars = uppercase + lowercase + numbers;
 
-  // Pick 4 random words
-  const words: string[] = [];
-  for (let i = 0; i < 4; i++) {
-    const randomIndex = crypto.randomInt(0, wordList.length);
-    words.push(wordList[randomIndex]);
+  let password = "";
+
+  // Ensure at least one uppercase, one lowercase, and one number
+  password += uppercase[crypto.randomInt(0, uppercase.length)];
+  password += lowercase[crypto.randomInt(0, lowercase.length)];
+  password += numbers[crypto.randomInt(0, numbers.length)];
+
+  // Fill the rest randomly (5 more characters to make 8 total)
+  for (let i = 3; i < 8; i++) {
+    password += allChars[crypto.randomInt(0, allChars.length)];
   }
 
-  // Add 2 random digits
-  const digits = crypto.randomInt(10, 100);
-
-  return `${words.join("-")}-${digits}`;
+  // Shuffle the password to randomize position of guaranteed characters
+  return password
+    .split("")
+    .sort(() => crypto.randomInt(-1, 2))
+    .join("");
 }
 
 /**

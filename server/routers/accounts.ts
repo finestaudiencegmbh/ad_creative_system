@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { authenticateUser, hashPassword, hasPermission } from "../auth";
 import { TRPCError } from "@trpc/server";
 import { sendWelcomeEmail } from "../email-service";
+import { generateSecurePassword } from "../password-generator";
 
 /**
  * Account Management Router
@@ -193,9 +194,14 @@ export const accountsRouter = router({
       z.object({
         id: z.number(),
         companyName: z.string().min(1).optional(),
+        firstName: z.string().min(1).optional(),
+        lastName: z.string().min(1).optional(),
+        email: z.string().email().optional(),
         metaAccessToken: z.string().optional(),
         metaAdAccountId: z.string().optional(),
         isActive: z.number().optional(),
+        resetPassword: z.boolean().optional(), // If true, generate new password and send email
+        newPassword: z.string().min(8).optional(), // Optional: manually set password
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -210,9 +216,83 @@ export const accountsRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
-      const { id, ...updateData } = input;
+      const { id, resetPassword, newPassword, email, ...updateData } = input;
 
-      await db.update(accounts).set(updateData).where(eq(accounts.id, id));
+      // Get account to find primary user
+      const [account] = await db.select().from(accounts).where(eq(accounts.id, id)).limit(1);
+      if (!account) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Account not found" });
+      }
+
+      // Update account fields
+      if (Object.keys(updateData).length > 0) {
+        await db.update(accounts).set(updateData).where(eq(accounts.id, id));
+      }
+
+      // Handle email update for primary user
+      if (email) {
+        // Check if new email already exists
+        const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        if (existingUser && existingUser.accountId !== id) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Email already exists",
+          });
+        }
+
+        // Update account email
+        await db.update(accounts).set({ email }).where(eq(accounts.id, id));
+
+        // Update primary user email
+        const [primaryUser] = await db
+          .select()
+          .from(users)
+          .where(and(eq(users.accountId, id), eq(users.role, "customer")))
+          .limit(1);
+
+        if (primaryUser) {
+          await db.update(users).set({ email }).where(eq(users.id, primaryUser.id));
+        }
+      }
+
+      // Handle password reset
+      if (resetPassword || newPassword) {
+        // Find primary user
+        const [primaryUser] = await db
+          .select()
+          .from(users)
+          .where(and(eq(users.accountId, id), eq(users.role, "customer")))
+          .limit(1);
+
+        if (!primaryUser) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Primary user not found" });
+        }
+
+        // Generate or use provided password
+        const password = newPassword || generateSecurePassword();
+        const passwordHash = hashPassword(password);
+
+        // Update user password
+        await db.update(users).set({ passwordHash }).where(eq(users.id, primaryUser.id));
+
+        // Send email with new password
+        const loginUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'http://localhost:3000'}/login`;
+        const emailResult = await sendWelcomeEmail({
+          to: primaryUser.email,
+          firstName: account.firstName || "",
+          lastName: account.lastName || "",
+          password,
+          loginUrl,
+        });
+
+        if (!emailResult.success) {
+          console.error(`[Accounts] Failed to send password reset email to ${primaryUser.email}:`, emailResult.error);
+        } else {
+          console.log(`[Accounts] Password reset email sent to ${primaryUser.email}`);
+        }
+
+        return { success: true, passwordReset: true };
+      }
 
       return { success: true };
     }),

@@ -28,11 +28,12 @@ import { Users, Plus, Edit, Trash2, Building2, RefreshCw, ChevronDown, UserPlus,
 import DashboardLayout from "@/components/DashboardLayout";
 
 // Available tabs for permission management
+// These must match the tabId values in DashboardLayout navigation
 const AVAILABLE_TABS = [
-  { id: "campaigns", label: "Kampagnen" },
-  { id: "creatives", label: "Creatives" },
-  { id: "performance", label: "Performance" },
+  { id: "dashboard", label: "Dashboard" },
   { id: "generator", label: "Creative Generator" },
+  { id: "werbetexte", label: "Werbetexte" },
+  { id: "performance", label: "Performance" },
 ];
 
 export default function Accounts() {
@@ -66,10 +67,14 @@ export default function Accounts() {
   });
 
   const updateMutation = trpc.accounts.update.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.accounts.list.invalidate();
       setIsEditDialogOpen(false);
-      alert("Account erfolgreich aktualisiert!");
+      if (data.passwordReset) {
+        alert("Account erfolgreich aktualisiert!\n\nNeues Passwort wurde generiert und per E-Mail an den Benutzer gesendet.");
+      } else {
+        alert("Account erfolgreich aktualisiert!");
+      }
     },
     onError: (error) => {
       alert(`Fehler: ${error.message}`);
@@ -171,6 +176,9 @@ export default function Accounts() {
     updateMutation.mutate({
       id: selectedAccount.id,
       companyName: formData.get("companyName") as string || undefined,
+      firstName: formData.get("firstName") as string || undefined,
+      lastName: formData.get("lastName") as string || undefined,
+      email: formData.get("email") as string || undefined,
       metaAccessToken: formData.get("metaAccessToken") as string || undefined,
       metaAdAccountId: formData.get("metaAdAccountId") as string || undefined,
     });
@@ -501,11 +509,11 @@ export default function Accounts() {
 
         {/* Edit Account Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Account bearbeiten</DialogTitle>
               <DialogDescription>
-                Aktualisieren Sie die Meta API Credentials für diesen Account.
+                Aktualisieren Sie die Account-Informationen und Meta API Credentials.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="space-y-4">
@@ -515,27 +523,90 @@ export default function Accounts() {
                   id="edit-companyName" 
                   name="companyName" 
                   defaultValue={selectedAccount?.companyName}
+                  required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-metaAccessToken">Meta Access Token</Label>
-                <Input 
-                  id="edit-metaAccessToken" 
-                  name="metaAccessToken" 
-                  placeholder="EAAG..."
-                  defaultValue={selectedAccount?.metaAccessToken || ""}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-firstName">Vorname</Label>
+                  <Input 
+                    id="edit-firstName" 
+                    name="firstName" 
+                    defaultValue={selectedAccount?.firstName || ""}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lastName">Nachname</Label>
+                  <Input 
+                    id="edit-lastName" 
+                    name="lastName" 
+                    defaultValue={selectedAccount?.lastName || ""}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-metaAdAccountId">Meta Ad Account ID</Label>
+                <Label htmlFor="edit-email">E-Mail</Label>
                 <Input 
-                  id="edit-metaAdAccountId" 
-                  name="metaAdAccountId" 
-                  placeholder="act_..."
-                  defaultValue={selectedAccount?.metaAdAccountId || ""}
+                  id="edit-email" 
+                  name="email" 
+                  type="email"
+                  defaultValue={selectedAccount?.email || ""}
+                  required
                 />
+              </div>
+
+              <div className="border-t pt-4 space-y-4">
+                <h4 className="font-semibold">Meta API Credentials</h4>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-metaAccessToken">Meta Access Token</Label>
+                  <Input 
+                    id="edit-metaAccessToken" 
+                    name="metaAccessToken" 
+                    placeholder="EAAG..."
+                    defaultValue={selectedAccount?.metaAccessToken || ""}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-metaAdAccountId">Meta Ad Account ID</Label>
+                  <Input 
+                    id="edit-metaAdAccountId" 
+                    name="metaAdAccountId" 
+                    placeholder="act_..."
+                    defaultValue={selectedAccount?.metaAdAccountId || ""}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Passwort zurücksetzen
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Generiert ein neues 8-stelliges Passwort und sendet es per E-Mail an den Benutzer.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (confirm(`Möchten Sie wirklich ein neues Passwort für ${selectedAccount?.companyName} generieren? Der Benutzer erhält das neue Passwort per E-Mail.`)) {
+                      updateMutation.mutate({
+                        id: selectedAccount.id,
+                        resetPassword: true,
+                      });
+                    }
+                  }}
+                  disabled={updateMutation.isPending}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Neues Passwort generieren & versenden
+                </Button>
               </div>
 
               <div className="flex justify-end gap-2">

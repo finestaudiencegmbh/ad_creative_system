@@ -1,10 +1,17 @@
 /**
- * Email Service using Manus Built-in Forge API
+ * Email Service using Resend
  * 
- * Sends transactional emails (welcome emails, password resets) via Manus infrastructure.
+ * Sends transactional emails (welcome emails, password resets) via Resend.
+ * Resend is specifically designed for transactional emails with excellent deliverability.
  */
 
-import { ENV } from "./_core/env";
+import { Resend } from "resend";
+
+// Initialize Resend only if API key is available
+let resend: Resend | null = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 interface SendEmailParams {
   to: string;
@@ -20,59 +27,48 @@ interface SendEmailResponse {
 }
 
 /**
- * Send email via Manus Forge API
+ * Send email via Resend
  */
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResponse> {
   const { to, subject, html, text } = params;
 
-  if (!ENV.forgeApiUrl) {
-    console.error("[Email] BUILT_IN_FORGE_API_URL not configured");
+  if (!process.env.RESEND_API_KEY || !resend) {
+    console.error("[Email] RESEND_API_KEY not configured");
     return { success: false, error: "Email service not configured" };
   }
 
-  if (!ENV.forgeApiKey) {
-    console.error("[Email] BUILT_IN_FORGE_API_KEY not configured");
-    return { success: false, error: "Email service authentication missing" };
-  }
-
   try {
-    const response = await fetch(`${ENV.forgeApiUrl}/email/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${ENV.forgeApiKey}`,
-      },
-      body: JSON.stringify({
-        to,
-        subject,
-        html,
-        text: text || stripHtml(html),
-      }),
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "Finest Ads <onboarding@resend.dev>",
+      to: [to],
+      subject,
+      html,
+      text: text || stripHtml(html),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Email] Failed to send email to ${to}:`, errorText);
-      return { 
-        success: false, 
-        error: `Email service returned ${response.status}: ${errorText}` 
-      };
+    if (error) {
+      console.error(`[Email] Failed to send email to ${to}:`, error);
+      return { success: false, error: error.message };
     }
 
-    const result = await response.json();
     console.log(`[Email] Successfully sent email to ${to}`);
-    
-    return {
-      success: true,
-      messageId: result.messageId || result.id,
-    };
-  } catch (error) {
+    return { success: true, messageId: data?.id };
+  } catch (error: any) {
     console.error("[Email] Error sending email:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { success: false, error: error.message };
   }
+}
+
+/**
+ * Strip HTML tags for plain text fallback
+ */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[^>]*>.*?<\/style>/gi, "")
+    .replace(/<script[^>]*>.*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -87,57 +83,95 @@ export async function sendWelcomeEmail(params: {
 }): Promise<SendEmailResponse> {
   const { to, firstName, lastName, password, loginUrl } = params;
 
-  const subject = "Willkommen bei AdScale - Deine Login-Daten";
-  
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #5f2faf; color: white; padding: 20px; text-align: center; }
-    .content { background-color: #f9f9f9; padding: 30px; }
-    .credentials { background-color: white; padding: 20px; border-left: 4px solid #5f2faf; margin: 20px 0; }
-    .button { display: inline-block; background-color: #5f2faf; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-    .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Willkommen bei Finest Ads</title>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Willkommen bei AdScale</h1>
-    </div>
-    <div class="content">
-      <p>Hallo ${firstName} ${lastName},</p>
-      
-      <p>Dein Account wurde erfolgreich erstellt! Du kannst dich jetzt mit folgenden Zugangsdaten einloggen:</p>
-      
-      <div class="credentials">
-        <p><strong>E-Mail:</strong> ${to}</p>
-        <p><strong>Passwort:</strong> ${password}</p>
-      </div>
-      
-      <p>Aus Sicherheitsgründen empfehlen wir dir, das Passwort nach dem ersten Login zu ändern.</p>
-      
-      <p style="text-align: center;">
-        <a href="${loginUrl}" class="button">Jetzt einloggen</a>
-      </p>
-      
-      <p>Falls du Fragen hast, melde dich gerne bei uns!</p>
-      
-      <p>Viele Grüße,<br>Dein AdScale Team</p>
-    </div>
-    <div class="footer">
-      <p>Diese E-Mail wurde automatisch generiert. Bitte antworte nicht auf diese E-Mail.</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #5f2faf 0%, #7c3aed 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">Willkommen bei Finest Ads!</h1>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Hallo ${firstName} ${lastName},
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Ihr Account wurde erfolgreich erstellt! Hier sind Ihre Zugangsdaten:
+              </p>
+              
+              <!-- Credentials Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 30px 0;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0 0 12px; color: #666666; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                      Login-Daten
+                    </p>
+                    <p style="margin: 0 0 8px; color: #333333; font-size: 15px;">
+                      <strong>E-Mail:</strong> ${to}
+                    </p>
+                    <p style="margin: 0; color: #333333; font-size: 15px;">
+                      <strong>Passwort:</strong> <code style="background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 16px; color: #5f2faf;">${password}</code>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #5f2faf 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 47, 175, 0.3);">
+                      Jetzt anmelden
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 30px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                <strong>Sicherheitshinweis:</strong> Bitte ändern Sie Ihr Passwort nach dem ersten Login.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; border-top: 1px solid #e9ecef; text-align: center;">
+              <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht auf diese Nachricht.
+              </p>
+              <p style="margin: 10px 0 0; color: #999999; font-size: 13px;">
+                © ${new Date().getFullYear()} Finest Audience GmbH
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
-  `.trim();
+  `;
 
-  return sendEmail({ to, subject, html });
+  return sendEmail({
+    to,
+    subject: "Willkommen bei Finest Ads - Ihre Zugangsdaten",
+    html,
+  });
 }
 
 /**
@@ -149,65 +183,80 @@ export async function sendPasswordResetEmail(params: {
 }): Promise<SendEmailResponse> {
   const { to, resetUrl } = params;
 
-  const subject = "Passwort zurücksetzen - AdScale";
-  
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #5f2faf; color: white; padding: 20px; text-align: center; }
-    .content { background-color: #f9f9f9; padding: 30px; }
-    .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
-    .button { display: inline-block; background-color: #5f2faf; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-    .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passwort zurücksetzen</title>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Passwort zurücksetzen</h1>
-    </div>
-    <div class="content">
-      <p>Hallo,</p>
-      
-      <p>Du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt.</p>
-      
-      <p>Klicke auf den folgenden Button, um ein neues Passwort zu setzen:</p>
-      
-      <p style="text-align: center;">
-        <a href="${resetUrl}" class="button">Passwort zurücksetzen</a>
-      </p>
-      
-      <div class="warning">
-        <p><strong>⚠️ Wichtig:</strong> Dieser Link ist nur 1 Stunde gültig und kann nur einmal verwendet werden.</p>
-      </div>
-      
-      <p>Falls du diese Anfrage nicht gestellt hast, ignoriere diese E-Mail einfach. Dein Passwort bleibt unverändert.</p>
-      
-      <p>Viele Grüße,<br>Dein AdScale Team</p>
-    </div>
-    <div class="footer">
-      <p>Diese E-Mail wurde automatisch generiert. Bitte antworte nicht auf diese E-Mail.</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #5f2faf 0%, #7c3aed 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">Passwort zurücksetzen</h1>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt.
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Klicken Sie auf den folgenden Button, um ein neues Passwort zu setzen:
+              </p>
+              
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #5f2faf 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 47, 175, 0.3);">
+                      Passwort zurücksetzen
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 30px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                <strong>Wichtig:</strong> Dieser Link ist 1 Stunde gültig.
+              </p>
+              
+              <p style="margin: 20px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                Falls Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail. Ihr Passwort bleibt unverändert.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; border-top: 1px solid #e9ecef; text-align: center;">
+              <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht auf diese Nachricht.
+              </p>
+              <p style="margin: 10px 0 0; color: #999999; font-size: 13px;">
+                © ${new Date().getFullYear()} Finest Audience GmbH
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
-  `.trim();
+  `;
 
-  return sendEmail({ to, subject, html });
-}
-
-/**
- * Strip HTML tags for plain text fallback
- */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>.*?<\/style>/gi, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return sendEmail({
+    to,
+    subject: "Passwort zurücksetzen - Finest Ads",
+    html,
+  });
 }
