@@ -890,3 +890,16 @@
 ### Placeholder Daten entfernen
 - [x] Persönliche Daten aus Platzhaltern entfernen (Firmenname, Vorname, Nachname, Email)
 - [x] Nur Meta Token/Account ID Platzhalter behalten
+
+
+### Multi-User Account Management System
+- [x] Datenbank: Tab-Permissions Spalte in users Tabelle
+- [x] Backend: User CRUD (Create, Read, Update, Delete) pro Account
+- [x] Backend: User bearbeiten (Name, Email, Passwort zurücksetzen)
+- [x] Backend: Tab-Permissions verwalten
+- [x] Frontend: User-Liste pro Account anzeigen (collapsible)
+- [x] Frontend: User hinzufügen Dialog (Email, Vorname, Nachname, Permissions)
+- [x] Frontend: User bearbeiten Dialog
+- [x] Frontend: Tab-Level Access Control (Navigation basierend auf Permissions)
+- [x] Welcome-Email für neue User (Console-Log)
+- [x] Passwort zurücksetzen Button pro User

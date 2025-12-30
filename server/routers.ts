@@ -11,11 +11,13 @@ import { authRouter } from "./routers/auth";
 import { accountsRouter } from "./routers/accounts";
 import { passwordResetRouter } from "./routers/password-reset";
 import { passwordGeneratorRouter } from "./routers/password-generator";
+import { usersRouter } from "./routers/users";
 
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
   accounts: accountsRouter,
+  users: usersRouter,
   passwordReset: passwordResetRouter,
   passwordGenerator: passwordGeneratorRouter,
 

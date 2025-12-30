@@ -28,7 +28,7 @@ export const accountsRouter = router({
 
     const allAccounts = await db.select().from(accounts).orderBy(accounts.createdAt);
 
-    // For each account, get the primary user (customer role)
+    // For each account, get the primary user and all users
     const accountsWithUsers = await Promise.all(
       allAccounts.map(async (account) => {
         const [primaryUser] = await db
@@ -37,9 +37,28 @@ export const accountsRouter = router({
           .where(and(eq(users.accountId, account.id), eq(users.role, "customer")))
           .limit(1);
 
+        // Get all users for this account (excluding primary user)
+        const allUsers = await db
+          .select({
+            id: users.id,
+            email: users.email,
+            name: users.name,
+            role: users.role,
+            tabPermissions: users.tabPermissions,
+            isActive: users.isActive,
+            createdAt: users.createdAt,
+            lastSignedIn: users.lastSignedIn,
+          })
+          .from(users)
+          .where(eq(users.accountId, account.id));
+
         return {
           ...account,
           primaryUser: primaryUser || null,
+          users: allUsers.filter(u => u.id !== primaryUser?.id).map(user => ({
+            ...user,
+            tabPermissions: user.tabPermissions ? JSON.parse(user.tabPermissions) : null,
+          })),
         };
       })
     );

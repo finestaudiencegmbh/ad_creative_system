@@ -38,6 +38,10 @@ export const users = mysqlTable("users", {
   name: text("name"),
   // Roles: super_admin (Finest Audience), admin (Finest Audience Team), team (Finest Audience Team Read-only), customer (Customer Account)
   role: mysqlEnum("role", ["super_admin", "admin", "team", "customer"]).default("customer").notNull(),
+  // Tab-level permissions: JSON array of allowed tabs
+  // Example: ["campaigns", "creatives", "performance"] or null for all tabs
+  // null = all tabs, [] = no tabs, ["campaigns"] = only campaigns tab
+  tabPermissions: text("tabPermissions"), // JSON string
   isActive: int("isActive").default(1).notNull(), // 1 = active, 0 = inactive
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

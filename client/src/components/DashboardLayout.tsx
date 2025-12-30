@@ -28,10 +28,10 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Sparkles, label: "Creative Generator", path: "/generator" },
-  { icon: FileText, label: "Werbetexte", path: "/werbetexte" },
-  { icon: TrendingUp, label: "Performance", path: "/performance" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "campaigns" },
+  { icon: Sparkles, label: "Creative Generator", path: "/generator", tabId: "generator" },
+  { icon: FileText, label: "Werbetexte", path: "/werbetexte", tabId: "creatives" },
+  { icon: TrendingUp, label: "Performance", path: "/performance", tabId: "performance" },
   { icon: Users, label: "Accounts", path: "/accounts", adminOnly: true },
 ];
 
@@ -173,6 +173,24 @@ function DashboardLayoutContent({
                   if (item.adminOnly) {
                     return user?.role === "super_admin" || user?.role === "admin";
                   }
+                  
+                  // Check tab permissions for customer users
+                  if (user?.role === "customer" && item.tabId) {
+                    // Parse tab permissions
+                    let tabPermissions: string[] | null = null;
+                    try {
+                      tabPermissions = user.tabPermissions ? JSON.parse(user.tabPermissions) : null;
+                    } catch (e) {
+                      console.error("Failed to parse tab permissions", e);
+                    }
+                    
+                    // null = all tabs allowed
+                    if (tabPermissions === null) return true;
+                    
+                    // Check if tab is in permissions list
+                    return tabPermissions.includes(item.tabId);
+                  }
+                  
                   return true;
                 })
                 .map(item => {
