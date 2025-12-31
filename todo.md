@@ -1079,3 +1079,10 @@
 - [x] Grid-Layout: Content links, Sidebar rechts
 - [x] Thumbnail-Anzeige für generierte Creatives
 - [x] Download-Button für Creatives
+
+### Zahlenformatierung - Deutsches Format
+- [x] Utility-Funktion für deutsches Zahlenformat erstellen (15.662,38 €)
+- [x] Dashboard Metriken-Cards mit deutschem Format aktualisieren
+- [x] Performance-Seite mit deutschem Format aktualisieren
+- [x] CampaignList mit deutschem Format aktualisieren
+- [x] Alle Währungsbeträge: Tausenderpunkt, Komma-Dezimal, € nach Zahl

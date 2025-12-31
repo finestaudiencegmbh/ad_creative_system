@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatRoas, formatNumber } from "@/lib/formatters";
 
 type DateRangePreset = "today" | "yesterday" | "last7days" | "currentMonth" | "lastMonth" | "last90days" | "maximum" | "custom";
 
@@ -159,7 +160,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <p className="text-3xl font-bold mb-2">
-                    €{campaignsData.reduce((sum: number, c: any) => sum + (c.spend || 0), 0).toFixed(2)}
+                    {formatCurrency(campaignsData.reduce((sum: number, c: any) => sum + (c.spend || 0), 0))}
                   </p>
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-accent/60 rounded-full" style={{ width: '75%' }} />
@@ -180,7 +181,7 @@ export default function Dashboard() {
                     {(() => {
                       const totalRoas = campaignsData.reduce((sum: number, c: any) => sum + (c.roasOrderVolume || 0), 0);
                       const avgRoas = campaignsData.length > 0 ? totalRoas / campaignsData.length : 0;
-                      return avgRoas > 0 ? `${avgRoas.toFixed(2)}x` : '-';
+                      return avgRoas > 0 ? formatRoas(avgRoas) : '-';
                     })()}
                   </p>
                   <div className="flex items-center gap-1 text-xs text-green-600">
@@ -200,7 +201,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <p className="text-3xl font-bold mb-2">
-                    {campaignsData.reduce((sum: number, c: any) => sum + (c.leads || 0), 0)}
+                    {formatNumber(campaignsData.reduce((sum: number, c: any) => sum + (c.leads || 0), 0), 0)}
                   </p>
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500/60 rounded-full" style={{ width: '60%' }} />
@@ -321,7 +322,7 @@ export default function Dashboard() {
                     <div className="relative px-6 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
                       <div className="space-y-2">
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ausgaben</p>
-                        <p className="text-2xl font-semibold">€{spend.toFixed(2)}</p>
+                        <p className="text-2xl font-semibold">{formatCurrency(spend)}</p>
                         <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div className="h-full bg-accent/60 rounded-full" style={{ width: `${progress}%` }} />
                         </div>
@@ -334,7 +335,7 @@ export default function Dashboard() {
                             roas > 1 ? "text-green-600" : "text-muted-foreground",
                           )}
                         >
-                          {roas > 0 ? `${roas.toFixed(2)}x` : "-"}
+                          {roas > 0 ? formatRoas(roas) : "-"}
                         </p>
                         {roas > 1 && (
                           <div className="flex items-center gap-1 text-xs text-green-600">
@@ -352,14 +353,14 @@ export default function Dashboard() {
                             </span>
                           )}
                         </div>
-                        <p className="text-2xl font-semibold">{leads}</p>
+                        <p className="text-2xl font-semibold">{formatNumber(leads, 0)}</p>
                         <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div className="h-full bg-blue-500/60 rounded-full" style={{ width: `${Math.min(100, (leads / 500) * 100)}%` }} />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Kosten/Lead</p>
-                        <p className="text-2xl font-semibold">€{costPerLead.toFixed(2)}</p>
+                        <p className="text-2xl font-semibold">{formatCurrency(costPerLead)}</p>
                         <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-green-500/60 rounded-full"

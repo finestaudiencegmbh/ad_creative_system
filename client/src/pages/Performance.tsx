@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { startOfMonth, endOfMonth, format as formatDate } from "date-fns";
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatRoas, formatNumber, formatPercentage } from "@/lib/formatters";
 
 export default function Performance() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("all");
@@ -202,9 +203,9 @@ export default function Performance() {
                             <p className="font-semibold text-lg group-hover:text-green-500 transition-colors">{creative.name}</p>
                             <div className="flex gap-4 text-sm">
                               {creative.roas > 0 && (
-                                <span className="font-semibold text-green-600">ROAS: {creative.roas.toFixed(2)}x</span>
+                                <span className="font-semibold text-green-600">ROAS: {formatRoas(creative.roas)}</span>
                               )}
-                              <span className="text-muted-foreground">CPL: €{creative.cpl.toFixed(2)}</span>
+                              <span className="text-muted-foreground">CPL: {formatCurrency(creative.cpl)}</span>
                             </div>
                           </div>
                           <div className="text-3xl font-bold text-green-500 flex-shrink-0">#{index + 1}</div>
@@ -226,11 +227,11 @@ export default function Performance() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
                                 <p className="text-muted-foreground">CTR</p>
-                                <p className="font-semibold">{creative.ctr.toFixed(2)}%</p>
+                                <p className="font-semibold">{formatPercentage(creative.ctr)}</p>
                               </div>
                               <div>
                                 <p className="text-muted-foreground">Spend</p>
-                                <p className="font-semibold">€{creative.spend.toFixed(2)}</p>
+                                <p className="font-semibold">{formatCurrency(creative.spend)}</p>
                               </div>
                             </div>
                           </div>
@@ -287,9 +288,9 @@ export default function Performance() {
                             <p className="font-semibold text-lg group-hover:text-red-500 transition-colors">{creative.name}</p>
                             <div className="flex gap-4 text-sm">
                               {creative.roas > 0 && (
-                                <span className="font-semibold text-green-600">ROAS: {creative.roas.toFixed(2)}x</span>
+                                <span className="font-semibold text-green-600">ROAS: {formatRoas(creative.roas)}</span>
                               )}
-                              <span className="text-muted-foreground">CPL: €{creative.cpl.toFixed(2)}</span>
+                              <span className="text-muted-foreground">CPL: {formatCurrency(creative.cpl)}</span>
                             </div>
                           </div>
                           <div className="text-3xl font-bold text-red-500 flex-shrink-0">#{index + 1}</div>
@@ -311,11 +312,11 @@ export default function Performance() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
                                 <p className="text-muted-foreground">CTR</p>
-                                <p className="font-semibold">{creative.ctr.toFixed(2)}%</p>
+                                <p className="font-semibold">{formatPercentage(creative.ctr)}</p>
                               </div>
                               <div>
                                 <p className="text-muted-foreground">Spend</p>
-                                <p className="font-semibold">€{creative.spend.toFixed(2)}</p>
+                                <p className="font-semibold">{formatCurrency(creative.spend)}</p>
                               </div>
                             </div>
                           </div>
@@ -352,24 +353,24 @@ export default function Performance() {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Impressions</span>
-                        <span className="font-medium">{campaign.impressions.toLocaleString()}</span>
+                        <span className="font-medium">{formatNumber(campaign.impressions, 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Clicks</span>
-                        <span className="font-medium">{campaign.clicks.toLocaleString()}</span>
+                        <span className="font-medium">{formatNumber(campaign.clicks, 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">CTR</span>
-                        <span className="font-medium">{campaign.ctr.toFixed(2)}%</span>
+                        <span className="font-medium">{formatPercentage(campaign.ctr)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Spend</span>
-                        <span className="font-medium">€{campaign.spend.toFixed(2)}</span>
+                        <span className="font-medium">{formatCurrency(campaign.spend)}</span>
                       </div>
                       {campaign.roas > 0 && (
                         <div className="flex justify-between pt-2 border-t border-border/50">
                           <span className="text-muted-foreground">ROAS</span>
-                          <span className="font-semibold text-green-600">{campaign.roas.toFixed(2)}x</span>
+                          <span className="font-semibold text-green-600">{formatRoas(campaign.roas)}</span>
                         </div>
                       )}
                     </div>
