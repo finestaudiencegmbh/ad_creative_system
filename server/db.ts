@@ -30,6 +30,9 @@ import {
   creativeJobs,
   InsertCreativeJob,
   CreativeJob,
+  adCopies,
+  InsertAdCopy,
+  AdCopy,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -533,4 +536,28 @@ export async function completeCreativeJob(jobId: string, result: { creatives: Ar
       completedAt: new Date(),
     })
     .where(eq(creativeJobs.jobId, jobId));
+}
+
+
+// ============================================
+// Ad Copies (Werbetexte)
+// ============================================
+
+export async function createAdCopy(data: InsertAdCopy): Promise<AdCopy> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  const [adCopy] = await db.insert(adCopies).values(data).$returningId();
+  const [created] = await db.select().from(adCopies).where(eq(adCopies.id, adCopy.id));
+  return created;
+}
+
+export async function getAdCopiesByUserId(userId: number): Promise<AdCopy[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  return await db.select()
+    .from(adCopies)
+    .where(eq(adCopies.userId, userId))
+    .orderBy(desc(adCopies.createdAt));
 }

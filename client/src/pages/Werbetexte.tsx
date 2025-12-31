@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { Copy, Sparkles, Check } from "lucide-react";
+import { Copy, Sparkles, Check, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { formatDistanceToNow } from "date-fns";
+import { de } from "date-fns/locale";
 
 export default function Werbetexte() {
   const [url, setUrl] = useState("");
@@ -42,12 +44,31 @@ export default function Werbetexte() {
     return () => clearInterval(interval);
   }, [url]);
 
+  const utils = trpc.useUtils();
+
+  // Fetch history
+  const { data: history = [] } = trpc.adCopies.list.useQuery();
+
+  // Save to database mutation
+  const saveAdCopyMutation = trpc.adCopies.create.useMutation({
+    onSuccess: () => {
+      utils.adCopies.list.invalidate();
+    },
+  });
+
   const generateCopyMutation = trpc.ai.generateAdCopy.useMutation({
     onSuccess: (data) => {
       setGeneratedCopy(data);
       setIsGenerating(false);
       setShowResults(true);
       toast.success("Werbetexte erfolgreich generiert!");
+      
+      // Save to database
+      saveAdCopyMutation.mutate({
+        landingPageUrl: url,
+        shortText: data.short,
+        longText: data.long,
+      });
     },
     onError: (error) => {
       setIsGenerating(false);
@@ -239,6 +260,67 @@ export default function Werbetexte() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* History Section */}
+        {history.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Clock className="w-6 h-6 text-accent" />
+              <h2 className="text-2xl font-bold">Verlauf</h2>
+              <span className="text-sm text-muted-foreground">({history.length} Einträge)</span>
+            </div>
+
+            <div className="space-y-4">
+              {history.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="group relative overflow-hidden rounded-xl bg-card/30 backdrop-blur-xl border border-border/30 p-6 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 transition-all duration-300"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  <div className="relative space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-muted-foreground truncate">{entry.landingPageUrl}</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">
+                          {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true, locale: de })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUrl(entry.landingPageUrl);
+                          setGeneratedCopy({ short: entry.shortText, long: entry.longText });
+                          setShowResults(true);
+                          toast.success("Werbetexte geladen!");
+                        }}
+                        className="shrink-0 h-9 px-3 hover:bg-accent/20 transition-all duration-200"
+                      >
+                        Laden
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Kurz</p>
+                        <div className="p-3 rounded-lg bg-background/40 border border-border/20">
+                          <p className="text-sm text-foreground/80 line-clamp-3">{entry.shortText}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lang</p>
+                        <div className="p-3 rounded-lg bg-background/40 border border-border/20">
+                          <p className="text-sm text-foreground/80 line-clamp-3">{entry.longText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

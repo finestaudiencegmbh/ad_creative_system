@@ -1086,3 +1086,27 @@
 - [x] Performance-Seite mit deutschem Format aktualisieren
 - [x] CampaignList mit deutschem Format aktualisieren
 - [x] Alle Währungsbeträge: Tausenderpunkt, Komma-Dezimal, € nach Zahl
+
+### Custom Date Picker - Dashboard
+- [x] react-day-picker installieren (pnpm add react-day-picker date-fns)
+- [x] CustomDatePicker Component erstellen (Kalender für Start/End-Datum)
+- [x] DateRangeSelector erweitern (Dialog mit CustomDatePicker bei "Benutzerdefiniert")
+- [x] Ausgewähltes Datum im State speichern und an tRPC übergeben
+- [x] UI: "01. Dez. 2025 - 31. Dez. 2025" anzeigen bei Custom Range
+
+### Werbetexte - Datenbank & History
+- [x] ad_copies Tabelle in drizzle/schema.ts erstellen (id, userId, landingPageUrl, shortText, longText, createdAt)
+- [x] pnpm db:push ausführen (Migration)
+- [x] tRPC Mutation: adCopies.create (speichert generierte Texte nach Webhook)
+- [x] tRPC Query: adCopies.list (lädt History für aktuellen User)
+- [x] Werbetexte.tsx: Nach Generierung in DB speichern
+- [x] History-Sektion unter Generator hinzufügen (Cards mit alten Texten)
+- [x] Kopieren-Button für History-Einträge
+- [x] Zeitstempel anzeigen (z.B. "Vor 2 Stunden")### Accounts-Seite Modernisierung
+- [x] Accounts.tsx mit V0-Design überarbeiten
+- [x] User-Management Cards mit Glassmorphismus
+- [x] Tab-Permissions Editor mit Hover-Effekten
+- [x] AnimatedBackground hinzufügen
+- [x] Button-Hover-Effekte wie Dashboardd hinzufügen
+- [ ] User-Avatar und Status-Indicator
+- [ ] Aktionen: Benutzer bearbeiten, deaktivieren, löschen

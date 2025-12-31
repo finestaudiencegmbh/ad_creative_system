@@ -1970,6 +1970,33 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // ============================================
+  // Ad Copies (Werbetexte)
+  // ============================================
+  adCopies: router({
+    create: protectedProcedure
+      .input(z.object({
+        landingPageUrl: z.string(),
+        shortText: z.string(),
+        longText: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const adCopy = await db.createAdCopy({
+          userId: ctx.user.id,
+          landingPageUrl: input.landingPageUrl,
+          shortText: input.shortText,
+          longText: input.longText,
+        });
+        return adCopy;
+      }),
+
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        const adCopies = await db.getAdCopiesByUserId(ctx.user.id);
+        return adCopies;
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

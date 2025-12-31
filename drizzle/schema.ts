@@ -260,3 +260,19 @@ export const creativeJobs = mysqlTable("creative_jobs", {
 
 export type CreativeJob = typeof creativeJobs.$inferSelect;
 export type InsertCreativeJob = typeof creativeJobs.$inferInsert;
+
+/**
+ * Ad Copies table - Stores generated ad copy texts (Werbetexte)
+ * Tracks history of generated short and long ad copy for landing pages
+ */
+export const adCopies = mysqlTable("ad_copies", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  landingPageUrl: text("landingPageUrl").notNull(),
+  shortText: text("shortText").notNull(), // Kurzer Werbetext
+  longText: text("longText").notNull(), // Langer Werbetext
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AdCopy = typeof adCopies.$inferSelect;
+export type InsertAdCopy = typeof adCopies.$inferInsert;

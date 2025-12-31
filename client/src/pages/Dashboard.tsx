@@ -8,11 +8,13 @@ import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatRoas, formatNumber } from "@/lib/formatters";
+import { CustomDatePicker } from "@/components/CustomDatePicker";
 
 type DateRangePreset = "today" | "yesterday" | "last7days" | "currentMonth" | "lastMonth" | "last90days" | "maximum" | "custom";
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangePreset>("currentMonth");
+  const [customRange, setCustomRange] = useState<{ from: Date; to: Date } | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
 
@@ -63,7 +65,14 @@ export default function Dashboard() {
           displayRange: `${format(oneYearAgo, 'dd. MMM. yyyy')} - ${format(now, 'dd. MMM. yyyy')}`
         };
       case "custom":
-        // TODO: Implement custom date picker
+        if (customRange) {
+          return {
+            startDate: customRange.from,
+            endDate: customRange.to,
+            displayRange: `${format(customRange.from, 'dd. MMM. yyyy')} - ${format(customRange.to, 'dd. MMM. yyyy')}`
+          };
+        }
+        // Fallback to current month if no custom range selected
         return {
           startDate: startOfMonth(now),
           endDate: endOfMonth(now),
@@ -77,7 +86,7 @@ export default function Dashboard() {
           displayRange: `${format(startOfMonth(now), 'dd. MMM. yyyy')} - ${format(endOfMonth(now), 'dd. MMM. yyyy')}`
         };
     }
-  }, [dateRange]);
+  }, [dateRange, customRange]);
 
   // Fetch campaigns from Meta API
   const { data: campaignsData, isLoading } = trpc.campaigns.list.useQuery({
@@ -130,21 +139,33 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRangePreset)}>
-              <SelectTrigger className="w-48 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/20 transition-all duration-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Heute</SelectItem>
-                <SelectItem value="yesterday">Gestern</SelectItem>
-                <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
-                <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
-                <SelectItem value="lastMonth">Letzter Monat</SelectItem>
-                <SelectItem value="last90days">Letzte 90 Tage</SelectItem>
-                <SelectItem value="maximum">Maximum</SelectItem>
-                <SelectItem value="custom">Benutzerdefiniert</SelectItem>
-              </SelectContent>
-            </Select>
+            {dateRange === "custom" ? (
+              <CustomDatePicker
+                selectedRange={customRange}
+                onSelect={(range) => {
+                  setCustomRange(range);
+                  if (!range) {
+                    setDateRange("currentMonth");
+                  }
+                }}
+              />
+            ) : (
+              <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRangePreset)}>
+                <SelectTrigger className="w-48 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/20 transition-all duration-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Heute</SelectItem>
+                  <SelectItem value="yesterday">Gestern</SelectItem>
+                  <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
+                  <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
+                  <SelectItem value="lastMonth">Letzter Monat</SelectItem>
+                  <SelectItem value="last90days">Letzte 90 Tage</SelectItem>
+                  <SelectItem value="maximum">Maximum</SelectItem>
+                  <SelectItem value="custom">Benutzerdefiniert</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Metrics Summary Cards */}

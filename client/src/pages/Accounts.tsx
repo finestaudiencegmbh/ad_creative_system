@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Users, Plus, Edit, Trash2, Building2, RefreshCw, ChevronDown, UserPlus, Key } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 // Available tabs for permission management
 // These must match the tabId values in DashboardLayout navigation
@@ -262,11 +263,14 @@ export default function Accounts() {
 
   return (
     <DashboardLayout>
-      <div className="container py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            <h1 className="text-3xl font-bold">Accounts</h1>
+      <AnimatedBackground />
+      <div className="relative z-10 container py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-balance mb-2">Accounts</h1>
+            <p className="text-lg text-muted-foreground">
+              Verwalten Sie Kunden-Accounts, Benutzer und Zugriffsrechte
+            </p>
           </div>
           
           {/* Create Account Dialog */}
@@ -365,13 +369,15 @@ export default function Accounts() {
         </div>
 
         {/* Accounts List */}
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {accounts?.map((account) => {
             const isExpanded = expandedAccounts.has(account.id);
             const accountUsers = account.users || [];
             
             return (
-              <Card key={account.id}>
+              <div key={account.id} className="group relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 shadow-xl hover:shadow-2xl hover:shadow-accent/10 hover:border-accent/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <Card className="bg-transparent border-0 shadow-none">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -503,6 +509,7 @@ export default function Accounts() {
                   )}
                 </CardContent>
               </Card>
+              </div>
             );
           })}
         </div>
