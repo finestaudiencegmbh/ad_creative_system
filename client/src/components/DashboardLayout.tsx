@@ -72,8 +72,8 @@ export default function DashboardLayout({
         <aside className="w-72 h-screen bg-sidebar/95 backdrop-blur-2xl border-r border-sidebar-border relative z-20 flex flex-col">
           <div className="p-8 space-y-10 flex-1">
             {/* Logo */}
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-accent/50 group-hover:scale-105">
+            <div className="flex items-center gap-3 group cursor-pointer transition-transform duration-300 hover:translate-x-1">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-accent/50 group-hover:scale-110 group-hover:rotate-3">
                 <Zap className="w-6 h-6 text-white" strokeWidth={2.5} />
               </div>
               <div className="flex flex-col">
@@ -96,7 +96,7 @@ export default function DashboardLayout({
                       "group flex items-center gap-3.5 px-4 h-14 rounded-xl text-[15px] font-medium transition-all duration-200 relative overflow-hidden w-full",
                       isActive
                         ? "bg-gradient-to-r from-accent via-accent/90 to-accent/80 text-white shadow-lg shadow-accent/40"
-                        : "bg-sidebar-accent/70 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-md hover:shadow-accent/20 hover:scale-[1.01] active:scale-[0.99]",
+                        : "bg-sidebar-accent/70 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-md hover:shadow-accent/20 hover:scale-[1.02] active:scale-[0.98]",
                     )}
                   >
                     {isActive && (
@@ -118,7 +118,7 @@ export default function DashboardLayout({
                         "w-4 h-4 transition-all duration-200",
                         isActive
                           ? "opacity-100 translate-x-0"
-                          : "opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0",
+                          : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
                       )}
                     />
                   </button>
@@ -131,13 +131,15 @@ export default function DashboardLayout({
           <div className="p-6 border-t border-sidebar-border bg-sidebar-accent/30 backdrop-blur-sm">
             <button 
               onClick={logout}
-              className="flex items-center gap-3.5 p-3.5 rounded-xl hover:bg-sidebar-accent/60 transition-all duration-200 cursor-pointer group w-full text-left"
+              className="flex items-center gap-3.5 p-3.5 rounded-xl hover:bg-sidebar-accent/60 transition-all duration-300 cursor-pointer group hover:scale-[1.02] active:scale-[0.98] w-full text-left"
             >
               <div className="relative shrink-0">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent via-accent to-accent/80 flex items-center justify-center text-white text-[15px] font-semibold shadow-lg shadow-accent/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-accent/50 group-hover:scale-105">
                   {user?.name?.charAt(0).toUpperCase() || "F"}
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-sidebar rounded-full shadow-sm" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-sidebar rounded-full shadow-sm">
+                  <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] font-semibold truncate text-sidebar-foreground leading-tight">
