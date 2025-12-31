@@ -1036,3 +1036,8 @@
 - [x] CampaignTabs Anzahl dynamisch aus Meta-Daten berechnen
 - [x] Loading States für CampaignList hinzufügen
 - [x] Error Handling für Meta API Fehler
+
+### Dashboard Bug Fixes
+- [x] Header-Lücke beheben (DashboardHeader negativer Margin entfernen)
+- [x] Datums-Optionen erweitern: Heute, Gestern, Letzte 7 Tage, Maximum, Benutzerdefiniert hinzufügen
+- [x] Voreinstellung: Aktueller Monat beibehalten

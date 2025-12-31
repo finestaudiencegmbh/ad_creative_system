@@ -9,7 +9,7 @@ import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-type DateRangePreset = "currentMonth" | "lastMonth" | "last90days";
+type DateRangePreset = "today" | "yesterday" | "last7days" | "currentMonth" | "lastMonth" | "last90days" | "maximum" | "custom";
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRangePreset>("currentMonth");
@@ -19,8 +19,28 @@ export default function Dashboard() {
   // Calculate date range based on selection
   const { startDate, endDate, displayRange } = useMemo(() => {
     const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
     switch (dateRange) {
+      case "today":
+        return {
+          startDate: now,
+          endDate: now,
+          displayRange: format(now, 'dd. MMM. yyyy')
+        };
+      case "yesterday":
+        return {
+          startDate: yesterday,
+          endDate: yesterday,
+          displayRange: format(yesterday, 'dd. MMM. yyyy')
+        };
+      case "last7days":
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return {
+          startDate: sevenDaysAgo,
+          endDate: now,
+          displayRange: `${format(sevenDaysAgo, 'dd. MMM. yyyy')} - ${format(now, 'dd. MMM. yyyy')}`
+        };
       case "lastMonth":
         const lastMonth = subMonths(now, 1);
         return {
@@ -34,6 +54,20 @@ export default function Dashboard() {
           startDate: ninetyDaysAgo,
           endDate: now,
           displayRange: `${format(ninetyDaysAgo, 'dd. MMM. yyyy')} - ${format(now, 'dd. MMM. yyyy')}`
+        };
+      case "maximum":
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        return {
+          startDate: oneYearAgo,
+          endDate: now,
+          displayRange: `${format(oneYearAgo, 'dd. MMM. yyyy')} - ${format(now, 'dd. MMM. yyyy')}`
+        };
+      case "custom":
+        // TODO: Implement custom date picker
+        return {
+          startDate: startOfMonth(now),
+          endDate: endOfMonth(now),
+          displayRange: `${format(startOfMonth(now), 'dd. MMM. yyyy')} - ${format(endOfMonth(now), 'dd. MMM. yyyy')}`
         };
       case "currentMonth":
       default:
@@ -103,9 +137,14 @@ export default function Dashboard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="today">Heute</SelectItem>
+                <SelectItem value="yesterday">Gestern</SelectItem>
+                <SelectItem value="last7days">Letzte 7 Tage</SelectItem>
                 <SelectItem value="currentMonth">Aktueller Monat</SelectItem>
                 <SelectItem value="lastMonth">Letzter Monat</SelectItem>
                 <SelectItem value="last90days">Letzte 90 Tage</SelectItem>
+                <SelectItem value="maximum">Maximum</SelectItem>
+                <SelectItem value="custom">Benutzerdefiniert</SelectItem>
               </SelectContent>
             </Select>
           </div>
