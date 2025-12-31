@@ -145,6 +145,70 @@ export default function Dashboard() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Metrics Summary Cards */}
+          {!isLoading && campaignsData && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Gesamt-Ausgaben Card */}
+              <div className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(95,47,175,0.15)] hover:border-[#5f2faf]/30 hover:scale-[1.02]">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Gesamt-Ausgaben</p>
+                    <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-all duration-300">
+                      <TrendingUp className="w-4 h-4 text-accent" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold mb-2">
+                    €{campaignsData.reduce((sum: number, c: any) => sum + (c.spend || 0), 0).toFixed(2)}
+                  </p>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-accent/60 rounded-full" style={{ width: '75%' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Gesamt-ROAS Card */}
+              <div className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(95,47,175,0.15)] hover:border-[#5f2faf]/30 hover:scale-[1.02]">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Durchschnittlicher ROAS</p>
+                    <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-all duration-300">
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold mb-2 text-green-600">
+                    {(() => {
+                      const totalRoas = campaignsData.reduce((sum: number, c: any) => sum + (c.roasOrderVolume || 0), 0);
+                      const avgRoas = campaignsData.length > 0 ? totalRoas / campaignsData.length : 0;
+                      return avgRoas > 0 ? `${avgRoas.toFixed(2)}x` : '-';
+                    })()}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                    Profitable
+                  </div>
+                </div>
+              </div>
+
+              {/* Gesamt-Leads Card */}
+              <div className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(95,47,175,0.15)] hover:border-[#5f2faf]/30 hover:scale-[1.02]">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Gesamt-Leads</p>
+                    <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-all duration-300">
+                      <TrendingUp className="w-4 h-4 text-blue-500" />
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold mb-2">
+                    {campaignsData.reduce((sum: number, c: any) => sum + (c.leads || 0), 0)}
+                  </p>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500/60 rounded-full" style={{ width: '60%' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Campaign Tabs */}
           <div className="flex items-center justify-between">

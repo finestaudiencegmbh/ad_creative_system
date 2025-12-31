@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { GeneratedCreatives } from "@/components/GeneratedCreatives";
 import { Loader2, Sparkles, Download, ChevronDown, Check, ImageIcon } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState, useEffect } from "react";
@@ -217,9 +218,9 @@ export default function CreativeGenerator() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
           {/* Main Form - Left Side */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Progress Indicator */}
             <div className="flex items-center justify-between">
               {[1, 2, 3].map((step) => (
@@ -427,69 +428,8 @@ export default function CreativeGenerator() {
           </div>
 
           {/* Generated Creatives - Right Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6 sticky top-6">
-              <h3 className="text-xl font-bold mb-2">Generierte Creatives</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Wähle eine Kampagne und starte die Generierung
-              </p>
-
-              {isGenerating ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="h-12 w-12 animate-spin text-[#5f2faf] mb-4" />
-                    <p className="text-sm text-muted-foreground text-center mb-4">
-                      Generierung läuft...
-                    </p>
-                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#5f2faf] to-[#8b5cf6] transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-4 text-center animate-fade-in">
-                      {currentFunFact}
-                    </p>
-                  </div>
-                </div>
-              ) : generatedCreatives.length > 0 ? (
-                <div className="space-y-4">
-                  {generatedCreatives.map((creative, index) => (
-                    <div
-                      key={index}
-                      className="group relative rounded-xl overflow-hidden border border-white/10 hover:border-[#5f2faf]/30 transition-all duration-300"
-                    >
-                      <img
-                        src={creative.imageUrl}
-                        alt={`Creative ${index + 1}`}
-                        className="w-full aspect-square object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <Button
-                            size="sm"
-                            className="w-full bg-[#5f2faf] hover:bg-[#7041c9]"
-                            onClick={() => window.open(creative.imageUrl, '_blank')}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-24 h-24 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Noch keine Creatives generiert
-                  </p>
-                </div>
-              )}
-            </div>
+          <div>
+            <GeneratedCreatives />
           </div>
         </div>
       </div>
