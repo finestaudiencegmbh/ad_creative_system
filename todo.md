@@ -1018,3 +1018,14 @@
 - [x] Check server logs for connection issues
 - [x] Verify tRPC endpoint configuration
 - [x] Test API calls after fix
+
+### V0 Apple-Inspired Dark Mode Design - Fehlende Komponenten
+- [x] Dashboard Header Component erstellen (glassmorphic, notifications)
+- [x] Date Range Selector Component erstellen
+- [x] Campaign Tabs Component erstellen
+- [x] Campaign List Component erstellen
+- [x] Sidebar Component aktualisieren (sticky, gradient navigation)
+- [x] Dashboard Page aktualisieren (mit neuen Components)
+- [x] Home Page erstellen (Redirect zu Dashboard)
+- [x] Alle Seiten mit DashboardLayout wrapper versehen
+- [x] Responsive Design testen (Mobile/Desktop)
