@@ -1041,3 +1041,6 @@
 - [x] Header-Lücke beheben (DashboardHeader negativer Margin entfernen)
 - [x] Datums-Optionen erweitern: Heute, Gestern, Letzte 7 Tage, Maximum, Benutzerdefiniert hinzufügen
 - [x] Voreinstellung: Aktueller Monat beibehalten
+
+### Dashboard Layout Fix
+- [x] DashboardHeader über gesamte Breite (über Sidebar hinweg) anzeigen

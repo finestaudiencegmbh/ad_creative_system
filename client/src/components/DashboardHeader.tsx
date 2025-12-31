@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export function DashboardHeader() {
   return (
-    <div className="sticky top-0 z-20 px-8 lg:px-12 py-4 mb-8 backdrop-blur-xl bg-background/80 border-b border-border/60">
+    <div className="w-full py-4 px-8 lg:px-12 backdrop-blur-xl bg-background/80 border-b border-border/60">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-2 text-sm">
