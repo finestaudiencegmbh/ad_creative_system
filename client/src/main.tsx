@@ -8,6 +8,17 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
+// Suppress harmless ResizeObserver loop warnings
+const resizeObserverLoopErrRe = /^ResizeObserver loop completed with undelivered notifications/;
+const resizeObserverErrFilter = (e: ErrorEvent) => {
+  if (e.message && resizeObserverLoopErrRe.test(e.message)) {
+    e.stopImmediatePropagation();
+    return true;
+  }
+  return false;
+};
+window.addEventListener('error', resizeObserverErrFilter);
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {

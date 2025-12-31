@@ -1047,3 +1047,6 @@
 
 ### Dashboard Layout Cleanup
 - [x] DashboardHeader komplett entfernen (nur Sidebar + Content)
+
+### Bug Fix - ResizeObserver Warnings
+- [x] ResizeObserver loop Warnungen unterdrücken (harmlose Browser-Warnungen)
