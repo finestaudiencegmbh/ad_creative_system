@@ -1044,3 +1044,6 @@
 
 ### Dashboard Layout Fix
 - [x] DashboardHeader über gesamte Breite (über Sidebar hinweg) anzeigen
+
+### Dashboard Layout Cleanup
+- [x] DashboardHeader komplett entfernen (nur Sidebar + Content)
