@@ -1,8 +1,10 @@
+import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { LayoutDashboard, Sparkles, FileText, TrendingUp, Users, ChevronRight, Zap } from "lucide-react";
+import { LayoutDashboard, Sparkles, FileText, TrendingUp, Users, ChevronRight, Zap, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { cn } from "@/lib/utils";
+import { trpc } from "@/lib/trpc";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "campaigns" },
@@ -19,6 +21,43 @@ export default function DashboardLayout({
 }) {
   const { loading, user, logout } = useAuth();
   const [location, setLocation] = useLocation();
+  const testMetaConnection = trpc.campaigns.testConnection.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+  });
+
+  const metaStatus = React.useMemo(() => {
+    if (testMetaConnection.isLoading || testMetaConnection.isFetching) {
+      return {
+        connected: false,
+        message: "Prüfe Verbindung...",
+        loading: true,
+      };
+    }
+    if (testMetaConnection.data) {
+      return {
+        connected: testMetaConnection.data.connected,
+        message: testMetaConnection.data.message,
+        loading: false,
+      };
+    }
+    if (testMetaConnection.error) {
+      return {
+        connected: false,
+        message: "Verbindung fehlgeschlagen",
+        loading: false,
+      };
+    }
+    return {
+      connected: false,
+      message: "Prüfe Verbindung...",
+      loading: true,
+    };
+  }, [testMetaConnection.data, testMetaConnection.error, testMetaConnection.isLoading, testMetaConnection.isFetching]);
+
+  const handleTestConnection = () => {
+    testMetaConnection.refetch();
+  };
 
   if (loading) {
     return <DashboardLayoutSkeleton />
@@ -150,6 +189,37 @@ export default function DashboardLayout({
                 </p>
               </div>
             </button>
+
+            {/* Meta API Status */}
+            <div className="px-6 pb-4 space-y-2">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  {metaStatus.loading ? (
+                    <RefreshCw className="h-3 w-3 text-muted-foreground animate-spin" />
+                  ) : metaStatus.connected ? (
+                    <Wifi className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <WifiOff className="h-3 w-3 text-red-500" />
+                  )}
+                  <span className="text-muted-foreground font-medium">
+                    {metaStatus.message}
+                  </span>
+                </div>
+                <button
+                  onClick={handleTestConnection}
+                  disabled={metaStatus.loading}
+                  className="text-accent hover:text-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  title="Verbindung testen"
+                >
+                  Test
+                </button>
+              </div>
+              {metaStatus.connected && testMetaConnection.data?.campaignCount !== undefined && (
+                <div className="text-[10px] text-muted-foreground/70 pl-5">
+                  {testMetaConnection.data.campaignCount} Kampagnen gefunden
+                </div>
+              )}
+            </div>
           </div>
         </aside>
 

@@ -1126,3 +1126,10 @@
 - [x] Performance: Alle KPIs (ROAS, CPL, CTR, Spend) werden korrekt angezeigt
 - [x] Creative Generator: "Alle Formate" Option hinzugefügt (Feed + Story + Reel)
 - [x] Meta API: Echte Daten werden erfolgreich geladen (15.138,02 € Ausgaben, 916 Leads, 4 aktive Kampagnen)
+
+### Meta API Status-Anzeige im Sidebar-Footer (02.01.2026)
+- [x] Backend: Test-Endpoint für Meta API Verbindung erstellen (testMetaConnection)
+- [x] Frontend: Status-Indikator im Sidebar-Footer unter Benutzernamen hinzufügen
+- [x] Frontend: Grün/Rot Indikator basierend auf Meta API Status
+- [x] Frontend: "Verbindung testen" Button mit Echtzeit-Prüfung
+- [x] UI: Klein und unauffällig unter dem Benutzernamen platzieren

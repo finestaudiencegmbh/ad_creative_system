@@ -449,6 +449,30 @@ export const appRouter = router({
           throw error;
         }
       }),
+
+    // Test Meta API connection in real-time
+    testConnection: protectedProcedure
+      .query(async () => {
+        try {
+          // Make a simple Meta API request to test connectivity
+          const campaigns = await getMetaCampaigns({
+            datePreset: "today",
+          });
+          
+          return {
+            connected: true,
+            message: "Meta API verbunden",
+            campaignCount: campaigns.length,
+          };
+        } catch (error: any) {
+          console.error("Meta API connection test failed:", error);
+          return {
+            connected: false,
+            message: error.message || "Meta API Verbindung fehlgeschlagen",
+            error: error.toString(),
+          };
+        }
+      }),
   }),
 
   // ============================================
