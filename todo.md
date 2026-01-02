@@ -1110,3 +1110,19 @@
 - [x] Button-Hover-Effekte wie Dashboardd hinzufügen
 - [ ] User-Avatar und Status-Indicator
 - [ ] Aktionen: Benutzer bearbeiten, deaktivieren, löschen
+
+### KRITISCH: Funktionen wiederherstellen (durch V0-Update entfernt)
+- [ ] Dashboard: Echte Meta API-Daten laden (aktuell statische Demo-Daten)
+- [ ] Dashboard: Expand/Collapse für Anzeigengruppen und Werbeanzeigen wiederherstellen
+- [ ] Performance: Alle KPIs anzeigen (ROAS, CTR, Impressions, CPM) nicht nur CPL
+- [ ] Creative Generator Schritt 1: Kampagne ODER Landing Page Input (nicht beide gleichzeitig)
+- [ ] Creative Generator Schritt 1: Nach Kampagne-Auswahl → Anzeigengruppe auswählen
+- [ ] Creative Generator Schritt 2: "Alle" als erste Format-Option hinzufügen
+- [ ] Creative Generator: Manuelle Creative-Auswahl ENTFERNEN (automatisch Top Performer)
+- [ ] Creative Generator: Original tRPC-Flow wiederherstellen (campaigns.topPerformers)
+
+### Bug Fixes - Deutsches Zahlenformat & UI Korrekturen (02.01.2026)
+- [x] Dashboard: Expand/Collapse Metriken mit deutschem Zahlenformat (formatNumber, formatCurrency, formatPercentage)
+- [x] Performance: Alle KPIs (ROAS, CPL, CTR, Spend) werden korrekt angezeigt
+- [x] Creative Generator: "Alle Formate" Option hinzugefügt (Feed + Story + Reel)
+- [x] Meta API: Echte Daten werden erfolgreich geladen (15.138,02 € Ausgaben, 916 Leads, 4 aktive Kampagnen)

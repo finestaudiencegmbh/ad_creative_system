@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useMemo } from "react";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatRoas, formatNumber } from "@/lib/formatters";
+import { formatCurrency, formatRoas, formatNumber, formatPercentage } from "@/lib/formatters";
 import { CustomDatePicker } from "@/components/CustomDatePicker";
 
 type DateRangePreset = "today" | "yesterday" | "last7days" | "currentMonth" | "lastMonth" | "last90days" | "maximum" | "custom";
@@ -401,19 +401,19 @@ export default function Dashboard() {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Impressions</p>
-                            <p className="font-semibold">{campaign.impressions?.toLocaleString() || 0}</p>
+                            <p className="font-semibold">{formatNumber(campaign.impressions || 0, 0)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">CPM</p>
-                            <p className="font-semibold">€{campaign.cpm?.toFixed(2) || 0}</p>
+                            <p className="font-semibold">{formatCurrency(campaign.cpm || 0)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Outbound CTR</p>
-                            <p className="font-semibold">{campaign.outboundCtr?.toFixed(2) || 0}%</p>
+                            <p className="font-semibold">{formatPercentage(campaign.outboundCtr || 0)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Conversion Rate</p>
-                            <p className="font-semibold">{campaign.conversionRate?.toFixed(2) || 0}%</p>
+                            <p className="font-semibold">{formatPercentage(campaign.conversionRate || 0)}</p>
                           </div>
                         </div>
                       </div>
