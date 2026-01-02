@@ -1,10 +1,14 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { Calendar, Loader2, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { Calendar, Loader2, ChevronDown, TrendingUp, TrendingDown, Edit, Plus } from "lucide-react";
+import { EditLeadCountDialog } from "@/components/EditLeadCountDialog";
+import { AddSaleDialog } from "@/components/AddSaleDialog";
+import { SalesListDialog } from "@/components/SalesListDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatRoas, formatNumber, formatPercentage } from "@/lib/formatters";
@@ -13,10 +17,30 @@ import { CustomDatePicker } from "@/components/CustomDatePicker";
 type DateRangePreset = "today" | "yesterday" | "last7days" | "currentMonth" | "lastMonth" | "last90days" | "maximum" | "custom";
 
 export default function Dashboard() {
+  const [, navigate] = useLocation();
   const [dateRange, setDateRange] = useState<DateRangePreset>("currentMonth");
   const [customRange, setCustomRange] = useState<{ from: Date; to: Date } | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
+  
+  // Dialog states
+  const [editLeadDialog, setEditLeadDialog] = useState<{
+    open: boolean;
+    entityId: string;
+    entityName: string;
+    currentLeadCount: number;
+    leadsFromMeta: number;
+  } | null>(null);
+  const [addSaleDialog, setAddSaleDialog] = useState<{
+    open: boolean;
+    entityId: string;
+    entityName: string;
+  } | null>(null);
+  const [salesListDialog, setSalesListDialog] = useState<{
+    open: boolean;
+    entityId: string;
+    entityName: string;
+  } | null>(null);
 
   // Calculate date range based on selection
   const { startDate, endDate, displayRange } = useMemo(() => {
@@ -307,13 +331,13 @@ export default function Dashboard() {
                     />
 
                     {/* Campaign Header */}
-                    <button
-                      onClick={() => toggleExpand(campaign.id)}
-                      className="relative w-full p-6 flex items-center justify-between text-left"
-                    >
-                      <div className="flex-1 space-y-2">
+                    <div className="relative w-full p-6 flex items-center justify-between">
+                      <button
+                        onClick={() => navigate(`/campaign/${campaign.id}`)}
+                        className="flex-1 space-y-2 text-left hover:opacity-80 transition-opacity"
+                      >
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold group-hover:text-accent transition-colors">{campaign.name}</h3>
+                          <h3 className="text-lg font-semibold group-hover:text-accent transition-colors cursor-pointer">{campaign.name}</h3>
                           <Badge
                             variant="secondary"
                             className={cn(
@@ -330,14 +354,19 @@ export default function Dashboard() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">Kampagnen-ID: {campaign.id}</p>
-                      </div>
-                      <ChevronDown
-                        className={cn(
-                          "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all duration-300",
-                          isExpanded && "rotate-180",
-                        )}
-                      />
-                    </button>
+                      </button>
+                      <button
+                        onClick={() => toggleExpand(campaign.id)}
+                        className="p-2 hover:bg-accent/10 rounded-lg transition-colors"
+                      >
+                        <ChevronDown
+                          className={cn(
+                            "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all duration-300",
+                            isExpanded && "rotate-180",
+                          )}
+                        />
+                      </button>
+                    </div>
 
                     {/* Campaign Metrics */}
                     <div className="relative px-6 pb-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -349,15 +378,34 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">ROAS</p>
-                        <p
-                          className={cn(
-                            "text-2xl font-semibold",
-                            roas > 1 ? "text-green-600" : "text-muted-foreground",
-                          )}
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">ROAS</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAddSaleDialog({ open: true, entityId: campaign.id, entityName: campaign.name });
+                            }}
+                            className="text-xs text-accent hover:text-accent/80 flex items-center gap-1 transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Sale
+                          </button>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSalesListDialog({ open: true, entityId: campaign.id, entityName: campaign.name });
+                          }}
+                          className="text-2xl font-semibold hover:opacity-80 transition-opacity text-left"
                         >
-                          {roas > 0 ? formatRoas(roas) : "-"}
-                        </p>
+                          <p
+                            className={cn(
+                              roas > 1 ? "text-green-600" : "text-muted-foreground",
+                            )}
+                          >
+                            {roas > 0 ? formatRoas(roas) : "-"}
+                          </p>
+                        </button>
                         {roas > 1 && (
                           <div className="flex items-center gap-1 text-xs text-green-600">
                             <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
@@ -366,13 +414,31 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Leads</p>
-                          {hasLeadCorrection && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                              Korrigiert
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Leads</p>
+                            {hasLeadCorrection && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                                Korrigiert
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditLeadDialog({
+                                open: true,
+                                entityId: campaign.id,
+                                entityName: campaign.name,
+                                currentLeadCount: leads,
+                                leadsFromMeta: campaign.leadsFromMeta || leads,
+                              });
+                            }}
+                            className="text-xs text-accent hover:text-accent/80 flex items-center gap-1 transition-colors"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Bearbeiten
+                          </button>
                         </div>
                         <p className="text-2xl font-semibold">{formatNumber(leads, 0)}</p>
                         <div className="h-1 bg-muted rounded-full overflow-hidden">
@@ -425,6 +491,37 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Dialogs */}
+      {editLeadDialog && (
+        <EditLeadCountDialog
+          open={editLeadDialog.open}
+          onOpenChange={(open) => !open && setEditLeadDialog(null)}
+          entityId={editLeadDialog.entityId}
+          entityType="campaign"
+          entityName={editLeadDialog.entityName}
+          currentLeadCount={editLeadDialog.currentLeadCount}
+          leadsFromMeta={editLeadDialog.leadsFromMeta}
+        />
+      )}
+      {addSaleDialog && (
+        <AddSaleDialog
+          open={addSaleDialog.open}
+          onOpenChange={(open) => !open && setAddSaleDialog(null)}
+          entityId={addSaleDialog.entityId}
+          entityType="campaign"
+          entityName={addSaleDialog.entityName}
+        />
+      )}
+      {salesListDialog && (
+        <SalesListDialog
+          open={salesListDialog.open}
+          onOpenChange={(open) => !open && setSalesListDialog(null)}
+          entityId={salesListDialog.entityId}
+          entityType="campaign"
+          entityName={salesListDialog.entityName}
+        />
+      )}
     </DashboardLayout>
   );
 }

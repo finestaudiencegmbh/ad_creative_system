@@ -1141,3 +1141,14 @@
 - [x] Fix: Meta API Insights-Abfrage mit korrekten Zeitraum-Parametern
 - [x] Fix: insights.date_preset() und insights.time_range() Syntax für alle 3 Funktionen (getMetaCampaigns, getCampaignAdSets, getAdSetAds)
 - [x] Test: Heute (204,07 €), Aktueller Monat (486,13 €), Letzte 90 Tage (23.497,21 €) - alle Zeiträume zeigen unterschiedliche Daten
+
+### Fehlende Funktionen nach Design-Update wiederherstellen (02.01.2026)
+- [x] Drill-Down Navigation: Kampagnen-Cards klickbar machen → CampaignDetail-Seite
+- [x] Drill-Down Navigation: Ad Set Cards klickbar machen → AdSetDetail-Seite (bereits vorhanden in CampaignDetail)
+- [x] Lead-Korrektur: Edit-Button neben "Korrigiert" Badge hinzufügen
+- [x] Lead-Korrektur: Inline-Edit-Dialog für manuelle Lead-Anzahl-Änderung (EditLeadCountDialog)
+- [x] Sales-Management: "+ Sale" Button bei ROAS in Kampagnen-Cards
+- [x] Sales-Management: ROAS-Wert klickbar → öffnet SalesListDialog
+- [x] Sales-Management: Edit/Delete-Funktionen für Sales-Einträge (in SalesListDialog)
+- [x] Breadcrumb-Navigation: "Zurück zum Dashboard" Button in CampaignDetail
+- [x] Alle Funktionen getestet: Campaign-Navigation, Lead-Edit, Sales-Liste, Sales-Add - alle funktionieren ohne Design-Änderungen
