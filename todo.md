@@ -1133,3 +1133,11 @@
 - [x] Frontend: Grün/Rot Indikator basierend auf Meta API Status
 - [x] Frontend: "Verbindung testen" Button mit Echtzeit-Prüfung
 - [x] UI: Klein und unauffällig unter dem Benutzernamen platzieren
+
+### Bug Fix - Datumsfilter funktioniert nicht (02.01.2026)
+- [x] Meta API: Datumsfilter wird nicht korrekt an Insights API übergeben
+- [x] Dashboard: Daten ändern sich nicht beim Wechsel des Zeitraums (Heute, Letzte 7 Tage, etc.)
+- [x] Debug: Prüfen ob datePreset/timeRange Parameter korrekt weitergegeben werden
+- [x] Fix: Meta API Insights-Abfrage mit korrekten Zeitraum-Parametern
+- [x] Fix: insights.date_preset() und insights.time_range() Syntax für alle 3 Funktionen (getMetaCampaigns, getCampaignAdSets, getAdSetAds)
+- [x] Test: Heute (204,07 €), Aktueller Monat (486,13 €), Letzte 90 Tage (23.497,21 €) - alle Zeiträume zeigen unterschiedliche Daten

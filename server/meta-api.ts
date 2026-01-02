@@ -66,25 +66,21 @@ export async function getMetaCampaigns(params?: {
     throw new Error("META_ACCESS_TOKEN or META_AD_ACCOUNT_ID not configured");
   }
 
+  // Build insights field with date filtering
+  let insightsField = "insights";
+  if (params?.datePreset) {
+    insightsField = `insights.date_preset(${params.datePreset})`;
+  } else if (params?.timeRange) {
+    insightsField = `insights.time_range({'since':'${params.timeRange.since}','until':'${params.timeRange.until}'})`;
+  }
+  insightsField += "{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}";
+
   // Build query parameters with all required metrics
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,status,objective,created_time,updated_time,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    fields: `id,name,status,objective,created_time,updated_time,${insightsField}`,
     limit: "100",
   });
-
-  // Add date filtering if provided
-  if (params?.datePreset) {
-    queryParams.append("date_preset", params.datePreset);
-  } else if (params?.timeRange) {
-    queryParams.append(
-      "time_range",
-      JSON.stringify({
-        since: params.timeRange.since,
-        until: params.timeRange.until,
-      })
-    );
-  }
 
   const url = `${META_API_BASE_URL}/${adAccountId}/campaigns?${queryParams.toString()}`;
 
@@ -177,25 +173,21 @@ export async function getCampaignAdSets(
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
+  // Build insights field with date filtering
+  let insightsField = "insights";
+  if (params?.datePreset) {
+    insightsField = `insights.date_preset(${params.datePreset})`;
+  } else if (params?.timeRange) {
+    insightsField = `insights.time_range({'since':'${params.timeRange.since}','until':'${params.timeRange.until}'})`;
+  }
+  insightsField += "{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}";
+
   // Build query parameters with all required metrics
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,status,insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    fields: `id,name,status,${insightsField}`,
     limit: "100",
   });
-
-  // Add date filtering if provided
-  if (params?.datePreset) {
-    queryParams.append("date_preset", params.datePreset);
-  } else if (params?.timeRange) {
-    queryParams.append(
-      "time_range",
-      JSON.stringify({
-        since: params.timeRange.since,
-        until: params.timeRange.until,
-      })
-    );
-  }
 
   const url = `${META_API_BASE_URL}/${campaignId}/adsets?${queryParams.toString()}`;
 
@@ -233,25 +225,21 @@ export async function getAdSetAds(
     throw new Error("META_ACCESS_TOKEN not configured");
   }
 
+  // Build insights field with date filtering
+  let insightsField = "insights";
+  if (params?.datePreset) {
+    insightsField = `insights.date_preset(${params.datePreset})`;
+  } else if (params?.timeRange) {
+    insightsField = `insights.time_range({'since':'${params.timeRange.since}','until':'${params.timeRange.until}'})`;
+  }
+  insightsField += "{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}";
+
   // Build query parameters with all required metrics + creative thumbnail
   const queryParams = new URLSearchParams({
     access_token: accessToken,
-    fields: "id,name,status,creative{thumbnail_url,image_url},insights{impressions,spend,ctr,cpm,actions,outbound_clicks,cost_per_outbound_click}",
+    fields: `id,name,status,creative{thumbnail_url,image_url},${insightsField}`,
     limit: "100",
   });
-
-  // Add date filtering if provided
-  if (params?.datePreset) {
-    queryParams.append("date_preset", params.datePreset);
-  } else if (params?.timeRange) {
-    queryParams.append(
-      "time_range",
-      JSON.stringify({
-        since: params.timeRange.since,
-        until: params.timeRange.until,
-      })
-    );
-  }
 
   const url = `${META_API_BASE_URL}/${adSetId}/ads?${queryParams.toString()}`;
 
