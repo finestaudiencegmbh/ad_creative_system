@@ -1152,3 +1152,21 @@
 - [x] Sales-Management: Edit/Delete-Funktionen für Sales-Einträge (in SalesListDialog)
 - [x] Breadcrumb-Navigation: "Zurück zum Dashboard" Button in CampaignDetail
 - [x] Alle Funktionen getestet: Campaign-Navigation, Lead-Edit, Sales-Liste, Sales-Add - alle funktionieren ohne Design-Änderungen
+
+### Make.com Webhook Integration (02.01.2026)
+- [x] MAKE_WEBHOOK_URL Umgebungsvariable hinzufügen
+- [x] Creative Generator Webhook-Trigger testen
+- [x] Webhook sendet Job-Daten an Make.com/Zapier (jobId, userId, campaignId, format, landingPageAnalysis, topPerformerAds, callbackUrl)
+
+### Creative Generator: Format-Auswahl entfernen (02.01.2026)
+- [x] Schritt 2 "Format auswählen" komplett entfernt
+- [x] Immer "all" (Feed + Story + Reel) generieren
+- [x] Schritte neu nummeriert: 1. Kampagne, 2. Anzahl, 3. Beschreibung
+- [x] Backend: format Parameter auf "all" hardcoded
+- [x] Workflow getestet im Browser
+
+### Zapier Webhook Integration (02.01.2026)
+- [x] MAKE_WEBHOOK_URL auf Zapier URL geändert: https://hooks.zapier.com/hooks/catch/2146604/uw91nf6/
+- [x] Zapier Webhook getestet (HTTP 200, erreichbar)
+- [x] Creative Generator 3-Schritt-Workflow getestet (ohne Format-Auswahl)
+- [x] Vitest Test aktualisiert für Zapier URL

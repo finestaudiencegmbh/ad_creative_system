@@ -64,7 +64,7 @@ export default function CreativeGenerator() {
   const [manualLandingPage, setManualLandingPage] = useState("");
   
   // Format & batch settings
-  const [format, setFormat] = useState<CreativeFormat | null>(null);
+  const format: CreativeFormat = "all"; // Always generate all formats
   const [batchCount, setBatchCount] = useState<number | null>(null);
   const [description, setDescription] = useState("");
   
@@ -76,9 +76,8 @@ export default function CreativeGenerator() {
   const [progress, setProgress] = useState(0);
   
   // Collapsible state
-  const [step2Open, setStep2Open] = useState(false);
-  const [step3Open, setStep3Open] = useState(false);
-  const [step4Open, setStep4Open] = useState(false);
+  const [step2Open, setStep2Open] = useState(false); // Now for batch count
+  const [step3Open, setStep3Open] = useState(false); // Now for description
 
   // Rotate fun facts every 8 seconds during generation (no repeats)
   useEffect(() => {
@@ -178,22 +177,15 @@ export default function CreativeGenerator() {
   }, [selectedCampaignId]);
 
   useEffect(() => {
-    if (format && !step3Open) {
+    if (batchCount && !step3Open) {
       setStep3Open(true);
-    }
-  }, [format]);
-
-  useEffect(() => {
-    if (batchCount && !step4Open) {
-      setStep4Open(true);
     }
   }, [batchCount]);
 
   // Check if steps are completed
   const step1Complete = !!selectedCampaignId;
-  const step2Complete = !!format;
-  const step3Complete = batchCount !== null && batchCount > 0;
-  const step4Complete = step3Complete; // Optional field, complete when step 3 is complete
+  const step2Complete = batchCount !== null && batchCount > 0;
+  const step3Complete = step2Complete; // Optional field, complete when step 2 is complete
 
   // Make.com webhook integration
   const triggerCreativeGeneration = trpc.ai.triggerCreativeGeneration.useMutation();
@@ -519,7 +511,7 @@ export default function CreativeGenerator() {
               </CardContent>
             </Card>
 
-            {/* Step 2: Format Selection - Collapsible */}
+            {/* Step 2: Batch Count - Collapsible */}
             <Collapsible open={step2Open} onOpenChange={(open) => step1Complete && setStep2Open(open)}>
               <Card className={!step1Complete ? 'opacity-50 pointer-events-none' : ''}>
                 <CollapsibleTrigger asChild disabled={!step1Complete}>
@@ -529,47 +521,7 @@ export default function CreativeGenerator() {
                         <div className={`w-5 h-5 rounded flex items-center justify-center ${step2Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
                           {step2Complete && <Check className="h-3 w-3 text-white" />}
                         </div>
-                        <CardTitle>2. Format auswählen</CardTitle>
-                      </div>
-                      <ChevronDown className={`h-5 w-5 transition-transform ${step2Open ? 'rotate-180' : ''}`} />
-                    </div>
-                    <CardDescription>
-                      Wähle das Zielformat für deine Creatives
-                    </CardDescription>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <RadioGroup value={format || ""} onValueChange={(v) => setFormat(v as CreativeFormat)} disabled={!step1Complete}>
-                      {Object.entries(formatSpecs).map(([key, spec]) => (
-                        <div key={key} className="flex items-start space-x-3 space-y-0">
-                          <RadioGroupItem value={key} id={key} />
-                          <Label htmlFor={key} className="font-normal cursor-pointer flex-1">
-                            <div>
-                              <div className="font-medium">{spec.label}</div>
-                              <div className="text-xs text-muted-foreground">{spec.size}</div>
-                              <div className="text-xs text-muted-foreground mt-1">{spec.description}</div>
-                            </div>
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* Step 3: Batch Count - Collapsible */}
-            <Collapsible open={step3Open} onOpenChange={(open) => step2Complete && setStep3Open(open)}>
-              <Card className={!step2Complete ? 'opacity-50 pointer-events-none' : ''}>
-                <CollapsibleTrigger asChild disabled={!step2Complete}>
-                  <CardHeader className={`cursor-pointer transition-colors ${step2Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step3Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
-                          {step3Complete && <Check className="h-3 w-3 text-white" />}
-                        </div>
-                        <CardTitle>3. Anzahl Creatives</CardTitle>
+                        <CardTitle>2. Anzahl Creatives</CardTitle>
                       </div>
                       <ChevronDown className={`h-5 w-5 transition-transform ${step3Open ? 'rotate-180' : ''}`} />
                     </div>
@@ -582,7 +534,7 @@ export default function CreativeGenerator() {
                   <CardContent>
                     <div className="space-y-2">
                       <Label htmlFor="count">Anzahl (1-10)</Label>
-                      <Select value={batchCount?.toString() || ""} onValueChange={(v) => setBatchCount(parseInt(v))} disabled={!step2Complete}>
+                      <Select value={batchCount?.toString() || ""} onValueChange={(v) => setBatchCount(parseInt(v))} disabled={!step1Complete}>
                         <SelectTrigger id="count">
                           <SelectValue placeholder="Anzahl wählen" />
                         </SelectTrigger>
@@ -600,19 +552,19 @@ export default function CreativeGenerator() {
               </Card>
             </Collapsible>
 
-            {/* Step 4: Description - Collapsible */}
-            <Collapsible open={step4Open} onOpenChange={(open) => step3Complete && setStep4Open(open)}>
-              <Card className={!step3Complete ? 'opacity-50 pointer-events-none' : ''}>
-                <CollapsibleTrigger asChild disabled={!step3Complete}>
-                  <CardHeader className={`cursor-pointer transition-colors ${step3Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
+            {/* Step 3: Description - Collapsible */}
+            <Collapsible open={step3Open} onOpenChange={(open) => step2Complete && setStep3Open(open)}>
+              <Card className={!step2Complete ? 'opacity-50 pointer-events-none' : ''}>
+                <CollapsibleTrigger asChild disabled={!step2Complete}>
+                  <CardHeader className={`cursor-pointer transition-colors ${step2Complete ? 'hover:bg-accent/50' : 'cursor-not-allowed'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step4Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
-                          {step4Complete && <Check className="h-3 w-3 text-white" />}
+                        <div className={`w-5 h-5 rounded flex items-center justify-center ${step3Complete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          {step3Complete && <Check className="h-3 w-3 text-white" />}
                         </div>
-                        <CardTitle>4. Zusätzliche Beschreibung (Optional)</CardTitle>
+                        <CardTitle>3. Zusätzliche Beschreibung (Optional)</CardTitle>
                       </div>
-                      <ChevronDown className={`h-5 w-5 transition-transform ${step4Open ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-5 w-5 transition-transform ${step3Open ? 'rotate-180' : ''}`} />
                     </div>
                     <CardDescription>
                       Ergänze spezifische Anforderungen oder lasse das Feld leer für automatische Generierung
