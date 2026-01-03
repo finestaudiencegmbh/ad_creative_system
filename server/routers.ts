@@ -1303,49 +1303,44 @@ export const appRouter = router({
         
         const appUrl = process.env.APP_URL || `https://${ctx.req.headers.host}`;
         
-        // Prepare comprehensive webhook payload
+        // Prepare FLAT webhook payload for Zapier compatibility
         const webhookPayload = {
+          // Job Info
           jobId,
-          userId: ctx.user.id,
+          userId: ctx.user.id.toString(),
           campaignId: input.campaignId,
-          adSetId: input.adSetId,
+          adSetId: input.adSetId || '',
           
-          // Landing Page Data
+          // Landing Page
           landingPageUrl: input.landingPageUrl,
           
-          // Winning Ad Data (Top Performer)
-          winningAd: topAd ? {
-            id: topAd.adId,
-            name: topAd.adName,
-            imageUrl: topAd.imageUrl,
-            metrics: {
-              roasOrderVolume: topAd.metrics.roasOrderVolume,
-              roasCashCollect: topAd.metrics.roasCashCollect,
-              costPerLead: topAd.metrics.costPerLead,
-              costPerOutboundClick: topAd.metrics.costPerOutboundClick,
-              outboundCtr: topAd.metrics.outboundCtr,
-              cpm: topAd.metrics.cpm,
-            },
-          } : null,
+          // Winning Ad (Top Performer) - Flattened
+          winningAdId: topAd?.adId || '',
+          winningAdName: topAd?.adName || '',
+          winningAdImageUrl: topAd?.imageUrl || '',
+          winningAdRoasOrder: topAd?.metrics.roasOrderVolume || 0,
+          winningAdRoasCash: topAd?.metrics.roasCashCollect || 0,
+          winningAdCpl: topAd?.metrics.costPerLead || 0,
+          winningAdCostPerClick: topAd?.metrics.costPerOutboundClick || 0,
+          winningAdCtr: topAd?.metrics.outboundCtr || 0,
+          winningAdCpm: topAd?.metrics.cpm || 0,
           
-          // Targeting Data (Audience)
-          targeting: targeting ? {
-            ageMin: targeting.age_min,
-            ageMax: targeting.age_max,
-            genders: targeting.genders, // [1] = male, [2] = female
-            geoLocations: targeting.geo_locations,
-            interests: targeting.flexible_spec?.map((spec: any) => spec.interests || []).flat(),
-            locales: targeting.locales,
-          } : null,
+          // Targeting (Audience) - Flattened
+          targetingAgeMin: targeting?.age_min || 18,
+          targetingAgeMax: targeting?.age_max || 65,
+          targetingGenders: targeting?.genders?.join(',') || '',
+          targetingCountries: targeting?.geo_locations?.countries?.join(',') || '',
+          targetingInterests: targeting?.flexible_spec?.map((spec: any) => 
+            spec.interests?.map((i: any) => i.name).join(', ') || ''
+          ).join('; ') || '',
           
           // Generation Parameters
           format: input.format,
-          count: input.count,
+          batchCount: input.count,
           
           // Callback URL
-          callbackUrl: `${appUrl}/api/trpc/ai.receiveCreatives`,
-        };
-        
+          callbackUrl: `${appUrl}/api/trpc/creatives.receiveCreatives`,
+        };   
         try {
           await fetch(makeWebhookUrl, {
             method: 'POST',
@@ -1408,6 +1403,13 @@ export const appRouter = router({
           createdAt: job.createdAt,
           completedAt: job.completedAt,
         };
+      }),
+    
+    // Get all creative jobs for current user
+    getCreativeJobs: protectedProcedure
+      .query(async ({ ctx }) => {
+        const jobs = await db.getCreativeJobsByUserId(ctx.user.id);
+        return jobs;
       }),
 
     // ============================================

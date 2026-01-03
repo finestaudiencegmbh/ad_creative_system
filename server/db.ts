@@ -538,6 +538,18 @@ export async function completeCreativeJob(jobId: string, result: { creatives: Ar
     .where(eq(creativeJobs.jobId, jobId));
 }
 
+export async function getCreativeJobsByUserId(userId: number): Promise<CreativeJob[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const jobs = await db.select()
+    .from(creativeJobs)
+    .where(eq(creativeJobs.userId, userId))
+    .orderBy(desc(creativeJobs.createdAt));
+
+  return jobs;
+}
+
 
 // ============================================
 // Ad Copies (Werbetexte)

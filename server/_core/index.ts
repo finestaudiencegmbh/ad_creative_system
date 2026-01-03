@@ -33,6 +33,29 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Custom webhook endpoint for Zapier (before tRPC middleware)
+  app.post("/api/webhook/receive-creatives", async (req, res) => {
+    try {
+      const { jobId, creatives } = req.body;
+      
+      if (!jobId || !creatives) {
+        return res.status(400).json({ error: "Missing jobId or creatives" });
+      }
+      
+      // Import db functions
+      const db = await import("../db");
+      
+      // Update job with results
+      await db.completeCreativeJob(jobId, { creatives });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[receive-creatives] Error:", error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+  
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // tRPC API

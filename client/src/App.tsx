@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import CampaignDetail from "./pages/CampaignDetail";
 import AdSetDetail from "./pages/AdSetDetail";
 import CreativeGenerator from "./pages/CreativeGenerator";
+import CreativeLibrary from "./pages/CreativeLibrary";
 import Werbetexte from "./pages/Werbetexte";
 import Performance from "./pages/Performance";
 import Login from "./pages/Login";
@@ -28,6 +29,7 @@ function Router() {
       <Route path={"/campaign/:id"} component={CampaignDetail} />
       <Route path={"/adset/:id"} component={AdSetDetail} />
       <Route path={"/generator"} component={CreativeGenerator} />
+      <Route path={"/creative-library"} component={CreativeLibrary} />
       <Route path={"/werbetexte"} component={Werbetexte} />
       <Route path={"/performance"} component={Performance} />
       <Route path={"/404"} component={NotFound} />

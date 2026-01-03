@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { LayoutDashboard, Sparkles, FileText, TrendingUp, Users, ChevronRight, Zap, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { LayoutDashboard, Sparkles, FileText, TrendingUp, Users, ChevronRight, Zap, Wifi, WifiOff, RefreshCw, ImageIcon } from "lucide-react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "campaigns" },
   { icon: Sparkles, label: "Creative Generator", path: "/generator", tabId: "generator" },
+  { icon: ImageIcon, label: "Creative Library", path: "/creative-library", tabId: "generator" },
   { icon: FileText, label: "Werbetexte", path: "/werbetexte", tabId: "creatives" },
   { icon: TrendingUp, label: "Performance", path: "/performance", tabId: "performance" },
   { icon: Users, label: "Accounts", path: "/accounts", adminOnly: true },

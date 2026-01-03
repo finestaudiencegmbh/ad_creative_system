@@ -1170,3 +1170,10 @@
 - [x] Zapier Webhook getestet (HTTP 200, erreichbar)
 - [x] Creative Generator 3-Schritt-Workflow getestet (ohne Format-Auswahl)
 - [x] Vitest Test aktualisiert für Zapier URL
+
+### Zapier Webhook Payload Fix (03.01.2026)
+- [ ] Debug: Webhook-Payload-Struktur prüfen (was wird wirklich gesendet?)
+- [ ] Backend: Payload flacher strukturieren für Zapier (keine verschachtelten Objekte)
+- [ ] Backend: Alle wichtigen Felder als Top-Level-Properties senden
+- [ ] Zapier: JavaScript-Code anpassen für neue Payload-Struktur
+- [ ] Test: Webhook erneut triggern und Felder in Zapier verifizieren
