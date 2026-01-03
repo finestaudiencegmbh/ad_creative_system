@@ -177,7 +177,7 @@ export default function CreativeLibrary() {
                 )}
 
                 {/* Creatives Grid */}
-                {job.status === "completed" && job.result?.creatives && (
+                {job.status === "completed" && job.result?.creatives && Array.isArray(job.result.creatives) && job.result.creatives.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {job.result.creatives.map((creative: any, index: number) => (
                       <div

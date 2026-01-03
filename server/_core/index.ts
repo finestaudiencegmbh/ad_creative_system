@@ -37,10 +37,25 @@ async function startServer() {
   // Custom webhook endpoint for Zapier (before tRPC middleware)
   app.post("/api/webhook/receive-creatives", async (req, res) => {
     try {
-      const { jobId, creatives } = req.body;
+      let { jobId, creatives } = req.body;
       
       if (!jobId || !creatives) {
         return res.status(400).json({ error: "Missing jobId or creatives" });
+      }
+      
+      // Parse creatives if it's a JSON string (Zapier sometimes sends it as string)
+      if (typeof creatives === 'string') {
+        try {
+          creatives = JSON.parse(creatives);
+        } catch (parseError) {
+          console.error("[receive-creatives] Failed to parse creatives string:", parseError);
+          return res.status(400).json({ error: "Invalid creatives format" });
+        }
+      }
+      
+      // Ensure creatives is an array
+      if (!Array.isArray(creatives)) {
+        return res.status(400).json({ error: "Creatives must be an array" });
       }
       
       // Import db functions
