@@ -1177,3 +1177,7 @@
 - [ ] Backend: Alle wichtigen Felder als Top-Level-Properties senden
 - [ ] Zapier: JavaScript-Code anpassen für neue Payload-Struktur
 - [ ] Test: Webhook erneut triggern und Felder in Zapier verifizieren
+
+- [x] Background Job Processing: Jobs continue when user navigates away
+- [x] Persistent Status Toast: Bottom-right corner showing active job progress
+- [x] Job Polling: Auto-refresh job status every 5 seconds

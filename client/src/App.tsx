@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Accounts from "./pages/Accounts";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import JobStatusToast from "./components/JobStatusToast";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <JobStatusToast />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
