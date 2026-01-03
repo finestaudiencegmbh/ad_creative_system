@@ -242,7 +242,7 @@ export const creativeJobs = mysqlTable("creative_jobs", {
   format: mysqlEnum("format", ["feed", "story", "reel"]).notNull(),
   count: int("count").notNull(),
   // Job status
-  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "paused", "completed", "failed"]).default("pending").notNull(),
   // Output (populated by Make.com callback)
   result: json("result").$type<{
     creatives: Array<{

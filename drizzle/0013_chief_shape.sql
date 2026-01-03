@@ -1,0 +1,1 @@
+ALTER TABLE `creative_jobs` MODIFY COLUMN `status` enum('pending','processing','paused','completed','failed') NOT NULL DEFAULT 'pending';

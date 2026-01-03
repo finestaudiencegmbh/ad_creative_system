@@ -1411,6 +1411,30 @@ export const appRouter = router({
         const jobs = await db.getCreativeJobsByUserId(ctx.user.id);
         return jobs;
       }),
+    
+    // Pause creative job
+    pauseCreativeJob: protectedProcedure
+      .input(z.object({ jobId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.pauseCreativeJob(input.jobId, ctx.user.id);
+        return { success: true };
+      }),
+    
+    // Resume creative job
+    resumeCreativeJob: protectedProcedure
+      .input(z.object({ jobId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.resumeCreativeJob(input.jobId, ctx.user.id);
+        return { success: true };
+      }),
+    
+    // Delete creative job
+    deleteCreativeJob: protectedProcedure
+      .input(z.object({ jobId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.deleteCreativeJob(input.jobId, ctx.user.id);
+        return { success: true };
+      }),
 
     // ============================================
     // Legacy Creative Generation (Direct)

@@ -1,12 +1,58 @@
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
-import { Download, ImageIcon, Loader2, Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Download, ImageIcon, Loader2, Calendar, CheckCircle2, Clock, XCircle, Pause, Play, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function CreativeLibrary() {
+  const utils = trpc.useUtils();
   const { data: jobs, isLoading } = trpc.ai.getCreativeJobs.useQuery();
+
+  const pauseJob = trpc.ai.pauseCreativeJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job pausiert");
+      utils.ai.getCreativeJobs.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Fehler: ${error.message}`);
+    },
+  });
+
+  const resumeJob = trpc.ai.resumeCreativeJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job fortgesetzt");
+      utils.ai.getCreativeJobs.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Fehler: ${error.message}`);
+    },
+  });
+
+  const deleteJob = trpc.ai.deleteCreativeJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job gelöscht");
+      utils.ai.getCreativeJobs.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Fehler: ${error.message}`);
+    },
+  });
+
+  const handlePause = (jobId: string) => {
+    pauseJob.mutate({ jobId });
+  };
+
+  const handleResume = (jobId: string) => {
+    resumeJob.mutate({ jobId });
+  };
+
+  const handleDelete = (jobId: string) => {
+    if (confirm("Möchtest du diesen Job wirklich löschen?")) {
+      deleteJob.mutate({ jobId });
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -53,7 +99,7 @@ export default function CreativeLibrary() {
               >
                 {/* Job Header */}
                 <div className="flex items-start justify-between mb-6">
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">
                         {job.format === "feed" && "Feed Creative"}
@@ -78,6 +124,40 @@ export default function CreativeLibrary() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Control Buttons */}
+                  <div className="flex items-center gap-2">
+                    {(job.status === "processing" || job.status === "pending") && (
+                      <button
+                        onClick={() => handlePause(job.jobId)}
+                        disabled={pauseJob.isPending}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-sm font-medium transition-all duration-200 hover:bg-yellow-500/20 disabled:opacity-50"
+                      >
+                        <Pause className="w-4 h-4" />
+                        Anhalten
+                      </button>
+                    )}
+
+                    {job.status === "paused" && (
+                      <button
+                        onClick={() => handleResume(job.jobId)}
+                        disabled={resumeJob.isPending}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 border border-green-500/20 text-sm font-medium transition-all duration-200 hover:bg-green-500/20 disabled:opacity-50"
+                      >
+                        <Play className="w-4 h-4" />
+                        Fortsetzen
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(job.jobId)}
+                      disabled={deleteJob.isPending}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 text-red-600 border border-red-500/20 text-sm font-medium transition-all duration-200 hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Löschen
+                    </button>
                   </div>
                 </div>
 
@@ -151,12 +231,35 @@ export default function CreativeLibrary() {
                   </div>
                 )}
 
-                {/* Processing State */}
-                {job.status === "processing" && (
+                {/* Processing State with Progress Bar */}
+                {(job.status === "processing" || job.status === "pending") && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {job.status === "pending" ? "Warte auf Start..." : "Creatives werden generiert..."}
+                      </span>
+                      <span className="text-accent font-medium">
+                        {job.status === "pending" ? "0%" : "45%"}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-accent/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-500"
+                        style={{
+                          width: job.status === "pending" ? "0%" : "45%",
+                          animation: job.status === "processing" ? "pulse 2s ease-in-out infinite" : "none",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Paused State */}
+                {job.status === "paused" && (
                   <div className="flex items-center justify-center py-8 space-x-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-accent" />
+                    <Pause className="w-5 h-5 text-yellow-600" />
                     <span className="text-sm text-muted-foreground">
-                      Creatives werden generiert...
+                      Job pausiert
                     </span>
                   </div>
                 )}
@@ -193,6 +296,11 @@ function StatusBadge({ status }: { status: string }) {
       icon: Loader2,
       label: "In Bearbeitung",
       className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    },
+    paused: {
+      icon: Pause,
+      label: "Pausiert",
+      className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
     },
     completed: {
       icon: CheckCircle2,

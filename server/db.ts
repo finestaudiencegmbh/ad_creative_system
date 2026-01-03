@@ -550,6 +550,50 @@ export async function getCreativeJobsByUserId(userId: number): Promise<CreativeJ
   return jobs;
 }
 
+export async function pauseCreativeJob(jobId: string, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  // Verify job belongs to user
+  const job = await getCreativeJob(jobId);
+  if (!job || job.userId !== userId) {
+    throw new Error("Unauthorized");
+  }
+
+  await db.update(creativeJobs)
+    .set({ status: 'paused' })
+    .where(eq(creativeJobs.jobId, jobId));
+}
+
+export async function resumeCreativeJob(jobId: string, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  // Verify job belongs to user
+  const job = await getCreativeJob(jobId);
+  if (!job || job.userId !== userId) {
+    throw new Error("Unauthorized");
+  }
+
+  await db.update(creativeJobs)
+    .set({ status: 'processing' })
+    .where(eq(creativeJobs.jobId, jobId));
+}
+
+export async function deleteCreativeJob(jobId: string, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+
+  // Verify job belongs to user
+  const job = await getCreativeJob(jobId);
+  if (!job || job.userId !== userId) {
+    throw new Error("Unauthorized");
+  }
+
+  await db.delete(creativeJobs)
+    .where(eq(creativeJobs.jobId, jobId));
+}
+
 
 // ============================================
 // Ad Copies (Werbetexte)
